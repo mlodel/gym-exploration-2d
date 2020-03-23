@@ -236,36 +236,13 @@ if __name__ == '__main__':
 
     Config.TRAIN_SINGLE_AGENT = True
     Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
-    Config.ANIMATE_EPISODES = True
+    Config.ANIMATE_EPISODES = False
     Config.SHOW_EPISODE_PLOTS = False
     Config.TRAIN_MODE = True
 
-    test_case_fn = tc.get_testcase_2agents_swap
-    # test_case_fn = tc.get_testcase_random
-    policies = {
-        'RVO': {
-            'policy': RVOPolicy,
-        },
-        'Learning': {
-            'policy': LearningPolicy,
-        },
-    }
-
-    num_agents_to_test = [2]
-    test_case_args = {}
-
     env, one_env = create_env()
 
-    agents = []
-    for i, policy in enumerate(policies):
-        one_env.plot_policy_name = policy
-        policy_class = policies[policy]['policy']
-        test_case_args['agents_policy'] = policy_class
-        agent = test_case_fn(i, agents_policy=policy_class)
-        # for agent in agents:
-        #    if 'checkpt_name' in policies[policy]:
-        #        agent.policy.env = env
-        agents.append(agent[0])
+    agents = tc.get_testcase_2agents_swap(0)
 
     one_env.set_agents(agents)
     one_env.test_case_index = 0

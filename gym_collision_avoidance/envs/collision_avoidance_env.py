@@ -17,6 +17,8 @@ from gym_collision_avoidance.envs.visualize import plot_episode, animate_episode
 from gym_collision_avoidance.envs.agent import Agent
 from gym_collision_avoidance.envs.Map import Map
 from gym_collision_avoidance.envs import test_cases as tc
+from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
+from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -226,6 +228,8 @@ class CollisionAvoidanceEnv(gym.Env):
             # else:
             #     # self.agents = tc.get_testcase_fixed_initial_conditions(self.agents)
             #     self.agents = tc.get_testcase_fixed_initial_conditions_for_non_ppo(self.agents)
+        elif Config.TRAIN_MODE:
+            self.agents = tc.get_testcase_2agents_swap(0)
         else:
             self.agents = self.default_agents
         for agent in self.agents:

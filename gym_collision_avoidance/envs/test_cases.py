@@ -154,16 +154,11 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
             goal_y_2 = np.random.normal(goal_y_1, 4.0)
 
 
-    # Swap agents
-    if test_case_index % 2 == 0:
-        agents = [
-            Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, agents_policy, agents_dynamics,
-                  agents_sensors, 0)
-        ]
-    else:
-        agents = [
-            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, agents_policy, agents_dynamics,
-                  agents_sensors, 0)
+    agents = [
+            Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, agents_dynamics,
+                  [OtherAgentsStatesSensor], test_case_index),
+            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, LearningPolicy, agents_dynamics,
+                  [OtherAgentsStatesSensor], test_case_index)
         ]
     return agents
 
