@@ -2,7 +2,7 @@ import gym
 import numpy as np
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.wrappers import FlattenDictWrapper, MultiagentFlattenDictWrapper, MultiagentDummyVecEnv
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
+from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 
 def create_env():
     import tensorflow as tf
@@ -42,9 +42,11 @@ def create_env():
 def run_episode(env, one_env):
     score = 0
     done = False
+    steps = 0
     while not done:
         obs, rew, done, info = env.step([None])
         score += rew[0]
+        steps += 1
 
     # After end of episode, compute statistics about the agents
     agents = one_env.agents
