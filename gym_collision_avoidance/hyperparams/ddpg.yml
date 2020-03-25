@@ -1,3 +1,14 @@
+gym-collision-avoidance:
+  n_timesteps: !!float 2e6
+  policy: 'LnMlpPolicy'
+  gamma: 0.95
+  memory_limit: 1000000
+  noise_type: 'normal'
+  noise_std: 0.22
+  batch_size: 256
+  normalize_observations: True
+  normalize_returns: False
+
 MountainCarContinuous-v0:
   n_timesteps: 300000
   policy: 'MlpPolicy'

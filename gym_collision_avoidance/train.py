@@ -236,12 +236,15 @@ if __name__ == '__main__':
 
     Config.TRAIN_SINGLE_AGENT = True
     Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
+    Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = 1
     Config.ANIMATE_EPISODES = False
     Config.SHOW_EPISODE_PLOTS = False
     Config.TRAIN_MODE = True
 
     env, one_env = create_env()
-
+    print(env.observation_space.sample())
+    env = VecNormalize(env)
+    print(env.observation_space.sample())
     agents = tc.get_testcase_2agents_swap(0)
 
     one_env.set_agents(agents)

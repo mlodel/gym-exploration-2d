@@ -1,6 +1,6 @@
 # Tuned
 gym-collision-avoidance:
-  n_timesteps: !!float 60000
+  n_timesteps: !!float 1e6
   policy: 'MlpPolicy'
   learning_rate: !!float 3e-4
   buffer_size: 50000

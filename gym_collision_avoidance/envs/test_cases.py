@@ -156,9 +156,9 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
 
     agents = [
             Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, agents_dynamics,
-                  [OtherAgentsStatesSensor], test_case_index),
+                  [OtherAgentsStatesSensor], 0),
             Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, LearningPolicy, agents_dynamics,
-                  [OtherAgentsStatesSensor], test_case_index)
+                  [OtherAgentsStatesSensor], 1)
         ]
     return agents
 

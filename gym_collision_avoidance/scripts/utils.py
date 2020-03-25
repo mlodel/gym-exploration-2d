@@ -12,7 +12,7 @@ import argparse
 from gym_collision_avoidance.experiments.src.env_utils import run_episode, create_env, store_stats
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs import test_cases as tc
-
+import yaml
 #import gym_cartpole
 
 ### These are only here to allow setting of seeds... hmm
@@ -348,3 +348,77 @@ def get_latest_run_id(log_path, env_id):
         if env_id == "_".join(file_name.split("_")[:-1]) and ext.isdigit() and int(ext) > max_run_id:
             max_run_id = int(ext)
     return max_run_id
+
+def get_latest_run_id(log_path, env_id):
+    """
+    Returns the latest run number for the given log name and log path,
+    by finding the greatest number in the directories.
+
+    :param log_path: (str) path to log folder
+    :param env_id: (str)
+    :return: (int) latest run number
+    """
+    max_run_id = 0
+    for path in glob.glob(log_path + "/{}_[0-9]*".format(env_id)):
+        file_name = path.split("/")[-1]
+        ext = file_name.split("_")[-1]
+        if env_id == "_".join(file_name.split("_")[:-1]) and ext.isdigit() and int(ext) > max_run_id:
+            max_run_id = int(ext)
+    return max_run_id
+
+
+def get_saved_hyperparams(stats_path, norm_reward=False, test_mode=False):
+    """
+    :param stats_path: (str)
+    :param norm_reward: (bool)
+    :param test_mode: (bool)
+    :return: (dict, str)
+    """
+    hyperparams = {}
+    if not os.path.isdir(stats_path):
+        stats_path = None
+    else:
+        config_file = os.path.join(stats_path, 'config.yml')
+        if os.path.isfile(config_file):
+            # Load saved hyperparameters
+            with open(os.path.join(stats_path, 'config.yml'), 'r') as f:
+                hyperparams = yaml.load(f, Loader=yaml.UnsafeLoader)  # pytype: disable=module-attr
+            hyperparams['normalize'] = hyperparams.get('normalize', False)
+        else:
+            obs_rms_path = os.path.join(stats_path, 'obs_rms.pkl')
+            hyperparams['normalize'] = os.path.isfile(obs_rms_path)
+
+        # Load normalization params
+        if hyperparams['normalize']:
+            if isinstance(hyperparams['normalize'], str):
+                normalize_kwargs = eval(hyperparams['normalize'])
+                if test_mode:
+                    normalize_kwargs['norm_reward'] = norm_reward
+            else:
+                normalize_kwargs = {'norm_obs': hyperparams['normalize'], 'norm_reward': norm_reward}
+            hyperparams['normalize_kwargs'] = normalize_kwargs
+    return hyperparams, stats_path
+
+
+def find_saved_model(algo, log_path, env_id, load_best=False):
+    """
+    :param algo: (str)
+    :param log_path: (str) Path to the directory with the saved model
+    :param env_id: (str)
+    :param load_best: (bool)
+    :return: (str) Path to the saved model
+    """
+    model_path, found = None, False
+    for ext in ['pkl', 'zip']:
+        model_path = "{}/{}.{}".format(log_path, env_id, ext)
+        found = os.path.isfile(model_path)
+        if found:
+            break
+
+    if load_best:
+        model_path = os.path.join(log_path, "best_model.zip")
+        found = os.path.isfile(model_path)
+
+    if not found:
+        raise ValueError("No model found for {} on {}, path: {}".format(algo, env_id, model_path))
+    return model_path
