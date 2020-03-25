@@ -272,25 +272,27 @@ class CollisionAvoidanceEnv(gym.Env):
                     rewards[i] = self.reward_at_goal
                     print("Agent %i: Arrived at goal!"% agent.id)
             else:
-                # agents at their goal shouldn't be penalized if someone else
-                # bumps into them
+                # collision with other agent
                 if agent.was_in_collision_already is False:
                     if collision_with_agent[i]:
                         rewards[i] = self.reward_collision_with_agent
                         agent.in_collision = True
                         # print("Agent %i: Collision with another agent!"
                         #       % agent.id)
+                    #collision with a static obstacle
                     elif collision_with_wall[i]:
                         rewards[i] = self.reward_collision_with_wall
                         agent.in_collision = True
                         # print("Agent %i: Collision with wall!"
                               # % agent.id)
+                    # There was no collision
                     else:
-                        # There was no collision
+                        # Penalty for getting close to agents
                         if dist_btwn_nearest_agent[i] <= Config.GETTING_CLOSE_RANGE:
                             rewards[i] = -0.1 - dist_btwn_nearest_agent[i]/2.
                             # print("Agent %i: Got close to another agent!"
                             #       % agent.id)
+                        # Penalty for wiggly behavior
                         if abs(agent.past_actions[0, 1]) > self.wiggly_behavior_threshold:
                             # Slightly penalize wiggly behavior
                             rewards[i] += self.reward_wiggly_behavior

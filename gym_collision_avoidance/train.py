@@ -65,7 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('-tb', '--tensorboard-log', help='Tensorboard log dir', default='', type=str)
     parser.add_argument('-i', '--trained-agent', help='Path to a pretrained agent to continue training',
                         default='', type=str)
-    parser.add_argument('--algo', help='RL Algorithm', default='sac',
+    parser.add_argument('--algo', help='RL Algorithm', default='ppo2',
                         type=str, required=False, choices=list(ALGOS.keys()))
     parser.add_argument('-n', '--n-timesteps', help='Overwrite the number of timesteps', default=-1,
                         type=int)

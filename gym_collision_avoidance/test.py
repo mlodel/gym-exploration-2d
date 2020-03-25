@@ -50,7 +50,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', help='environment ID', type=str, default='gym-collision-avoidance')
     parser.add_argument('-f', '--folder', help='Log folder', type=str, default='logs')
-    parser.add_argument('--algo', help='RL Algorithm', default='sac',
+    parser.add_argument('--algo', help='RL Algorithm', default='ppo2',
                         type=str, required=False, choices=list(ALGOS.keys()))
     parser.add_argument('-n', '--n-episodes', help='number of episodes', default=10,
                         type=int)

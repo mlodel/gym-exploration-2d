@@ -28,11 +28,11 @@ class Config:
     PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
     DT             = 0.2 # seconds between simulation time steps
     REWARD_AT_GOAL = 1.0 # reward given when agent reaches goal position
-    REWARD_COLLISION_WITH_AGENT = -0.25 # reward given when agent collides with another agent
+    REWARD_COLLISION_WITH_AGENT = -1.0 # reward given when agent collides with another agent
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = np.inf
     COLLISION_DIST = 0.0 # meters between agents' boundaries for collision
@@ -65,7 +65,7 @@ class Config:
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
-    STATES_NOT_USED_IN_POLICY = ['use_ppo', 'num_other_agents', 'other_agents_states']
+    STATES_NOT_USED_IN_POLICY = ['use_ppo', 'num_other_agents']
     STATE_INFO_DICT = {
         'dist_to_goal': {
             'dtype': np.float32,
