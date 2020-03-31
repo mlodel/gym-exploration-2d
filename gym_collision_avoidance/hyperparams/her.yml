@@ -1,4 +1,15 @@
 # DDPG hyperparams
+gym-collision-avoidance:
+  n_timesteps: !!float 1e6
+  policy: 'MlpPolicy'
+  model_class: 'sac'
+  n_sampled_goal: 4
+  goal_selection_strategy: 'future'
+  buffer_size: 1000000
+  gamma: 0.95
+  learning_rate: !!float 1e-3
+  batch_size: 256
+
 parking-v0:
   n_timesteps: !!float 2e4
   policy: 'MlpPolicy'

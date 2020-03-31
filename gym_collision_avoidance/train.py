@@ -65,7 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('-tb', '--tensorboard-log', help='Tensorboard log dir', default='', type=str)
     parser.add_argument('-i', '--trained-agent', help='Path to a pretrained agent to continue training',
                         default='', type=str)
-    parser.add_argument('--algo', help='RL Algorithm', default='ppo2',
+    parser.add_argument('--algo', help='RL Algorithm', default='sac',
                         type=str, required=False, choices=list(ALGOS.keys()))
     parser.add_argument('-n', '--n-timesteps', help='Overwrite the number of timesteps', default=-1,
                         type=int)
@@ -235,8 +235,8 @@ if __name__ == '__main__':
     ###### gym-collision-avoidance parameters #######
 
     Config.TRAIN_SINGLE_AGENT = True
-    Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
-    Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = 1
+    Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 6
+    Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = 5
     Config.ANIMATE_EPISODES = False
     Config.SHOW_EPISODE_PLOTS = False
     Config.TRAIN_MODE = True
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     print(env.observation_space.sample())
     env = VecNormalize(env)
     print(env.observation_space.sample())
-    agents = tc.get_testcase_2agents_swap(0)
+    agents = tc.get_train_cases(0)
 
     one_env.set_agents(agents)
     one_env.test_case_index = 0

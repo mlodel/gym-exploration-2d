@@ -46,6 +46,12 @@ policy_dict = {
     'GA3C': GA3CCADRLPolicy
 }
 
+policy_train_dict = {
+    '0': RVOPolicy,
+    '2': NonCooperativePolicy,
+    '1': GA3CCADRLPolicy
+}
+
 def get_testcase_two_agents():
     goal_x = 3
     goal_y = 3
@@ -94,6 +100,57 @@ def get_testcase_random(num_agents=None, side_length=None, speed_bnds=None, radi
         agents_policy=agents_policy,
         agents_dynamics=agents_dynamics,
         agents_sensors=agents_sensors)
+    return agents
+
+def is_pose_valid(new_pose, position_list):
+    for pose in position_list:
+        if np.linalg.norm(new_pose - pose) < 1.0:
+            return False
+    return True
+
+def get_train_cases(step,n_other_agents=5, agents_policy=LearningPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):
+    pref_speed = 1.0
+    radius = 0.5
+    positions = []
+    goals = []
+    ini_pos = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+    positions.append(ini_pos)
+    goal = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+
+    n_agent_types = 1
+
+    if step > 500:
+        n_other_agents = 3
+
+    if step > 1000:
+        n_other_agents = 4
+
+    if step > 1500:
+        n_other_agents = 5
+
+    if step > 2000:
+        n_agent_types = 2
+    if step > 5000:
+        n_agent_types = 3
+    # Check if goal position does not match initial position
+    while np.linalg.norm(goal - ini_pos) < 1.0:
+        goal = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+    goals.append(goal)
+
+    agents = [Agent(goal[0],goal[1],ini_pos[0], ini_pos[1],radius, pref_speed, None, LearningPolicy, agents_dynamics,
+                  [OtherAgentsStatesSensor], 0)]
+    for agend_id in range(n_other_agents):
+        # Generate new random goal and initial position
+        ini_pos = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+        goal = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+        while not is_pose_valid(ini_pos,positions):
+            ini_pos = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+        while not is_pose_valid(goal,goals):
+            goal = np.array([np.random.uniform(-10, 10.0), np.random.uniform(-10, 10.0)])
+        agents.append(Agent(goal[0],goal[1],ini_pos[0], ini_pos[1], radius, pref_speed, None, policy_train_dict[str(np.random.randint(0,n_agent_types))], agents_dynamics,
+                    [OtherAgentsStatesSensor], 1+agend_id))
+        positions.append(ini_pos)
+        goals.append(goal)
     return agents
 
 def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=LearningPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):

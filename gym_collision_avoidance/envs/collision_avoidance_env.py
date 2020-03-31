@@ -221,7 +221,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.prev_episode_agents = copy.deepcopy(self.agents)
         if self.default_agents is None:
             # self.agents = tc.get_testcase_easy()
-            self.agents = tc.get_testcase_random()
+            self.agents = tc.get_train_cases(self.episode_number)
             # self.agents = tc.get_testcase_two_agents_laserscanners()
             # if self.episode_number == 0:
             #     self.agents = tc.get_testcase_random()
@@ -229,7 +229,7 @@ class CollisionAvoidanceEnv(gym.Env):
             #     # self.agents = tc.get_testcase_fixed_initial_conditions(self.agents)
             #     self.agents = tc.get_testcase_fixed_initial_conditions_for_non_ppo(self.agents)
         elif Config.TRAIN_MODE:
-            self.agents = tc.get_testcase_2agents_swap(0)
+            self.agents = tc.get_train_cases(self.episode_number)
         else:
             self.agents = self.default_agents
         for agent in self.agents:
