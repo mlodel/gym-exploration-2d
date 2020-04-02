@@ -56,7 +56,7 @@ def main():
                         type=int)
     parser.add_argument('--n-envs', help='number of environments', default=1,
                         type=int)
-    parser.add_argument('--exp-id', help='Experiment ID (default: -1, no exp folder, 0: latest)', default=1,
+    parser.add_argument('--exp-id', help='Experiment ID (default: -1, no exp folder, 0: latest)', default=0,
                         type=int)
     parser.add_argument('--verbose', help='Verbose mode (0: no output, 1: INFO)', default=1,
                         type=int)
@@ -112,8 +112,8 @@ def main():
 
     ####### Gym-collision-avodiance Environment
     Config.TRAIN_SINGLE_AGENT = True
-    Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
-    Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = 1
+    Config.MAX_NUM_AGENTS_IN_ENVIRONMENT = 6
+    Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = 5
     Config.ANIMATE_EPISODES = False
     Config.SHOW_EPISODE_PLOTS = False
     Config.SAVE_EPISODE_PLOTS = True
@@ -122,7 +122,8 @@ def main():
     print(env.observation_space.sample())
     env = VecNormalize(env)
     print(env.observation_space.sample())
-    agents = tc.get_testcase_2agents_swap(0)
+    #agents = tc.get_testcase_2agents_swap(0)
+    agents = tc.get_train_cases(60000)
 
     one_env.set_agents(agents)
     one_env.test_case_index = 0
@@ -207,7 +208,8 @@ def main():
         episode_stats = {**generic_episode_stats, **specific_episode_stats}
         done = False
         # Generate new random scenario
-        agents = tc.get_testcase_2agents_swap(0)
+        #agents = tc.get_testcase_2agents_swap(0)
+        agents = tc.get_train_cases(60000)
         one_env.set_agents(agents)
         one_env.test_case_index = ep_id
         model = ALGOS[algo].load(model_path, env=env)

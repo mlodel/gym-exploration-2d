@@ -119,18 +119,18 @@ def get_train_cases(step,n_other_agents=5, agents_policy=LearningPolicy, agents_
 
     n_agent_types = 1
 
-    if step > 500:
+    if step > 5000:
         n_other_agents = 3
 
-    if step > 1000:
+    if step > 10000:
         n_other_agents = 4
 
-    if step > 1500:
+    if step > 15000:
         n_other_agents = 5
 
-    if step > 2000:
+    if step > 20000:
         n_agent_types = 2
-    if step > 5000:
+    if step > 50000:
         n_agent_types = 3
     # Check if goal position does not match initial position
     while np.linalg.norm(goal - ini_pos) < 1.0:
@@ -213,7 +213,7 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
 
     agents = [Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, LearningPolicy, agents_dynamics,
                   [OtherAgentsStatesSensor], 0),
-              Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, agents_dynamics,
+              Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, GA3CCADRLPolicy, agents_dynamics,
                     [OtherAgentsStatesSensor], 1)
         ]
     return agents

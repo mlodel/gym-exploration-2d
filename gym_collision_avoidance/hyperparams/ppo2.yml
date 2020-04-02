@@ -1,6 +1,6 @@
 gym-collision-avoidance:
   n_envs: 16
-  n_timesteps: !!float 5e5
+  n_timesteps: !!float 5e6
   policy: 'MlpPolicy'
   n_steps: 1024
   nminibatches: 32

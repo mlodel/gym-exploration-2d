@@ -1,6 +1,6 @@
 # Tuned
 gym-collision-avoidance:
-  n_timesteps: !!float 1e6
+  n_timesteps: !!float 5e6
   policy: 'MlpPolicy'
   learning_rate: !!float 3e-4
   buffer_size: 50000
@@ -10,7 +10,7 @@ gym-collision-avoidance:
   gradient_steps: 1
   learning_starts: 0
   noise_type: 'ornstein-uhlenbeck'
-  noise_std: 0.5
+  noise_std: 1.0
 
 MountainCarContinuous-v0:
   n_timesteps: !!float 60000
