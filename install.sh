@@ -9,15 +9,15 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if $MAKE_VENV; then
     # Virtualenv w/ python3
-    export PYTHONPATH=/usr/bin/python3 # point to your python3
+    export PYTHONPATH=/usr/bin/python2 # point to your python3
     python3 -m pip install virtualenv
     cd $DIR
-    virtualenv -p python3 venv
+    virtualenv -p python2 venvpy2
 fi
 
 if $SOURCE_VENV; then
     cd $DIR
-    source venv/bin/activate
+    source venvpy2/bin/activate
     export PYTHONPATH=${DIR}/venv/bin/python/dist-packages
 fi
 
