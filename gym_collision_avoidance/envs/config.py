@@ -35,7 +35,7 @@ class Config:
     REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = np.inf
-    COLLISION_DIST = 0.0 # meters between agents' boundaries for collision
+    COLLISION_DIST = 0.4 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
