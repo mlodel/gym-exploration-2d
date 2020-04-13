@@ -7,8 +7,8 @@ class Config:
     continuous, discrete = range(2) # Initialize game types as enum
     ACTION_SPACE_TYPE   = continuous
 
-    ANIMATE_EPISODES    = False
-    SHOW_EPISODE_PLOTS = False
+    ANIMATE_EPISODES    = True
+    SHOW_EPISODE_PLOTS = True
     SAVE_EPISODE_PLOTS = False
     TRAIN_MODE           = False # Enable to see the trained agent in action (for testing)
     PLAY_MODE           = False # Enable to see the trained agent in action (for testing)
@@ -27,12 +27,12 @@ class Config:
     NUM_TEST_CASES = 50
     PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
     DT             = 0.2 # seconds between simulation time steps
-    REWARD_AT_GOAL = 1.0 # reward given when agent reaches goal position
-    REWARD_COLLISION_WITH_AGENT = -1.0 # reward given when agent collides with another agent
+    REWARD_AT_GOAL = 10.0 # reward given when agent reaches goal position
+    REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = np.inf
     COLLISION_DIST = 0.0 # meters between agents' boundaries for collision
@@ -42,7 +42,7 @@ class Config:
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
     NUM_PAST_ACTIONS_IN_STATE = 0
 
-    NEAR_GOAL_THRESHOLD = 0.2
+    NEAR_GOAL_THRESHOLD = 0.5
     MAX_TIME_RATIO = 8. # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
@@ -61,7 +61,7 @@ class Config:
     PLT_LIMITS = None
     PLT_FIG_SIZE = (10, 8)
 
-    STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states']
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
@@ -83,6 +83,14 @@ class Config:
             'std': np.array([1.0], dtype=np.float32),
             'mean': np.array([0.5], dtype=np.float32)
             },
+        'rel_goal': {
+            'dtype': np.float32,
+            'size': 2,
+            'bounds': [-np.inf, np.inf],
+            'attr': 'get_agent_data("rel_goal")',
+            'std': np.array([10.0], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+            },
         'heading_ego_frame': {
             'dtype': np.float32,
             'size': 1,
@@ -90,7 +98,7 @@ class Config:
             'attr': 'get_agent_data("heading_ego_frame")',
             'std': np.array([3.14], dtype=np.float32),
             'mean': np.array([0.], dtype=np.float32)
-            },
+        },
         'pref_speed': {
             'dtype': np.float32,
             'size': 1,

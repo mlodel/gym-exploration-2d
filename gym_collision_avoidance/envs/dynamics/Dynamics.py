@@ -24,3 +24,5 @@ class Dynamics(object):
         v_prll = cur_speed * np.cos(self.agent.heading_ego_frame)
         v_orthog = cur_speed * np.sin(self.agent.heading_ego_frame)
         self.agent.vel_ego_frame = np.array([v_prll, v_orthog])
+
+        self.agent.rel_goal = self.agent.goal_global_frame - self.agent.pos_global_frame

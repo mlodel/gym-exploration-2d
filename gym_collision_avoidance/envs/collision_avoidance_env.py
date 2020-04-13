@@ -296,6 +296,9 @@ class CollisionAvoidanceEnv(gym.Env):
                         if abs(agent.past_actions[0, 1]) > self.wiggly_behavior_threshold:
                             # Slightly penalize wiggly behavior
                             rewards[i] += self.reward_wiggly_behavior
+                        # if gets close to goal
+                        rewards[i] -= 0.1*agent.dist_to_goal#0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
+
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
         rewards = np.clip(rewards, self.min_possible_reward,

@@ -187,6 +187,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                              fill=True))
 
             # Display text of current timestamp every text_spacing (nom 1.5 sec)
+            """
             text_spacing = 1.5
             text_times = np.arange(0.0, t_final,text_spacing)
             _, text_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],text_times)
@@ -202,6 +203,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                 ax.text(agent.global_state_history[ind, 1]-0.15,
                         agent.global_state_history[ind, 2]+y_text_offset,
                         '%.1f' % agent.global_state_history[ind, 0], color=c)
+            """
             # Also display circle at agent position at end of trajectory
             ind = agent.step_num-1
             alpha = 1 - \

@@ -23,7 +23,8 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
-from gym_collision_avoidance.envs.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+#from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
@@ -212,9 +213,9 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
             goal_y_2 = np.random.normal(goal_y_1, 4.0)
 
 
-    agents = [Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, MPCPolicy, agents_dynamics,
+    agents = [Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, MPCPolicy, ExternalDynamics,
                   [OtherAgentsStatesSensor], 0),
-              Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, GA3CCADRLPolicy, agents_dynamics,
+              Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamics,
                     [OtherAgentsStatesSensor], 1)
         ]
     return agents

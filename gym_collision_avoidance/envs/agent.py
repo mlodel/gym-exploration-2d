@@ -14,6 +14,7 @@ class Agent(object):
         # Global Frame states
         self.pos_global_frame = np.array([start_x, start_y], dtype='float64')
         self.goal_global_frame = np.array([goal_x, goal_y], dtype='float64')
+        self.rel_goal = self.goal_global_frame - self.pos_global_frame
         self.vel_global_frame = np.array([0.0, 0.0], dtype='float64')
         self.speed_global_frame = 0.0
 
