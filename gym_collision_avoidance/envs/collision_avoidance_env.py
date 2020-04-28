@@ -141,7 +141,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take action
         self._take_action(actions, dt)
 
-        print(actions)
+        #print(actions)
 
         # Collect rewards
         rewards = self._compute_rewards()
