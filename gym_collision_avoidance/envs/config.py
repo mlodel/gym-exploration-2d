@@ -27,14 +27,14 @@ class Config:
     NUM_TEST_CASES = 50
     PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
     DT             = 0.2 # seconds between simulation time steps
-    REWARD_AT_GOAL = 1.0 # reward given when agent reaches goal position
+    REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = -0.0 # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
-    WIGGLY_BEHAVIOR_THRESHOLD = np.inf
+    WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     COLLISION_DIST = 0.4 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
 
@@ -42,7 +42,7 @@ class Config:
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
     NUM_PAST_ACTIONS_IN_STATE = 0
 
-    NEAR_GOAL_THRESHOLD = 0.5
+    NEAR_GOAL_THRESHOLD = 0.2
     MAX_TIME_RATIO = 8. # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
@@ -57,7 +57,7 @@ class Config:
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
     PLOT_CIRCLES_ALONG_TRAJ = True
-    ANIMATION_PERIOD_STEPS = 5 # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 2 # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = None
     PLT_FIG_SIZE = (10, 8)
 
@@ -117,11 +117,11 @@ class Config:
             },
         'other_agent_states': {
             'dtype': np.float32,
-            'size': 7,
+            'size': 9,
             'bounds': [-np.inf, np.inf],
             'attr': 'get_agent_data("other_agent_states")',
-            'std': np.array([5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0], dtype=np.float32),
-            'mean': np.array([0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0], dtype=np.float32)
+            'std': np.array([5.0, 5.0,5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0], dtype=np.float32),
+            'mean': np.array([0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0], dtype=np.float32)
             },
         'other_agents_states': {
             'dtype': np.float32,

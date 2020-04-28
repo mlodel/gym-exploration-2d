@@ -155,97 +155,103 @@ def plot_episode(agents, in_evaluate_mode,
 
 def draw_agents(agents, circles_along_traj, ax, last_index=-1):
 
-    max_time = max([agent.global_state_history[agent.global_state_history.shape[0]+last_index, 0] for agent in agents] + [1e-4])
+    max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
-    for i, agent in enumerate(agents):
+    if max_time > 1e-4:
+        for i, agent in enumerate(agents):
 
-        # Plot line through agent trajectory
-        color_ind = i % len(plt_colors)
-        plt_color = plt_colors[color_ind]
-        t_final = agent.global_state_history[agent.step_num-1, 0]
-        if circles_along_traj:
-            plt.plot(agent.global_state_history[:agent.step_num-1, 1],
-                     agent.global_state_history[:agent.step_num-1, 2],
-                     color=plt_color, ls='-', linewidth=2)
-            plt.plot(agent.global_state_history[0, 3],
-                     agent.global_state_history[0, 4],
-                     color=plt_color, marker='*', markersize=20)
+            # Plot line through agent trajectory
+            color_ind = i % len(plt_colors)
+            plt_color = plt_colors[color_ind]
+            t_final = agent.global_state_history[agent.step_num-1, 0]
+            if circles_along_traj:
+                plt.plot(agent.global_state_history[:agent.step_num-1, 1],
+                         agent.global_state_history[:agent.step_num-1, 2],
+                         color=plt_color, ls='-', linewidth=2)
+                # Plot goal position
+                plt.plot(agent.global_state_history[0, 3],
+                         agent.global_state_history[0, 4],
+                         color=plt_color, marker='*', markersize=20)
+                if i == 0:
+                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num, -1],
+                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num, -2],
+                             color=plt_colors[4], marker='*', markersize=20)
 
-            # Display circle at agent pos every circle_spacing (nom 1.5 sec)
-            circle_spacing = 0.4
-            circle_times = np.arange(0.0, t_final,
-                                     circle_spacing)
-            _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],
-                                          circle_times)
-            for ind in circle_inds[1:]:
-                alpha = 1 - \
-                        agent.global_state_history[ind, 0] / \
+                # Display circle at agent pos every circle_spacing (nom 1.5 sec)
+                circle_spacing = 0.4
+                circle_times = np.arange(0.0, t_final,
+                                         circle_spacing)
+                _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],
+                                              circle_times)
+                for ind in circle_inds[0:]:
+                    alpha = 1 - \
+                            agent.global_state_history[ind, 0] / \
+                            (max_time_alpha_scalar*max_time)
+                    c = rgba2rgb(plt_color+[float(alpha)])
+                    ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
+                                 radius=agent.radius, fc=c, ec=plt_color,
+                                 fill=True))
+
+                # Display text of current timestamp every text_spacing (nom 1.5 sec)
+                """
+                text_spacing = 1.5
+                text_times = np.arange(0.0, t_final,text_spacing)
+                _, text_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],text_times)
+                for ind in text_inds[1:]:
+                    y_text_offset = 0.1
+                    alpha = agent.global_state_history[ind, 0] / \
                         (max_time_alpha_scalar*max_time)
+                    if alpha < 0.5:
+                        alpha = 0.3
+                    else:
+                        alpha = 0.9
+                    c = rgba2rgb(plt_color+[float(alpha)])
+                    ax.text(agent.global_state_history[ind, 1]-0.15,
+                            agent.global_state_history[ind, 2]+y_text_offset,
+                            '%.1f' % agent.global_state_history[ind, 0], color=c)
+                """
+                # Also display circle at agent position at end of trajectory
+                ind = agent.step_num-1
+                alpha = 1 - \
+                    agent.global_state_history[ind, 0] / \
+                    (max_time_alpha_scalar*max_time)
                 c = rgba2rgb(plt_color+[float(alpha)])
                 ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
-                             radius=agent.radius, fc=c, ec=plt_color,
-                             fill=True))
-
-            # Display text of current timestamp every text_spacing (nom 1.5 sec)
-            """
-            text_spacing = 1.5
-            text_times = np.arange(0.0, t_final,text_spacing)
-            _, text_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],text_times)
-            for ind in text_inds[1:]:
+                             radius=agent.radius, fc=c, ec=plt_color))
                 y_text_offset = 0.1
-                alpha = agent.global_state_history[ind, 0] / \
-                    (max_time_alpha_scalar*max_time)
-                if alpha < 0.5:
-                    alpha = 0.3
-                else:
-                    alpha = 0.9
+                ax.text(agent.global_state_history[ind, 1] - 0.15,
+                        agent.global_state_history[ind, 2] + y_text_offset,
+                        '%.1f' % agent.global_state_history[ind, 0],
+                        color=plt_color)
+
+                # if hasattr(agent.policy, 'deltaPos'):
+                #     arrow_start = agent.global_state_history[ind, 1:3]
+                #     arrow_end = agent.global_state_history[ind, 1:3] + (1.0/0.1)*agent.policy.deltaPos
+                #     style="Simple,head_width=10,head_length=20"
+                #     ax.add_patch(ptch.FancyArrowPatch(arrow_start, arrow_end, arrowstyle=style, color='black'))
+
+            else:
+                colors = np.zeros((agent.global_state_history.shape[0], 4))
+                colors[:,:3] = plt_color
+                colors[:, 3] = np.linspace(0.2, 1., agent.global_state_history.shape[0])
+                colors = rgba2rgb(colors)
+
+                plt.scatter(agent.global_state_history[:agent.global_state_history.shape[0], 1],
+                         agent.global_state_history[:agent.global_state_history.shape[0], 2],
+                         color=colors)
+
+                # Also display circle at agent position at end of trajectory
+                ind = agent.global_state_history.shape[0] + last_index
+                alpha = 0.7
                 c = rgba2rgb(plt_color+[float(alpha)])
-                ax.text(agent.global_state_history[ind, 1]-0.15,
-                        agent.global_state_history[ind, 2]+y_text_offset,
-                        '%.1f' % agent.global_state_history[ind, 0], color=c)
-            """
-            # Also display circle at agent position at end of trajectory
-            ind = agent.step_num-1
-            alpha = 1 - \
-                agent.global_state_history[ind, 0] / \
-                (max_time_alpha_scalar*max_time)
-            c = rgba2rgb(plt_color+[float(alpha)])
-            ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
-                         radius=agent.radius, fc=c, ec=plt_color))
-            y_text_offset = 0.1
-            ax.text(agent.global_state_history[ind, 1] - 0.15,
-                    agent.global_state_history[ind, 2] + y_text_offset,
-                    '%.1f' % agent.global_state_history[ind, 0],
-                    color=plt_color)
-
-            # if hasattr(agent.policy, 'deltaPos'):
-            #     arrow_start = agent.global_state_history[ind, 1:3]
-            #     arrow_end = agent.global_state_history[ind, 1:3] + (1.0/0.1)*agent.policy.deltaPos
-            #     style="Simple,head_width=10,head_length=20"
-            #     ax.add_patch(ptch.FancyArrowPatch(arrow_start, arrow_end, arrowstyle=style, color='black'))
-
-        else:
-            colors = np.zeros((agent.global_state_history.shape[0], 4))
-            colors[:,:3] = plt_color
-            colors[:, 3] = np.linspace(0.2, 1., agent.global_state_history.shape[0])
-            colors = rgba2rgb(colors)
-
-            plt.scatter(agent.global_state_history[:agent.global_state_history.shape[0], 1],
-                     agent.global_state_history[:agent.global_state_history.shape[0], 2],
-                     color=colors)
-
-            # Also display circle at agent position at end of trajectory
-            ind = agent.global_state_history.shape[0] + last_index
-            alpha = 0.7
-            c = rgba2rgb(plt_color+[float(alpha)])
-            ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
-                         radius=agent.radius, fc=c, ec=plt_color))
-            # y_text_offset = 0.1
-            # ax.text(agent.global_state_history[ind, 1] - 0.15,
-            #         agent.global_state_history[ind, 2] + y_text_offset,
-            #         '%.1f' % agent.global_state_history[ind, 0],
-            #         color=plt_color)
-    return max_time
+                ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
+                             radius=agent.radius, fc=c, ec=plt_color))
+                # y_text_offset = 0.1
+                # ax.text(agent.global_state_history[ind, 1] - 0.15,
+                #         agent.global_state_history[ind, 2] + y_text_offset,
+                #         '%.1f' % agent.global_state_history[ind, 0],
+                #         color=plt_color)
+        return max_time
 
 def plot_perturbed_observation(agents, ax, perturbed_info):
     # This is hard-coded for 2 agent scenarios

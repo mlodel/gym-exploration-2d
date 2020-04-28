@@ -65,9 +65,9 @@ class Agent(object):
         self.min_y = -20.0
         self.max_y = 20.0
 
-        self.num_states_in_history = 10000000
-        self.global_state_dim = 11
-        self.global_state_history = np.empty((self.num_states_in_history, self.global_state_dim))
+        self.num_states_in_history = 10000
+        self.global_state_dim = 13
+        self.global_state_history = np.zeros((self.num_states_in_history, self.global_state_dim))
         self.ego_state_dim = 3
         self.ego_state_history = np.empty((self.num_states_in_history, self.ego_state_dim))
 
@@ -75,7 +75,7 @@ class Agent(object):
         self.past_global_velocities = np.zeros((self.num_actions_to_store,2))
         self.past_global_velocities = self.vel_global_frame * np.ones((self.num_actions_to_store,2))
 
-        self.other_agent_states = np.zeros((7,))
+        self.other_agent_states = np.zeros((9,))
 
         self.dynamics_model.update_ego_frame()
         # self._update_state_history()
@@ -92,6 +92,8 @@ class Agent(object):
         # self.latest_laserscan.ranges = 10*np.ones(Config.LASERSCAN_LENGTH)
 
         self.is_done = False
+
+        self._update_state_history()
 
     def __deepcopy__(self, memo):
         # Copy every attribute about the agent except its policy
@@ -133,6 +135,7 @@ class Agent(object):
             if self.is_at_goal:
                 self.was_at_goal_already = True
                 self._update_state_history()
+                self.t += dt
                 self.step_num += 1
             if self.in_collision:
                 self.was_in_collision_already = True
@@ -205,7 +208,9 @@ class Agent(object):
                                  self.vel_global_frame[0],
                                  self.vel_global_frame[1],
                                  self.speed_global_frame,
-                                 self.heading_global_frame])
+                                 self.heading_global_frame,
+                                 self.past_actions[0, 0],
+                                 self.past_actions[0, 1]])
         ego_state = np.array([self.t, self.dist_to_goal, self.heading_ego_frame])
         return global_state, ego_state
 

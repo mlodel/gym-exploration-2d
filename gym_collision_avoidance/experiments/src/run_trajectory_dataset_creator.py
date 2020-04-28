@@ -6,97 +6,85 @@ from tqdm import tqdm
 from gym_collision_avoidance.envs.config import Config
 import gym_collision_avoidance.envs.test_cases as tc
 from gym_collision_avoidance.experiments.src.env_utils import run_episode, create_env
-
+from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.CADRLPolicy import CADRLPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 
-np.random.seed(0)
+np.random.seed(1)
 
 Config.EVALUATE_MODE = True
 Config.SAVE_EPISODE_PLOTS = True
 Config.SHOW_EPISODE_PLOTS = False
+Config.ANIMATE_EPISODES = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'trajectory_swap_dataset'
+results_subdir = 'test_dataset'
 
 test_case_fn = tc.get_testcase_2agents_swap
 #test_case_fn = tc.get_testcase_random
 policies = {
-            #'RVO': {
-            #    'policy': RVOPolicy,
-            #    },
-            'GA3C-CADRL-10': {
-                 'policy': GA3CCADRLPolicy,
-                 'checkpt_dir': 'IROS18',
-                 'checkpt_name': 'network_01900000'
-                 },
+            'RVO': {
+                'policy': RVOPolicy,
+                },
+            'NonCooperative': {
+                'policy': NonCooperativePolicy
+            }
+            #'GA3C-CADRL-10': {
+            #     'policy': GA3CCADRLPolicy,
+            #     'checkpt_dir': 'IROS18',
+            #     'checkpt_name': 'network_01900000'
+            #     },
             }
 
 num_agents_to_test = [2]
-num_test_cases = 2000
+num_test_cases = 40
 test_case_args = {}
 Config.PLOT_CIRCLES_ALONG_TRAJ = True
 Config.NUM_TEST_CASES = num_test_cases
+Config.EVALUATE_MODE =  True
+Config.TRAIN_SINGLE_AGENT = False
 
-def add_traj(agents, trajs, dt, traj_i, max_ts):
+
+def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
     agent_i = 0
     other_agent_i = (agent_i + 1) % 2
-    agent = agents[agent_i]
-    other_agent = agents[other_agent_i]
+    #agent = agents[agent_i]
+    #other_agent = agents[other_agent_i]
     #max_t = int(max_ts[agent_i])
     future_plan_horizon_secs = 3.0
     future_plan_horizon_steps = int(future_plan_horizon_secs / dt)
+    for i, agent in enumerate(agents):
+        for t in range(max_ts):
+            robot_linear_speed = agent.global_state_history[t, 9]
+            robot_angular_speed = agent.global_state_history[t, 10] / dt
 
-    for t in range(max_ts):
-        robot_linear_speed = agent.global_state_history[t, 9]
-        robot_angular_speed = agent.global_state_history[t, 10] / dt
+            t_horizon = min(max_ts, t+future_plan_horizon_steps)
+            future_linear_speeds = agent.global_state_history[t:t_horizon, 9]
+            future_angular_speeds = agent.global_state_history[t:t_horizon, 10] / dt
+            predicted_cmd = np.dstack([future_linear_speeds, future_angular_speeds])
 
-        t_horizon = min(max_ts, t+future_plan_horizon_steps)
-        future_linear_speeds = agent.global_state_history[t:t_horizon, 9]
-        future_angular_speeds = agent.global_state_history[t:t_horizon, 10] / dt
-        predicted_cmd = np.dstack([future_linear_speeds, future_angular_speeds])
+            future_positions = agent.global_state_history[t:t_horizon, 1:3]
 
-        future_positions = agent.global_state_history[t:t_horizon, 1:3]
-
-        d = {
-            'control_command': np.array([
-                robot_linear_speed,
-                robot_angular_speed
-                ]),
-            'predicted_cmd': predicted_cmd,
-            'future_positions': future_positions,
-            'pedestrian_state': {
-                'position': np.array([
-                    other_agent.global_state_history[t, 1],
-                    other_agent.global_state_history[t, 2],
-                    ]),
-                'velocity': np.array([
-                    other_agent.global_state_history[t, 7],
-                    other_agent.global_state_history[t, 8],
-                    ])
-            },
-            'robot_state': np.array([
-                agent.global_state_history[t, 1],
-                agent.global_state_history[t, 2],
-                agent.global_state_history[t, 10],
-                ]),
-            'robot_velocity': np.array([
-                agent.global_state_history[t, 7],
-                agent.global_state_history[t, 8],
-            ]),
-            'goal_position': np.array([
-                agent.goal_global_frame[0],
-                agent.goal_global_frame[1],
-                ]),
-            'pedestrian_goal_position': np.array([
-                other_agent.goal_global_frame[0],
-                other_agent.goal_global_frame[1],
-            ])
-        }
-        trajs[traj_i].append(d)
-
+            d = {'time': np.round(agent.global_state_history[t, 0]+last_time,decimals=1),
+                'pedestrian_state': {
+                    'position': np.array([
+                        agent.global_state_history[t, 1],
+                        agent.global_state_history[t, 2],
+                        ]),
+                    'velocity': np.array([
+                        agent.global_state_history[t, 7],
+                        agent.global_state_history[t, 8],
+                        ])
+                },
+                'pedestrian_goal_position': np.array([
+                    agent.goal_global_frame[0],
+                    agent.goal_global_frame[1],
+                ])
+            }
+            trajs[traj_i+i].append(d)
+    last_time += np.round(agent.global_state_history[-1, 0],decimals=1) +1
 #     global_state = np.array([self.t,
 #                                  self.pos_global_frame[0],
 #                                  self.pos_global_frame[1],
@@ -109,15 +97,15 @@ def add_traj(agents, trajs, dt, traj_i, max_ts):
 #                                  self.speed_global_frame,
 #                                  self.heading_global_frame])
 
-    return trajs
+    return trajs, last_time
 
 
 def main():
     env, one_env = create_env()
     dt = one_env.dt_nominal
     file_dir_template = os.path.dirname(os.path.realpath(__file__)) + '/../results/{results_subdir}/{num_agents}_agents'
-
-    trajs = [[] for _ in range(num_test_cases)]
+    last_time = 0.0
+    trajs = [[] for _ in range(num_test_cases*num_agents_to_test[0]*len(policies))]
 
     for num_agents in num_agents_to_test:
 
@@ -132,7 +120,7 @@ def main():
         for test_case in tqdm(range(num_test_cases)):
             test_case_args['test_case_index'] = test_case % 10
             # test_case_args['num_test_cases'] = num_test_cases
-            for policy in policies:
+            for j,policy in enumerate(policies):
                 one_env.plot_policy_name = policy
                 policy_class = policies[policy]['policy']
                 test_case_args['agents_policy'] = policy_class
@@ -153,7 +141,7 @@ def main():
                 if not collision:
                     for agent in agents:
                         agent.global_state_history = agent.global_state_history[:agent.step_num]
-                    trajs = add_traj(agents, trajs, dt, test_case, agent.step_num)
+                    trajs,last_time = add_traj(agents, trajs, dt, test_case*num_agents_to_test[0]*len(policies)+j*num_agents_to_test[0], agent.step_num,last_time)
 
         # print(trajs)
                 

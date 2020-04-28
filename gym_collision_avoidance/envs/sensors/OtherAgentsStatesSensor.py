@@ -33,7 +33,7 @@ class OtherAgentsStatesSensor(Sensor):
             sorted_inds[-Config.MAX_NUM_OTHER_AGENTS_OBSERVED:]
         clipped_sorted_agents = [agents[i] for i in clipped_sorted_inds]
 
-        other_agents_states = np.zeros((Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 7))
+        other_agents_states = np.zeros((Config.MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 9))
         other_agent_count = 0
         for other_agent in clipped_sorted_agents:
             if other_agent.id == host_agent.id:
@@ -53,7 +53,9 @@ class OtherAgentsStatesSensor(Sensor):
                 host_agent.radius - other_agent.radius
             combined_radius = host_agent.radius + other_agent.radius
 
-            other_obs = np.array([p_parallel_ego_frame,
+            other_obs = np.array([rel_pos_to_other_global_frame[0],
+                                  rel_pos_to_other_global_frame[1],
+                                  p_parallel_ego_frame,
                                   p_orthog_ego_frame,
                                   v_parallel_ego_frame,
                                   v_orthog_ego_frame,

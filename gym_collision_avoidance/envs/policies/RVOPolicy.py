@@ -68,7 +68,7 @@ class RVOPolicy(Policy):
 
             # Set agent positions and velocities in RVO simulator
             self.sim.setAgentMaxSpeed(self.rvo_agents[a], agents[a].pref_speed)
-            self.sim.setAgentRadius(self.rvo_agents[a], (1+5e-2)*agents[a].radius)
+            self.sim.setAgentRadius(self.rvo_agents[a], (1+5e-2)*agents[a].radius+0.15)
             self.sim.setAgentPosition(self.rvo_agents[a], tuple(self.pos_agents[a,:]))
             self.sim.setAgentVelocity(self.rvo_agents[a], tuple(self.vel_agents[a,:]))
             self.sim.setAgentPrefVelocity(self.rvo_agents[a], tuple(self.pref_vel_agents[a,:]))

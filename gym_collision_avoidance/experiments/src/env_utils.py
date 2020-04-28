@@ -4,11 +4,10 @@ from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.wrappers import FlattenDictWrapper, MultiagentFlattenDictWrapper, MultiagentDummyVecEnv
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 
-def create_env():
+def create_env(n_envs=1,eval_env=True):
     import tensorflow as tf
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     tf.Session().__enter__()
-    num_envs = 1
     ncpu = 1
     
     def make_env():
@@ -27,9 +26,9 @@ def create_env():
     
     # To be prepared for training on multiple instances of the env at once
     if Config.TRAIN_SINGLE_AGENT:
-        env = DummyVecEnv([make_env for _ in range(num_envs)])
+        env = DummyVecEnv([make_env for _ in range(n_envs)])
     else:
-        env = MultiagentDummyVecEnv([make_env for _ in range(num_envs)])
+        env = MultiagentDummyVecEnv([make_env for _ in range(n_envs)])
     unwrapped_envs = [e.unwrapped for e in env.envs]
     
     # Set env id for each env
