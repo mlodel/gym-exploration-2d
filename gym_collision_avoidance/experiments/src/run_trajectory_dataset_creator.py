@@ -20,9 +20,10 @@ Config.ANIMATE_EPISODES = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'non_cooperative_dataset'
+results_subdir = 'test_dataset'
 
 test_case_fn = tc.get_traincase_2agents_swap
+test_case_fn = tc.get_testcase_2agents_swap
 #test_case_fn = tc.get_testcase_random
 policies = {
             'RVO': {
@@ -39,7 +40,7 @@ policies = {
             }
 
 num_agents_to_test = [2]
-num_test_cases = 1000
+num_test_cases = 20
 test_case_args = {}
 Config.PLOT_CIRCLES_ALONG_TRAJ = True
 Config.NUM_TEST_CASES = num_test_cases

@@ -254,18 +254,18 @@ def get_traincase_2agents_swap(test_case_index, num_test_cases=10, agents_policy
 def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
-    # Swap x-axis
+    # Move alone
     if test_case_index == 0:
         x0_agent_1 = -10.0
         y0_agent_1 = 0
         goal_x_1 = 10
         goal_y_1 = 0
-        x0_agent_2 = 5.1
-        y0_agent_2 = 5.1
-        goal_x_2 = 5
-        goal_y_2 = 5
+        x0_agent_2 = 20.0
+        y0_agent_2 = 20.0
+        goal_x_2 = 20.5
+        goal_y_2 = 20.5
         pref_speed2 = pref_speed
-    # Swap y-axis
+    # Move behind
     elif test_case_index == 1:
         x0_agent_1 = -10.0
         y0_agent_1 = 0.0
@@ -276,7 +276,7 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
         goal_x_2 = 12.0
         goal_y_2 = 0
         pref_speed2 = pref_speed
-    # Move behind
+    # Agent Stopped in the Middle
     elif test_case_index == 2:
         x0_agent_1 = -10.0
         y0_agent_1 = 0.0
@@ -287,6 +287,7 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
         goal_x_2 = 0.0
         goal_y_2 = 0.0
         pref_speed2 = pref_speed
+    # swap
     else:
         x0_agent_1 = -10.0
         y0_agent_1 = 0.0

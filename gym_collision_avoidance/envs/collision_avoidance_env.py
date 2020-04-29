@@ -61,10 +61,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Upper/Lower bounds on Actions
         # todo: this was changed
-        self.max_heading_change = 3.0
-        self.min_heading_change = -3.0
-        self.min_speed = -3.0
-        self.max_speed = 3.0
+        self.max_heading_change = 1.0
+        self.min_heading_change = -1.0
+        self.min_speed = -1.0
+        self.max_speed = 1.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -302,8 +302,8 @@ class CollisionAvoidanceEnv(gym.Env):
                             rewards[i] += self.reward_wiggly_behavior
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
-            # if gets close to goal
-            rewards[i] -= 0.1 * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame)  # 0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
+                # if gets close to goal
+                rewards[i] -= 0.1 * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame)  # 0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
@@ -329,11 +329,14 @@ class CollisionAvoidanceEnv(gym.Env):
         collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent = \
             self.check_action_for_collisions(action,ego_agent,other_agents)
 
-        if ego_agent.is_at_goal:
+        is_in_goal_direction = (ego_agent.pos_global_frame[0] + action[0] - ego_agent.goal_global_frame[0]) ** 2 + (
+                    ego_agent.pos_global_frame[1] + action[1] - ego_agent.goal_global_frame[1]) ** 2 <= ego_agent.near_goal_threshold ** 2
+
+        if is_in_goal_direction:
             if ego_agent.was_at_goal_already is False:
                 # agents should only receive the goal reward once
                 rewards = self.reward_at_goal  # - np.linalg.norm(agent.past_actions[0,:])
-                print("Agent %i: Arrived at goal!" % ego_agent.id)
+                print("Agent %i: Is going to the goal!" % ego_agent.id)
         else:
             for i, agent in enumerate(other_agents):
                 # collision with other agent
@@ -341,7 +344,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     if collision_with_agent[i]:
                         rewards = self.reward_collision_with_agent
                         agent.in_collision = True
-                        print("Agent %i: Collision with another agent!"
+                        print("\32 Agent %i: Collision with another agent!"
                                % agent.id)
                     #collision with a static obstacle
                     elif collision_with_wall[i]:
