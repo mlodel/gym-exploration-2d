@@ -14,24 +14,30 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 np.random.seed(1)
 
 Config.EVALUATE_MODE = True
-Config.SAVE_EPISODE_PLOTS = True
+Config.SAVE_EPISODE_PLOTS = False
 Config.SHOW_EPISODE_PLOTS = False
+Config.ANIMATE_EPISODES = False
+Config.PLOT_CIRCLES_ALONG_TRAJ = False
+
+Config.EVALUATE_MODE =  True
+Config.TRAIN_SINGLE_AGENT = False
 Config.ANIMATE_EPISODES = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'test_dataset'
+results_subdir = 'swap_dataset'
 
 test_case_fn = tc.get_traincase_2agents_swap
-test_case_fn = tc.get_testcase_2agents_swap
+test_case_fn = tc.agents_swap
+#test_case_fn = tc.get_testcase_2agents_swap
 #test_case_fn = tc.get_testcase_random
 policies = {
             'RVO': {
                 'policy': RVOPolicy,
                 },
-            'NonCooperative': {
-                'policy': NonCooperativePolicy
-            }
+            #'NonCooperative': {
+            #    'policy': NonCooperativePolicy
+            #}
             #'GA3C-CADRL-10': {
             #     'policy': GA3CCADRLPolicy,
             #     'checkpt_dir': 'IROS18',
@@ -39,14 +45,10 @@ policies = {
             #     },
             }
 
-num_agents_to_test = [2]
-num_test_cases = 20
+num_agents_to_test = [4]
+num_test_cases = 1000
 test_case_args = {}
-Config.PLOT_CIRCLES_ALONG_TRAJ = True
 Config.NUM_TEST_CASES = num_test_cases
-Config.EVALUATE_MODE =  True
-Config.TRAIN_SINGLE_AGENT = False
-
 
 def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
     agent_i = 0
@@ -56,11 +58,10 @@ def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
     #max_t = int(max_ts[agent_i])
     future_plan_horizon_secs = 3.0
     future_plan_horizon_steps = int(future_plan_horizon_secs / dt)
-    for i, agent in enumerate(agents):
-        for t in range(max_ts):
-            robot_linear_speed = agent.global_state_history[t, 9]
-            robot_angular_speed = agent.global_state_history[t, 10] / dt
 
+    for i, agent in enumerate(agents):
+        max_ts = agent.global_state_history.shape[0]
+        for t in range(max_ts):
             t_horizon = min(max_ts, t+future_plan_horizon_steps)
             future_linear_speeds = agent.global_state_history[t:t_horizon, 9]
             future_angular_speeds = agent.global_state_history[t:t_horizon, 10] / dt
@@ -86,19 +87,10 @@ def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
             }
             trajs[traj_i+i].append(d)
     last_time += np.round(agent.global_state_history[-1, 0],decimals=1) +1
-#     global_state = np.array([self.t,
-#                                  self.pos_global_frame[0],
-#                                  self.pos_global_frame[1],
-#                                  self.goal_global_frame[0],
-#                                  self.goal_global_frame[1],
-#                                  self.radius,
-#                                  self.pref_speed,
-#                                  self.vel_global_frame[0],
-#                                  self.vel_global_frame[1],
-#                                  self.speed_global_frame,
-#                                  self.heading_global_frame])
 
-    return trajs, last_time
+    traj_i += len(agents)
+
+    return traj_i, last_time
 
 
 def main():
@@ -107,7 +99,7 @@ def main():
     file_dir_template = os.path.dirname(os.path.realpath(__file__)) + '/../results/{results_subdir}/{num_agents}_agents'
     last_time = 0.0
     trajs = [[] for _ in range(num_test_cases*num_agents_to_test[0]*len(policies))]
-
+    traj_id = 0
     for num_agents in num_agents_to_test:
 
         file_dir = file_dir_template.format(num_agents=num_agents, results_subdir=results_subdir)
@@ -119,7 +111,7 @@ def main():
         # What is this?
         #test_case_args['side_length'] = 7
         for test_case in tqdm(range(num_test_cases)):
-            test_case_args['test_case_index'] = test_case % 10
+            test_case_args['test_case_index'] = np.random.randint(0,7) # there are 3 different cases for this scenario
             # test_case_args['num_test_cases'] = num_test_cases
             for j,policy in enumerate(policies):
                 one_env.plot_policy_name = policy
@@ -142,7 +134,7 @@ def main():
                 if not collision:
                     for agent in agents:
                         agent.global_state_history = agent.global_state_history[:agent.step_num]
-                    trajs,last_time = add_traj(agents, trajs, dt, test_case*num_agents_to_test[0]*len(policies)+j*num_agents_to_test[0], agent.step_num,last_time)
+                    traj_id , last_time = add_traj(agents, trajs, dt, traj_id, agent.step_num,last_time)
 
         # print(trajs)
                 
