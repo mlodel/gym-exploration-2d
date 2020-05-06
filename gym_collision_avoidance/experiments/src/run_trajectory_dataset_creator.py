@@ -14,10 +14,10 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 np.random.seed(1)
 
 Config.EVALUATE_MODE = True
-Config.SAVE_EPISODE_PLOTS = False
+Config.SAVE_EPISODE_PLOTS = True
 Config.SHOW_EPISODE_PLOTS = False
 Config.ANIMATE_EPISODES = False
-Config.PLOT_CIRCLES_ALONG_TRAJ = False
+Config.PLOT_CIRCLES_ALONG_TRAJ = True
 
 Config.EVALUATE_MODE =  True
 Config.TRAIN_SINGLE_AGENT = False
@@ -25,19 +25,20 @@ Config.ANIMATE_EPISODES = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'swap_dataset'
+results_subdir = 'mix_dataset'
 
+#test_case_fn = tc.get_traincase_2agents_swap
+#test_case_fn = tc.agents_swap
+#test_case_fn = tc.random_agents_swap
 test_case_fn = tc.get_traincase_2agents_swap
-test_case_fn = tc.agents_swap
-#test_case_fn = tc.get_testcase_2agents_swap
 #test_case_fn = tc.get_testcase_random
 policies = {
             'RVO': {
                 'policy': RVOPolicy,
                 },
-            #'NonCooperative': {
-            #    'policy': NonCooperativePolicy
-            #}
+            'NonCooperative': {
+                'policy': NonCooperativePolicy
+            }
             #'GA3C-CADRL-10': {
             #     'policy': GA3CCADRLPolicy,
             #     'checkpt_dir': 'IROS18',
@@ -45,8 +46,8 @@ policies = {
             #     },
             }
 
-num_agents_to_test = [4]
-num_test_cases = 1000
+num_agents_to_test = [2]
+num_test_cases = 2000
 test_case_args = {}
 Config.NUM_TEST_CASES = num_test_cases
 
@@ -111,7 +112,7 @@ def main():
         # What is this?
         #test_case_args['side_length'] = 7
         for test_case in tqdm(range(num_test_cases)):
-            test_case_args['test_case_index'] = np.random.randint(0,7) # there are 3 different cases for this scenario
+            test_case_args['test_case_index'] = np.random.randint(0,10) # there are 3 different cases for this scenario
             # test_case_args['num_test_cases'] = num_test_cases
             for j,policy in enumerate(policies):
                 one_env.plot_policy_name = policy

@@ -185,7 +185,7 @@ def get_train_cases(test_case_index, agents_policy=MPCPolicy, agents_dynamics=Un
 def get_traincase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
-    # Random motion in space
+    # swap random point in space
     if test_case_index == 0:
         x0_agent_1 = np.random.uniform(-7, 7.0)
         y0_agent_1 = np.random.uniform(-7, 7.0)
@@ -211,24 +211,24 @@ def get_traincase_2agents_swap(test_case_index, num_test_cases=10, agents_policy
         # Swap y-axis
     # Swap x-axis
     elif test_case_index == 2:
-        x0_agent_1 = np.random.normal(-7, 1.0)
-        y0_agent_1 = np.random.normal(0, 1.0)
-        goal_x_1 = np.random.normal(7.0,1.0)
-        goal_y_1 = np.random.normal(0.0,1.0)
-        x0_agent_2 = np.random.normal(7.0, 1.0)
-        y0_agent_2 = np.random.normal(0, 1.0)
-        goal_x_2 = np.random.normal(-7.0, 1.0)
-        goal_y_2 = np.random.normal(0.0, 1.0)
+        x0_agent_1 = np.random.normal(-4, 1.0)
+        y0_agent_1 = np.random.normal(0, 0.2)
+        goal_x_1 = np.random.normal(4.0,1.0)
+        goal_y_1 = np.random.normal(0.0,0.2)
+        x0_agent_2 = np.random.normal(4.0, 1.0)
+        y0_agent_2 = np.random.normal(0, 0.2)
+        goal_x_2 = np.random.normal(-4.0, 1.0)
+        goal_y_2 = np.random.normal(0.0, 0.2)
         # Swap y-axis
     elif test_case_index == 3:
-        x0_agent_1 = np.random.normal(0, 1.0)
-        y0_agent_1 = np.random.normal(-7, 1.0)
-        goal_x_1 = np.random.normal(0, 1.0)
-        goal_y_1 = np.random.normal(7.0, 1.0)
-        x0_agent_2 = np.random.normal(0, 1.0)
-        y0_agent_2 = np.random.normal(7, 1.0)
-        goal_x_2 = np.random.normal(0, 1.0)
-        goal_y_2 = np.random.normal(-7.0, 1.0)
+        x0_agent_1 = np.random.normal(0, 0.2)
+        y0_agent_1 = np.random.normal(-4, 1.0)
+        goal_x_1 = np.random.normal(0, 0.2)
+        goal_y_1 = np.random.normal(4.0, 1.0)
+        x0_agent_2 = np.random.normal(0, 0.2)
+        y0_agent_2 = np.random.normal(4, 1.0)
+        goal_x_2 = np.random.normal(0, 0.2)
+        goal_y_2 = np.random.normal(-4.0, 1.0)
     # Move behind
     elif test_case_index == 4:
         x0_agent_1 = np.random.uniform(-10.0, 10.0)
@@ -255,8 +255,8 @@ def get_traincase_2agents_swap(test_case_index, num_test_cases=10, agents_policy
         y0_agent_2 = (goal_y_1 + y0_agent_1)/2.0
         goal_x_2 = x0_agent_2 +np.random.uniform(-1.0,1.0)
         goal_y_2 = y0_agent_2 +np.random.uniform(-1.0,1.0)
-    # swap random point in space
-    else:
+    # Random motion in space
+    elif test_case_index == 6:
         x0_agent_1 = np.random.normal(0, 7.0)
         y0_agent_1 = np.random.normal(0, 7.0)
         goal_x_1 = np.random.normal(0, 7.0)
@@ -274,6 +274,18 @@ def get_traincase_2agents_swap(test_case_index, num_test_cases=10, agents_policy
         while np.linalg.norm(np.array([goal_x_2, goal_y_2]) - np.array([goal_x_1, goal_y_1])) < 1.0:
             goal_x_2 = np.random.normal(goal_x_1, 7.0)
             goal_y_2 = np.random.normal(goal_y_1, 7.0)
+    else:
+        x0_agent_1 = np.random.uniform(-5, 5.0)
+        y0_agent_1 = np.random.uniform(-5, 5.0)
+        goal_x_1 = np.random.uniform(-5, 5.0)
+        goal_y_1 = np.random.uniform(-5, 5.0)
+        while np.linalg.norm(np.array([goal_x_1, goal_y_1]) - np.array([x0_agent_1, y0_agent_1])) < 4.0:
+            goal_x_1 = np.random.uniform(-5, 5.0)
+            goal_y_1 = np.random.uniform(-5, 5.0)
+        x0_agent_2 = goal_x_1
+        y0_agent_2 = goal_y_1
+        goal_x_2 = x0_agent_1
+        goal_y_2 = y0_agent_1
 
 
     agents = [Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
@@ -299,6 +311,27 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
         agents.append(
             Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
+                  [OtherAgentsStatesSensor], 0))
+    return agents
+
+def random_agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+    pref_speed = 1.0
+    radius = 0.5
+    agents = []
+
+    for ag_id in range(number_of_agents):
+        x0_agent_1 = np.random.uniform(-10, 10.0)
+        y0_agent_1 = np.random.uniform(-10, 10.0)
+        goal_x_1 = np.random.uniform(-10, 10.0)
+        goal_y_1 = np.random.uniform(-10, 10.0)
+        while np.linalg.norm(np.array([goal_x_1, goal_y_1]) - np.array([x0_agent_1, y0_agent_1])) < 7.0:
+            goal_x_1 = np.random.uniform(-10, 10.0)
+            goal_y_1 = np.random.uniform(-10, 10.0)
+
+        agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamics,
+                  [OtherAgentsStatesSensor], 0))
+        agents.append(
+            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamics,
                   [OtherAgentsStatesSensor], 0))
     return agents
 
