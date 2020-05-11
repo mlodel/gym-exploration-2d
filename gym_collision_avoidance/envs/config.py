@@ -32,7 +32,7 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = -0.0 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = 0 # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     COLLISION_DIST = 0.4 # meters between agents' boundaries for collision
@@ -42,7 +42,7 @@ class Config:
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
     NUM_PAST_ACTIONS_IN_STATE = 0
 
-    NEAR_GOAL_THRESHOLD = 0.2
+    NEAR_GOAL_THRESHOLD = 0.4
     MAX_TIME_RATIO = 8. # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf

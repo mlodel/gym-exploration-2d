@@ -37,6 +37,7 @@ class Agent(object):
         self.action_dim = 2
         self.past_actions = np.zeros((self.num_actions_to_store,
                                       self.action_dim))
+        self.next_state = []
 
         # Other parameters
         self.radius = radius
@@ -134,11 +135,11 @@ class Agent(object):
         if self.is_at_goal or self.ran_out_of_time or self.in_collision:
             if self.is_at_goal:
                 self.was_at_goal_already = True
-                self._update_state_history()
-                self.t += dt
-                self.step_num += 1
             if self.in_collision:
                 self.was_in_collision_already = True
+            self._update_state_history()
+            self.t += dt
+            self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return

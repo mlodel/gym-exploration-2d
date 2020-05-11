@@ -37,6 +37,9 @@ def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
 def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_case_index=0, agents=None):
     plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
     
+    if not os.path.exists(plot_save_dir):
+        os.makedirs(plot_save_dir)
+        
     # Load all images of the current episode (each animation)
     fig_name = base_fig_name.format(
             policy=plot_policy_name,
@@ -140,14 +143,18 @@ def plot_episode(agents, in_evaluate_mode,
             plt.savefig(collision_plot_dir+fig_name)
 
     if save_for_animation:
-        fig_name = base_fig_name.format(
-            policy=plot_policy_name,
-            num_agents = len(agents),
-            test_case = str(test_case_index).zfill(3),
-            step="_"+"{:06.1f}".format(max_time),
-            extension='png')
-        filename = plot_save_dir+fig_name
-        plt.savefig(filename)
+        try:
+            fig_name = base_fig_name.format(
+                policy=plot_policy_name,
+                num_agents = len(agents),
+                test_case = str(test_case_index).zfill(3),
+                step="_"+"{:06.1f}".format(max_time),
+                extension='png')
+            filename = plot_save_dir+fig_name
+            plt.savefig(filename)
+        except:
+            print("Error:")
+            print(max_time)
 
     if show:
         plt.pause(0.0001)

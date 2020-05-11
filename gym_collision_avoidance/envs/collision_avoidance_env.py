@@ -52,6 +52,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
+        self.scenario= tc.go_to_goal
+
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
         #     self.low_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
         #     self.high_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
@@ -61,10 +63,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Upper/Lower bounds on Actions
         # todo: this was changed
-        self.max_heading_change = 1.0
-        self.min_heading_change = -1.0
-        self.min_speed = -1.0
-        self.max_speed = 1.0
+        # this depends on the scenario
+        self.max_heading_change = 10.0
+        self.min_heading_change = -10.0
+        self.min_speed = -10.0
+        self.max_speed = 10.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -149,8 +152,20 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
-        if Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0:
-            plot_episode(self.agents, False, self.map, self.test_case_index,
+        """"""
+        if (not Config.TRAIN_MODE and Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
+            plot_episode(self.agents, False, self.map, self.episode_number,
+                circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
+                plot_save_dir=self.plot_save_dir,
+                plot_policy_name=self.plot_policy_name,
+                save_for_animation=True,
+                limits=self.plt_limits,
+                fig_size=self.plt_fig_size,
+                perturbed_obs=self.perturbed_obs,
+                show=False,
+                save=True)
+        if self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 20 and self.episode_step_number % self.animation_period_steps == 0:
+            plot_episode(self.agents, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
                 plot_policy_name=self.plot_policy_name,
@@ -172,11 +187,16 @@ class CollisionAvoidanceEnv(gym.Env):
             {'which_agents_done': which_agents_done_dict}
 
     def reset(self):
-        if self.episode_step_number is not None and self.episode_step_number > 0 and self.plot_episodes and self.test_case_index >= 0:
+        if Config.ANIMATE_EPISODES and not Config.TRAIN_MODE and self.episode_step_number is not None and self.episode_step_number > 0 and self.plot_episodes and self.test_case_index >= 0:
             plot_episode(self.agents, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             if Config.ANIMATE_EPISODES:
                 animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, test_case_index=self.test_case_index, agents=self.agents)
-            self.episode_number += 1
+        elif self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 20:
+            plot_episode(self.agents, self.evaluate, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+            animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
+                            plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
+                            agents=self.agents)
+        self.episode_number += 1
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
@@ -224,7 +244,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.prev_episode_agents = copy.deepcopy(self.agents)
         if self.default_agents is None:
             # self.agents = tc.get_testcase_easy()
-            self.agents = tc.get_train_cases(0)
+            self.agents = self.scenario(0)
             # self.agents = tc.get_testcase_two_agents_laserscanners()
             # if self.episode_number == 0:
             #     self.agents = tc.get_testcase_random()
@@ -232,7 +252,7 @@ class CollisionAvoidanceEnv(gym.Env):
             #     # self.agents = tc.get_testcase_fixed_initial_conditions(self.agents)
             #     self.agents = tc.get_testcase_fixed_initial_conditions_for_non_ppo(self.agents)
         elif Config.TRAIN_MODE:
-            self.agents = tc.get_train_cases(0)
+            self.agents = self.scenario(0)
         else:
             self.agents = self.default_agents
 
@@ -303,7 +323,7 @@ class CollisionAvoidanceEnv(gym.Env):
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
                 # if gets close to goal
-                rewards[i] -= 0.1 * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame)  # 0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
+                rewards[i] -= 0.1 * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])  # 0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)

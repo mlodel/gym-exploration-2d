@@ -21,7 +21,7 @@ Config.PLOT_CIRCLES_ALONG_TRAJ = True
 
 Config.EVALUATE_MODE =  True
 Config.TRAIN_SINGLE_AGENT = False
-Config.ANIMATE_EPISODES = False
+
 Config.DT = 0.1
 start_from_last_configuration = False
 
@@ -51,16 +51,15 @@ num_test_cases = 2000
 test_case_args = {}
 Config.NUM_TEST_CASES = num_test_cases
 
-def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
+def add_traj(agents, trajs, dt, last_time):
     agent_i = 0
     other_agent_i = (agent_i + 1) % 2
-    #agent = agents[agent_i]
-    #other_agent = agents[other_agent_i]
-    #max_t = int(max_ts[agent_i])
+
     future_plan_horizon_secs = 3.0
     future_plan_horizon_steps = int(future_plan_horizon_secs / dt)
 
     for i, agent in enumerate(agents):
+        trajectory = []
         max_ts = agent.global_state_history.shape[0]
         for t in range(max_ts):
             t_horizon = min(max_ts, t+future_plan_horizon_steps)
@@ -70,7 +69,7 @@ def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
 
             future_positions = agent.global_state_history[t:t_horizon, 1:3]
 
-            d = {'time': np.round(agent.global_state_history[t, 0]+last_time,decimals=1),
+            d = {'time': np.round(last_time + t*0.1,decimals=1),
                 'pedestrian_state': {
                     'position': np.array([
                         agent.global_state_history[t, 1],
@@ -86,12 +85,11 @@ def add_traj(agents, trajs, dt, traj_i, max_ts,last_time):
                     agent.goal_global_frame[1],
                 ])
             }
-            trajs[traj_i+i].append(d)
-    last_time += np.round(agent.global_state_history[-1, 0],decimals=1) +1
+            trajectory.append(d)
+        trajs.append(trajectory)
+    last_time = d['time'] +1.0
 
-    traj_i += len(agents)
-
-    return traj_i, last_time
+    return last_time
 
 
 def main():
@@ -99,7 +97,7 @@ def main():
     dt = one_env.dt_nominal
     file_dir_template = os.path.dirname(os.path.realpath(__file__)) + '/../results/{results_subdir}/{num_agents}_agents'
     last_time = 0.0
-    trajs = [[] for _ in range(num_test_cases*num_agents_to_test[0]*len(policies))]
+    trajs = []
     traj_id = 0
     for num_agents in num_agents_to_test:
 
@@ -129,13 +127,13 @@ def main():
 
                 times_to_goal, extra_times_to_goal, collision, all_at_goal, any_stuck, agents = run_episode(env, one_env)
 
-                max_ts = [t / dt for t in times_to_goal]
                 # Change the global state history according with the number of steps required to finish the episode
-
                 if not collision:
                     for agent in agents:
                         agent.global_state_history = agent.global_state_history[:agent.step_num]
-                    traj_id , last_time = add_traj(agents, trajs, dt, traj_id, agent.step_num,last_time)
+                    if agents[0].step_num != agents[1].step_num:
+                        print("Different times")
+                    last_time = add_traj(agents, trajs, dt,last_time)
 
         # print(trajs)
                 
