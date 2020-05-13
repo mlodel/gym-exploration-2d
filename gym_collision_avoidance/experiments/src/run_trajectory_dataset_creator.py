@@ -16,7 +16,7 @@ np.random.seed(1)
 Config.EVALUATE_MODE = True
 Config.SAVE_EPISODE_PLOTS = True
 Config.SHOW_EPISODE_PLOTS = False
-Config.ANIMATE_EPISODES = False
+Config.ANIMATE_EPISODES = True
 Config.PLOT_CIRCLES_ALONG_TRAJ = True
 
 Config.EVALUATE_MODE =  True
@@ -25,12 +25,12 @@ Config.TRAIN_SINGLE_AGENT = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'mix_dataset'
+results_subdir = 'test_swap_dataset'
 
 #test_case_fn = tc.get_traincase_2agents_swap
-#test_case_fn = tc.agents_swap
+test_case_fn = tc.agents_swap
 #test_case_fn = tc.random_agents_swap
-test_case_fn = tc.get_traincase_2agents_swap
+#test_case_fn = tc.get_traincase_2agents_swap
 #test_case_fn = tc.get_testcase_random
 policies = {
             'RVO': {
@@ -47,7 +47,7 @@ policies = {
             }
 
 num_agents_to_test = [2]
-num_test_cases = 2000
+num_test_cases = 40
 test_case_args = {}
 Config.NUM_TEST_CASES = num_test_cases
 
@@ -131,8 +131,6 @@ def main():
                 if not collision:
                     for agent in agents:
                         agent.global_state_history = agent.global_state_history[:agent.step_num]
-                    if agents[0].step_num != agents[1].step_num:
-                        print("Different times")
                     last_time = add_traj(agents, trajs, dt,last_time)
 
         # print(trajs)

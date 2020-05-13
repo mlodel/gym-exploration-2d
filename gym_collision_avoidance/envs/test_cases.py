@@ -437,7 +437,7 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
         agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 0))
         agents.append(
-            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
+            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None, agents_policy, UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 0))
     return agents
 
