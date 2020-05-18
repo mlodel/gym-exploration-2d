@@ -123,7 +123,10 @@ def go_to_goal(test_case_index, agents_policy=MPCPolicy, agents_dynamics=Unicycl
     goal_y_1 = np.random.uniform(-10, 10.0)
 
     agents = [Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, agents_policy,
-                    ExternalDynamics,[OtherAgentsStatesSensor], 0)]
+                    ExternalDynamics,[OtherAgentsStatesSensor], 0),
+              Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1,  radius, pref_speed, None, RVOPolicy,
+                    UnicycleDynamicsMaxAcc, [OtherAgentsStatesSensor], 1)
+              ]
     return agents
 
 def get_train_cases(test_case_index, agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):

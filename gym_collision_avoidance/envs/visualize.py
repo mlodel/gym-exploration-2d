@@ -180,8 +180,8 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                          agent.global_state_history[0, 4],
                          color=plt_color, marker='*', markersize=20)
                 if i == 0:
-                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num, -1],
-                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num, -2],
+                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num-1, -2],
+                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num-1, -1],
                              color=plt_colors[4], marker='*', markersize=20)
 
                 # Display circle at agent pos every circle_spacing (nom 1.5 sec)

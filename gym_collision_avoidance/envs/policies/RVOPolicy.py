@@ -68,7 +68,7 @@ class RVOPolicy(Policy):
 
             # Set agent positions and velocities in RVO simulator
             self.sim.setAgentMaxSpeed(self.rvo_agents[a], agents[a].pref_speed)
-            self.sim.setAgentRadius(self.rvo_agents[a], (1+5e-2)*agents[a].radius+0.15)
+            self.sim.setAgentRadius(self.rvo_agents[a], (1+15e-2)*agents[a].radius)
             self.sim.setAgentPosition(self.rvo_agents[a], tuple(self.pos_agents[a,:]))
             self.sim.setAgentVelocity(self.rvo_agents[a], tuple(self.vel_agents[a,:]))
             self.sim.setAgentPrefVelocity(self.rvo_agents[a], tuple(self.pref_vel_agents[a,:]))
@@ -81,7 +81,8 @@ class RVOPolicy(Policy):
             # if a certain freq, randomly select btwn use non coop policy vs. rvo
             if round(agents[agent_index].t % Config.RVO_ANTI_COLLAB_T, 3) < Config.DT or \
                 round(Config.RVO_ANTI_COLLAB_T - agents[agent_index].t % Config.RVO_ANTI_COLLAB_T, 3) < Config.DT:
-                self.use_non_coop_policy = np.random.choice([True, False], p=[1-abs(Config.RVO_COLLAB_COEFF), abs(Config.RVO_COLLAB_COEFF)])
+                # TODO: this was changed
+                self.use_non_coop_policy = False #np.random.choice([True, False], p=[1-abs(Config.RVO_COLLAB_COEFF), abs(Config.RVO_COLLAB_COEFF)])
             if self.use_non_coop_policy:
                 self.sim.setAgentCollabCoeff(self.rvo_agents[agent_index], 0.0)
             else:
