@@ -38,6 +38,7 @@ from gym_collision_avoidance.envs.config import Config
 
 import os
 import pickle
+import random
 
 from gym_collision_avoidance.envs.policies.CADRL.scripts.multi import gen_rand_testcases as tc
 
@@ -444,11 +445,14 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def train_agents_swap_circle(test_case_index, number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def train_agents_swap_circle(test_case_index, number_of_agents=3, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
 
+    policies = [RVOPolicy, NonCooperativePolicy]
+    policy = random.choice(policies)
+    
     for ag_id in range(number_of_agents):
         distance = np.random.uniform(5.0, 6.0)
         angle = np.random.uniform(-np.pi, np.pi)
@@ -463,7 +467,7 @@ def train_agents_swap_circle(test_case_index, number_of_agents=2, agents_policy=
             agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
                       [OtherAgentsStatesSensor], 0))
         agents.append(
-            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None,RVOPolicy , UnicycleDynamicsMaxAcc,
+            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 0))
     return agents
 
