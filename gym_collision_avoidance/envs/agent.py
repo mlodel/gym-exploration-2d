@@ -93,6 +93,7 @@ class Agent(object):
         # self.latest_laserscan.ranges = 10*np.ones(Config.LASERSCAN_LENGTH)
 
         self.is_done = False
+        self.warm_start = False
 
         self._update_state_history()
 
