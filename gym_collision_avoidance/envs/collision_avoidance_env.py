@@ -52,7 +52,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario= tc.go_to_goal
+        self.scenario= tc.train_agents_swap_circle
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
         #     self.low_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
@@ -164,7 +164,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 perturbed_obs=self.perturbed_obs,
                 show=False,
                 save=True)
-        if Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 20 and self.episode_step_number % self.animation_period_steps == 0:
+        if Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 and self.episode_step_number % self.animation_period_steps == 0:
             plot_episode(self.agents, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
@@ -191,7 +191,7 @@ class CollisionAvoidanceEnv(gym.Env):
             plot_episode(self.agents, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             if Config.ANIMATE_EPISODES:
                 animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, test_case_index=self.test_case_index, agents=self.agents)
-        elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 20:
+        elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 2:
             plot_episode(self.agents, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,

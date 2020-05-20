@@ -444,6 +444,29 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
+def train_agents_swap_circle(test_case_index, number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+    radius = 0.5# np.random.uniform(0.5, 0.5)
+    agents = []
+
+    for ag_id in range(number_of_agents):
+        distance = np.random.uniform(5.0, 6.0)
+        angle = np.random.uniform(-np.pi, np.pi)
+        x0_agent_1 = distance*np.cos(angle)
+        y0_agent_1 = distance*np.sin(angle)
+        goal_x_1 = -x0_agent_1
+        goal_y_1 = -y0_agent_1
+        if ag_id == 0:
+            agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, agents_policy, ExternalDynamics,
+                      [OtherAgentsStatesSensor], 0))
+        else:
+            agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
+                      [OtherAgentsStatesSensor], 0))
+        agents.append(
+            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None,RVOPolicy , UnicycleDynamicsMaxAcc,
+                  [OtherAgentsStatesSensor], 0))
+    return agents
+
 def random_agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
