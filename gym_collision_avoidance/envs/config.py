@@ -33,6 +33,7 @@ class Config:
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
     REWARD_TIME_STEP   = 0 # default reward given if none of the others apply (encourage speed)
+    REWARD_DISTANCE_TO_GOAL = 0.1  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     COLLISION_DIST = 0.4 # meters between agents' boundaries for collision
