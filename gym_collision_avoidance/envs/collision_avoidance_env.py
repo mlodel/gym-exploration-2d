@@ -386,7 +386,7 @@ class CollisionAvoidanceEnv(gym.Env):
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
             # if gets close to goal
-            rewards -= 0.1 * np.linalg.norm(ego_agent.goal_global_frame - ego_agent.pos_global_frame - action)  # 0.01*np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
+            rewards -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(ego_agent.goal_global_frame - ego_agent.pos_global_frame - action)
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
