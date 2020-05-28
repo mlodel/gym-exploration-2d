@@ -411,7 +411,6 @@ class CollisionAvoidanceEnv(gym.Env):
             dist_btwn_nearest_agent[i] = min(dist_btwn_nearest_agent[i], dist_btwn - combined_radius)
             if dist_btwn <= combined_radius:
                 # Collision with another agent!
-                print(dist_btwn)
                 collision_with_agent[i] = True
                 collision_with_agent[j] = True
         for i in agent_inds:
@@ -472,7 +471,7 @@ class CollisionAvoidanceEnv(gym.Env):
         
         if Config.EVALUATE_MODE:
             # Episode ends when every agent is done
-            game_over = np.all(which_agents_done)
+            game_over = which_agents_done[0]
         elif Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]
