@@ -452,22 +452,45 @@ def train_agents_swap_circle(test_case_index, number_of_agents=3, agents_policy=
 
     policies = [RVOPolicy, NonCooperativePolicy]
     policy = random.choice(policies)
-    
+    goals_position_list = []
+    initial_position_list = []
+
+    distance = np.random.uniform(4.0, 6.0)
+    angle = np.random.uniform(-np.pi, np.pi)
+    x0_agent_1 = distance * np.cos(angle)
+    y0_agent_1 = distance * np.sin(angle)
+    goal_x_1 = -x0_agent_1
+    goal_y_1 = -y0_agent_1
+    goals_position_list.append(np.array([goal_x_1,goal_y_1]))
+    initial_position_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    for ag_id in range(number_of_agents-1):
+        in_collision = False
+        while not in_collision:
+            distance = np.random.uniform(4.0, 6.0)
+            angle = np.random.uniform(-np.pi, np.pi)
+            x0_agent_1 = distance*np.cos(angle)
+            y0_agent_1 = distance*np.sin(angle)
+            goal_x_1 = -x0_agent_1
+            goal_y_1 = -y0_agent_1
+            goal=np.array([goal_x_1,goal_y_1])
+            initial_pose= np.array([x0_agent_1, y0_agent_1])
+            in_collision = is_pose_valid(goal, goals_position_list) or is_pose_valid(initial_pose, initial_position_list)
+        goals_position_list.append(np.array([goal_x_1, goal_y_1]))
+        initial_position_list.append(np.array([x0_agent_1, y0_agent_1]))
+
     for ag_id in range(number_of_agents):
-        distance = np.random.uniform(5.0, 6.0)
-        angle = np.random.uniform(-np.pi, np.pi)
-        x0_agent_1 = distance*np.cos(angle)
-        y0_agent_1 = distance*np.sin(angle)
-        goal_x_1 = -x0_agent_1
-        goal_y_1 = -y0_agent_1
         if ag_id == 0:
-            agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, agents_policy, ExternalDynamics,
+            agents.append(Agent(initial_position_list[ag_id][0], initial_position_list[ag_id][1],
+                                goals_position_list[ag_id][0], goals_position_list[ag_id][1], radius, pref_speed, None, agents_policy, ExternalDynamics,
                       [OtherAgentsStatesSensor], 0))
         else:
-            agents.append(Agent(x0_agent_1, y0_agent_1,goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
+            agents.append(Agent(initial_position_list[ag_id][0], initial_position_list[ag_id][1],
+                                goals_position_list[ag_id][0], goals_position_list[ag_id][1], radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
                       [OtherAgentsStatesSensor], 0))
         agents.append(
-            Agent(goal_x_1, goal_y_1,x0_agent_1, y0_agent_1, radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
+            Agent(goals_position_list[ag_id][0], goals_position_list[ag_id][1],
+                  initial_position_list[ag_id][0], initial_position_list[ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 0))
     return agents
 

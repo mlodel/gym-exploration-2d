@@ -413,6 +413,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 # Collision with another agent!
                 collision_with_agent[i] = True
                 collision_with_agent[j] = True
+                if i == 0 and collision_with_agent[i]:
+                    print("Ego-agent collided")
         for i in agent_inds:
             agent = self.agents[i]
             [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
