@@ -110,7 +110,7 @@ def get_testcase_random(num_agents=None, side_length=None, speed_bnds=None, radi
 
 def is_pose_valid(new_pose, position_list):
     for pose in position_list:
-        if np.linalg.norm(new_pose - pose) < 1.0:
+        if np.linalg.norm(new_pose - pose) < 1.1:
             return False
     return True
 
