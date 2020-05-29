@@ -52,7 +52,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario= tc.train_agents_swap_circle
+        self.scenario = tc.train_agents_swap_circle
+        self.scenario = tc.go_to_goal
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
         #     self.low_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
