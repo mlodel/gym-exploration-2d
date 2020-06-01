@@ -451,7 +451,7 @@ def train_agents_swap_circle(test_case_index, number_of_agents=3, agents_policy=
     agents = []
 
     policies = [RVOPolicy, NonCooperativePolicy]
-    policy = random.choice(policies)
+    policy = RVOPolicy#random.choice(policies)
     goals_position_list = []
     initial_position_list = []
 
