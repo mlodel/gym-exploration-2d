@@ -451,7 +451,7 @@ def train_agents_swap_circle(test_case_index, number_of_agents=3, agents_policy=
     agents = []
 
     policies = [RVOPolicy, NonCooperativePolicy]
-    policy = RVOPolicy#random.choice(policies)
+    policy = random.choice(policies)
     goals_position_list = []
     initial_position_list = []
 
@@ -487,11 +487,11 @@ def train_agents_swap_circle(test_case_index, number_of_agents=3, agents_policy=
         else:
             agents.append(Agent(initial_position_list[ag_id][0], initial_position_list[ag_id][1],
                                 goals_position_list[ag_id][0], goals_position_list[ag_id][1], radius, pref_speed, None, RVOPolicy, UnicycleDynamicsMaxAcc,
-                      [OtherAgentsStatesSensor], 0))
+                      [OtherAgentsStatesSensor], 2*ag_id))
         agents.append(
             Agent(goals_position_list[ag_id][0], goals_position_list[ag_id][1],
                   initial_position_list[ag_id][0], initial_position_list[ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
-                  [OtherAgentsStatesSensor], 0))
+                  [OtherAgentsStatesSensor], 2*ag_id+1))
     return agents
 
 def random_agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
