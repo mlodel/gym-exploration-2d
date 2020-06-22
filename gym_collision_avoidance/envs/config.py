@@ -39,7 +39,7 @@ class Config:
     ENABLE_COLLISION_AVOIDANCE = True
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
-    JOINT_MPC_RL_TRAINING = True # select the action that has highets reward (mpc/rl)
+    JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
@@ -55,7 +55,7 @@ class Config:
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
-    MAX_NUM_AGENTS_IN_ENVIRONMENT = 6
+    MAX_NUM_AGENTS_IN_ENVIRONMENT = 10
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
