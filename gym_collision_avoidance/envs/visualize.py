@@ -139,7 +139,7 @@ def plot_episode(agents, in_evaluate_mode,
         filename = plot_save_dir+fig_name
         plt.savefig(filename)
 
-        if np.any([agent.in_collision for agent in agents]):
+        if agents[0].in_collision:
             plt.savefig(collision_plot_dir+fig_name)
 
     if save_for_animation:

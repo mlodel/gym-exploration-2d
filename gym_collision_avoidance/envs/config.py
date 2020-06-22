@@ -32,13 +32,14 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
-    ENABLE_COLLISION_AVOIDANCE = False
-    COLLISION_DIST = 0.4 # meters between agents' boundaries for collision
+    ENABLE_COLLISION_AVOIDANCE = True
+    COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
+    JOINT_MPC_RL_TRAINING = True # select the action that has highets reward (mpc/rl)
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector

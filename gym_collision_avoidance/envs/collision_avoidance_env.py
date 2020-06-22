@@ -65,10 +65,15 @@ class CollisionAvoidanceEnv(gym.Env):
         # Upper/Lower bounds on Actions
         # todo: this was changed
         # this depends on the scenario
-        self.max_heading_change = 4.0
-        self.min_heading_change = -4.0
-        self.min_speed = -4.0
-        self.max_speed = 4.0
+        #self.max_heading_change = 4.0
+        #self.min_heading_change = -4.0
+        #self.min_speed = -4.0
+        #self.max_speed = 4.0
+
+        self.max_heading_change = 1.0
+        self.min_heading_change = -1.0
+        self.min_speed = -1.0
+        self.max_speed = 1.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -343,15 +348,15 @@ class CollisionAvoidanceEnv(gym.Env):
         ###############################
 
         # if nothing noteworthy happened in that timestep, reward = -0.01
-        rewards = 0.0
+        rewards = self.reward_time_step
         ego_agent = agents[0]
         other_agents = agents[1:]
 
         collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent = \
             self.check_action_for_collisions(action,ego_agent,other_agents)
 
-        is_in_goal_direction = (ego_agent.pos_global_frame[0] + action[0] - ego_agent.goal_global_frame[0]) ** 2 + (
-                    ego_agent.pos_global_frame[1] + action[1] - ego_agent.goal_global_frame[1]) ** 2 <= ego_agent.near_goal_threshold ** 2
+        is_in_goal_direction = (ego_agent.pos_global_frame[0] + action[0,0] - ego_agent.goal_global_frame[0]) ** 2 + (
+                    ego_agent.pos_global_frame[1] + action[0,1] - ego_agent.goal_global_frame[1]) ** 2 <= ego_agent.near_goal_threshold ** 2
 
         if is_in_goal_direction:
             if ego_agent.was_at_goal_already is False:
@@ -387,7 +392,7 @@ class CollisionAvoidanceEnv(gym.Env):
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
             # if gets close to goal
-            rewards -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(ego_agent.goal_global_frame - ego_agent.pos_global_frame - action)
+            rewards -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(ego_agent.goal_global_frame - ego_agent.pos_global_frame - action[0])
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
