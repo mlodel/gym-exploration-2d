@@ -480,7 +480,9 @@ def train_agents_swap_circle(test_case_index, number_of_agents=5, agents_policy=
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(number_of_agents):
-        policy = random.choice(policies)
+        policy = random.choice(policies) #RVOPolicy #
+        cooperation_coef = 0.5
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
             agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
                                 positions_list[ag_id+1][0], positions_list[ag_id+1][1], radius, pref_speed, None, agents_policy, ExternalDynamics,
@@ -488,11 +490,11 @@ def train_agents_swap_circle(test_case_index, number_of_agents=5, agents_policy=
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
-                      [OtherAgentsStatesSensor], 2*ag_id))
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                   positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
-                  [OtherAgentsStatesSensor], 2*ag_id+1))
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
 def random_agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
