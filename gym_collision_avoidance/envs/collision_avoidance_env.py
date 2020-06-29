@@ -328,6 +328,9 @@ class CollisionAvoidanceEnv(gym.Env):
                             rewards[i] += self.reward_wiggly_behavior
                         # elif entered_norm_zone[i]:
                         #     rewards[i] = self.reward_entered_norm_zone
+
+                elif agent.ran_out_of_time:
+                    rewards[i] += Config.REWARD_TIMEOUT
                 # if gets close to goal
                 rewards[i] -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
 

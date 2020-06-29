@@ -10,3 +10,4 @@ gym
 moviepy
 baselines
 stable_baselines
+optuna
