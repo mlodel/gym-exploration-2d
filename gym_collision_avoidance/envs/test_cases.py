@@ -482,15 +482,17 @@ def train_agents_swap_circle(test_case_index, number_of_agents=4, agents_policy=
     for ag_id in range(number_of_agents):
         policy = random.choice(policies) #RVOPolicy #
         cooperation_coef = 0.5
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
             agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
-                                positions_list[ag_id+1][0], positions_list[ag_id+1][1], radius, pref_speed, None, agents_policy, ExternalDynamics,
+                                positions_list[ag_id+1][0], positions_list[ag_id+1][1], radius, pref_speed, None, agents_policy, agents_dynamics,
                       [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+        cooperation_coef = np.random.uniform(0.0, 1.0)
+        policy = random.choice(policies)  # RVOPolicy #
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                   positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
