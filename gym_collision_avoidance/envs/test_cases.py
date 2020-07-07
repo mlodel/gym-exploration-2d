@@ -111,7 +111,7 @@ def get_testcase_random(num_agents=None, side_length=None, speed_bnds=None, radi
 
 def is_pose_valid(new_pose, position_list):
     for pose in position_list:
-        if np.linalg.norm(new_pose - pose) < 1.1:
+        if np.linalg.norm(new_pose - pose) < 1.5:
             return False
     return True
 
@@ -446,7 +446,7 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def train_agents_swap_circle(test_case_index, number_of_agents=1, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def train_agents_swap_circle(test_case_index, number_of_agents=5, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -499,15 +499,16 @@ def train_agents_swap_circle(test_case_index, number_of_agents=1, agents_policy=
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
-def corridor_scenario(test_case_index, number_of_agents=1, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
 
     policies = [RVOPolicy, NonCooperativePolicy]
     positions_list = []
+    side = [-1,1]
 
-    x0_agent_1 = np.random.uniform(-8.0, -7.0)*random.randint(0, 1)
+    x0_agent_1 = np.random.uniform(-8.0, -7.0)*random.side(policies)
     y0_agent_1 = np.random.uniform(-4.0, -4.0)
     goal_x_1 = -x0_agent_1
     goal_y_1 = y0_agent_1
