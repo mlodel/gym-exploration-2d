@@ -446,7 +446,7 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def train_agents_swap_circle(test_case_index, number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def train_agents_swap_circle(test_case_index, number_of_agents=1, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -473,6 +473,54 @@ def train_agents_swap_circle(test_case_index, number_of_agents=2, agents_policy=
             y0_agent_1 = distance*np.sin(angle)
             goal_x_1 = -x0_agent_1
             goal_y_1 = -y0_agent_1
+            goal=np.array([goal_x_1,goal_y_1])
+            initial_pose= np.array([x0_agent_1, y0_agent_1])
+            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    for ag_id in range(number_of_agents):
+        policy = random.choice(policies) #RVOPolicy #
+        cooperation_coef = 0.5
+        cooperation_coef = np.random.uniform(0.0, 1.0)
+        if ag_id == 0:
+            agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
+                                positions_list[ag_id+1][0], positions_list[ag_id+1][1], radius, pref_speed, None, agents_policy, agents_dynamics,
+                      [OtherAgentsStatesSensor], 0))
+        else:
+            agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+        cooperation_coef = np.random.uniform(0.0, 1.0)
+        policy = random.choice(policies)  # RVOPolicy #
+        agents.append(
+            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+    return agents
+
+def corridor_scenario(test_case_index, number_of_agents=1, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+    radius = 0.5# np.random.uniform(0.5, 0.5)
+    agents = []
+
+    policies = [RVOPolicy, NonCooperativePolicy]
+    positions_list = []
+
+    x0_agent_1 = np.random.uniform(-8.0, -7.0)*random.randint(0, 1)
+    y0_agent_1 = np.random.uniform(-4.0, -4.0)
+    goal_x_1 = -x0_agent_1
+    goal_y_1 = y0_agent_1
+    positions_list.append(np.array([goal_x_1,goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    for ag_id in range(number_of_agents-1):
+        in_collision = False
+        while not in_collision:
+            x0_agent_1 = np.random.uniform(-8.0, -7.0) * random.randint(0, 1)
+            y0_agent_1 = np.random.uniform(-4.0, -4.0)
+            goal_x_1 = -x0_agent_1
+            goal_y_1 = y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
             in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
