@@ -52,7 +52,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario = tc.train_agents_swap_circle
+        self.scenario = "tc.corridor_scenario"
         #self.scenario = tc.go_to_goal
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
@@ -250,7 +250,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.prev_episode_agents = copy.deepcopy(self.agents)
         if self.default_agents is None:
             # self.agents = tc.get_testcase_easy()
-            self.agents = self.scenario(0)
+            self.agents = eval(self.scenario)
             # self.agents = tc.get_testcase_two_agents_laserscanners()
             # if self.episode_number == 0:
             #     self.agents = tc.get_testcase_random()
@@ -258,7 +258,7 @@ class CollisionAvoidanceEnv(gym.Env):
             #     # self.agents = tc.get_testcase_fixed_initial_conditions(self.agents)
             #     self.agents = tc.get_testcase_fixed_initial_conditions_for_non_ppo(self.agents)
         elif Config.TRAIN_MODE:
-            self.agents = self.scenario(0)
+            self.agents = eval(self.scenario)
         else:
             self.agents = self.default_agents
 
