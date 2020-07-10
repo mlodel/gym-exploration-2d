@@ -508,7 +508,7 @@ def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPoli
     positions_list = []
     side = [-1,1]
 
-    x0_agent_1 = np.random.uniform(-8.0, -7.0)*random.choice(side)
+    x0_agent_1 = np.random.uniform(-8.0, -6.0)*random.choice(side)
     y0_agent_1 = np.random.uniform(-4.0, 4.0)
     goal_x_1 = -x0_agent_1
     goal_y_1 = y0_agent_1
@@ -518,7 +518,7 @@ def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPoli
     for ag_id in range(number_of_agents-1):
         in_collision = False
         while not in_collision:
-            x0_agent_1 = np.random.uniform(-8.0, -7.0) * random.choice(side)
+            x0_agent_1 = np.random.uniform(-8.0, -6.0) * random.choice(side)
             y0_agent_1 = np.random.uniform(-4.0, 4.0)
             goal_x_1 = -x0_agent_1
             goal_y_1 = y0_agent_1
