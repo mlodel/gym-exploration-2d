@@ -52,8 +52,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        #self.scenario = "tc.train_agents_swap_circle(0)"
-        self.scenario = "tc.corridor_scenario(0)"
+        self.scenario = "tc.train_agents_swap_circle(0)"
+        #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
@@ -322,6 +322,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 elif agent.ran_out_of_time:
                     rewards[i] += Config.REWARD_TIMEOUT
+
+                # If action is infeasible
+                if agent.is_infeasible:
+                    rewards[i] += Config.REWARD_INFEASIBLE
+
                 # if gets close to goal
                 rewards[i] -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
 
