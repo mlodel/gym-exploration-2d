@@ -71,10 +71,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.min_speed = -4.0
         #self.max_speed = 4.0
 
-        self.max_heading_change = 4.0
-        self.min_heading_change = -4.0
-        self.min_speed = -4.0
-        self.max_speed = 4.0
+        self.max_heading_change = 1.0
+        self.min_heading_change = -1.0
+        self.min_speed = -1.0
+        self.max_speed = 1.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -321,6 +321,8 @@ class CollisionAvoidanceEnv(gym.Env):
                         #     rewards[i] = self.reward_entered_norm_zone
 
                 elif agent.ran_out_of_time:
+                    if i ==0:
+                        print("Agent 0 is out of time.")
                     rewards[i] += Config.REWARD_TIMEOUT
 
                 # If action is infeasible

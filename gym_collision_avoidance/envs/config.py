@@ -48,7 +48,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.4
-    MAX_TIME_RATIO = 10.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
@@ -57,7 +57,7 @@ class Config:
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
-    MAX_NUM_AGENTS_IN_ENVIRONMENT = 10
+    MAX_NUM_AGENTS_IN_ENVIRONMENT = 4
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
