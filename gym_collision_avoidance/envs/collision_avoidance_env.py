@@ -52,7 +52,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario = "tc.train_agents_swap_circle(0)"
+        self.number_of_agents = 1
+        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
@@ -119,6 +120,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.episode_step_number = None
         self.episode_number = 0
+        self.total_number_of_steps = 0
 
         self.plot_save_dir = None
         self.plot_policy_name = None
@@ -147,6 +149,7 @@ class CollisionAvoidanceEnv(gym.Env):
             dt = self.dt_nominal
 
         self.episode_step_number += 1
+        self.total_number_of_steps += 1
 
         # Take action
         self._take_action(actions, dt)
@@ -250,6 +253,17 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
 
+        if self.episode_number < 2.5e5:
+            self.number_of_agents = 2
+        elif self.episode_number < 5e5:
+            self.number_of_agents = 3
+        elif self.episode_number < 7.5e5:
+            self.number_of_agents = 4
+        elif self.episode_number < 1e6:
+            self.number_of_agents = 5
+
+        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+
         self.agents = eval(self.scenario)
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
 
@@ -310,7 +324,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     else:
                         # Penalty for getting close to agents
                         if dist_btwn_nearest_agent[i] <= Config.GETTING_CLOSE_RANGE:
-                            rewards[i] = -0.1 - dist_btwn_nearest_agent[i]/2.
+                            rewards[i] += -0.1 - dist_btwn_nearest_agent[i]/2.
                             # print("Agent %i: Got close to another agent!"
                             #       % agent.id)
                         # Penalty for wiggly behavior
