@@ -52,7 +52,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario = "tc.corridor_scenario"
+        self.scenario = "tc.train_agents_swap_circle(0)"
         #self.scenario = tc.go_to_goal
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
