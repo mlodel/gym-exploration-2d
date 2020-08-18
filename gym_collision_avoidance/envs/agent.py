@@ -60,6 +60,7 @@ class Agent(object):
         self.was_in_collision_already = False
         self.in_collision = False
         self.ran_out_of_time = False
+        self.is_infeasible = False
 
         self.min_x = -20.0
         self.max_x = 20.0

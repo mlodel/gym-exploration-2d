@@ -12,6 +12,7 @@ After defining a test case function that returns a list of Agents, you can selec
 '''
 
 import numpy as np
+import random
 np.random.seed(1)
 import sys
 sys.path.append('/home/bdebrito/code/mpc-rl-collision-avoidance')
@@ -427,12 +428,12 @@ def get_testcase_2agents_swap(test_case_index, num_test_cases=10, agents_policy=
         ]
     return agents
 
-def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def agents_swap(number_of_agents=2, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
     agents = []
 
-    for ag_id in range(number_of_agents):
+    for ag_id in range(np.random.uniform(1,number_of_agents)):
         distance = np.random.uniform(5.0, 6.0)
         angle = np.random.uniform(-np.pi, np.pi)
         x0_agent_1 = distance*np.cos(angle)
@@ -446,7 +447,7 @@ def agents_swap(test_case_index, number_of_agents=2, agents_policy=LearningPolic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def train_agents_swap_circle(test_case_index, number_of_agents=4, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -464,7 +465,9 @@ def train_agents_swap_circle(test_case_index, number_of_agents=4, agents_policy=
     positions_list.append(np.array([goal_x_1,goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents-1):
+    n_agents = random.randint(0,number_of_agents-1)
+
+    for ag_id in range(n_agents):
         in_collision = False
         while not in_collision:
             distance = np.random.uniform(4.0, 6.0)
@@ -479,7 +482,7 @@ def train_agents_swap_circle(test_case_index, number_of_agents=4, agents_policy=
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents):
+    for ag_id in range(n_agents+1):
         policy = random.choice(policies) #RVOPolicy #
         cooperation_coef = 0.5
         cooperation_coef = np.random.uniform(0.0, 1.0)
@@ -499,16 +502,17 @@ def train_agents_swap_circle(test_case_index, number_of_agents=4, agents_policy=
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
-def corridor_scenario(test_case_index, number_of_agents=1, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
 
     policies = [RVOPolicy, NonCooperativePolicy]
     positions_list = []
+    side = [-1,1]
 
-    x0_agent_1 = np.random.uniform(-8.0, -7.0)*random.randint(0, 1)
-    y0_agent_1 = np.random.uniform(-4.0, -4.0)
+    x0_agent_1 = np.random.uniform(-8.0, -6.0)*random.choice(side)
+    y0_agent_1 = np.random.uniform(-4.0, 4.0)
     goal_x_1 = -x0_agent_1
     goal_y_1 = y0_agent_1
     positions_list.append(np.array([goal_x_1,goal_y_1]))
@@ -517,8 +521,8 @@ def corridor_scenario(test_case_index, number_of_agents=1, agents_policy=MPCPoli
     for ag_id in range(number_of_agents-1):
         in_collision = False
         while not in_collision:
-            x0_agent_1 = np.random.uniform(-8.0, -7.0) * random.randint(0, 1)
-            y0_agent_1 = np.random.uniform(-4.0, -4.0)
+            x0_agent_1 = np.random.uniform(-8.0, -6.0) * random.choice(side)
+            y0_agent_1 = np.random.uniform(-4.0, 4.0)
             goal_x_1 = -x0_agent_1
             goal_y_1 = y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])

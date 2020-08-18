@@ -52,7 +52,9 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.scenario = "tc.train_agents_swap_circle(0)"
+        self.number_of_agents = 1
+        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+        #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
         # if Config.TRAIN_ON_MULTIPLE_AGENTS:
@@ -70,10 +72,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.min_speed = -4.0
         #self.max_speed = 4.0
 
-        self.max_heading_change = 4.0
-        self.min_heading_change = -4.0
-        self.min_speed = -4.0
-        self.max_speed = 4.0
+        self.max_heading_change = 1.0
+        self.min_heading_change = -1.0
+        self.min_speed = -1.0
+        self.max_speed = 1.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -118,6 +120,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.episode_step_number = None
         self.episode_number = 0
+        self.total_number_of_steps = 0
 
         self.plot_save_dir = None
         self.plot_policy_name = None
@@ -146,6 +149,7 @@ class CollisionAvoidanceEnv(gym.Env):
             dt = self.dt_nominal
 
         self.episode_step_number += 1
+        self.total_number_of_steps += 1
 
         # Take action
         self._take_action(actions, dt)
@@ -248,19 +252,20 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-        if self.default_agents is None:
-            # self.agents = tc.get_testcase_easy()
-            self.agents = eval(self.scenario)
-            # self.agents = tc.get_testcase_two_agents_laserscanners()
-            # if self.episode_number == 0:
-            #     self.agents = tc.get_testcase_random()
-            # else:
-            #     # self.agents = tc.get_testcase_fixed_initial_conditions(self.agents)
-            #     self.agents = tc.get_testcase_fixed_initial_conditions_for_non_ppo(self.agents)
-        elif Config.TRAIN_MODE:
-            self.agents = eval(self.scenario)
-        else:
-            self.agents = self.default_agents
+
+        if self.episode_number < 2.5e5:
+            self.number_of_agents = 2
+        elif self.episode_number < 5e5:
+            self.number_of_agents = 3
+        elif self.episode_number < 7.5e5:
+            self.number_of_agents = 4
+        elif self.episode_number < 1e6:
+            self.number_of_agents = 5
+
+        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+
+        self.agents = eval(self.scenario)
+        self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
 
         for agent in self.agents:
             agent.max_heading_change = self.max_heading_change
@@ -319,7 +324,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     else:
                         # Penalty for getting close to agents
                         if dist_btwn_nearest_agent[i] <= Config.GETTING_CLOSE_RANGE:
-                            rewards[i] = -0.1 - dist_btwn_nearest_agent[i]/2.
+                            rewards[i] += -0.1 - dist_btwn_nearest_agent[i]/2.
                             # print("Agent %i: Got close to another agent!"
                             #       % agent.id)
                         # Penalty for wiggly behavior
@@ -330,7 +335,14 @@ class CollisionAvoidanceEnv(gym.Env):
                         #     rewards[i] = self.reward_entered_norm_zone
 
                 elif agent.ran_out_of_time:
+                    if i ==0:
+                        print("Agent 0 is out of time.")
                     rewards[i] += Config.REWARD_TIMEOUT
+
+                # If action is infeasible
+                if agent.is_infeasible:
+                    rewards[i] += Config.REWARD_INFEASIBLE
+
                 # if gets close to goal
                 rewards[i] -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(agent.goal_global_frame - agent.pos_global_frame-agent.past_actions[0])
 
