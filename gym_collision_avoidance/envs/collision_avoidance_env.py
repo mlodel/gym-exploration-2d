@@ -253,13 +253,15 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
 
-        if self.episode_number < 2.5e5:
+        if self.episode_number < 1e4:
+            self.number_of_agents = 1
+        elif self.episode_number < 2e4:
             self.number_of_agents = 2
-        elif self.episode_number < 5e5:
+        elif self.episode_number < 3e4:
             self.number_of_agents = 3
-        elif self.episode_number < 7.5e5:
+        elif self.episode_number < 5e4:
             self.number_of_agents = 4
-        elif self.episode_number < 1e6:
+        elif self.episode_number < 7e4:
             self.number_of_agents = 5
 
         self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
