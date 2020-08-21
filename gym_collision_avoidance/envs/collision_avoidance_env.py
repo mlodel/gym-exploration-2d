@@ -154,8 +154,6 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take action
         self._take_action(actions, dt)
 
-        #print(actions)
-
         # Collect rewards
         rewards = self._compute_rewards()
 
@@ -252,17 +250,17 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-
-        if self.episode_number < 1e4:
-            self.number_of_agents = 1
-        elif self.episode_number < 2e4:
-            self.number_of_agents = 2
-        elif self.episode_number < 3e4:
-            self.number_of_agents = 3
-        elif self.episode_number < 5e4:
-            self.number_of_agents = 4
-        elif self.episode_number < 7e4:
-            self.number_of_agents = 5
+        else:
+            if self.episode_number < 1e4:
+                self.number_of_agents = 1
+            elif self.episode_number < 2e4:
+                self.number_of_agents = 2
+            elif self.episode_number < 3e4:
+                self.number_of_agents = 3
+            elif self.episode_number < 5e4:
+                self.number_of_agents = 4
+            elif self.episode_number < 7e4:
+                self.number_of_agents = 5
 
         self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
 
