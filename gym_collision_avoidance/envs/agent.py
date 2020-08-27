@@ -245,7 +245,10 @@ class Agent(object):
         # ref_orthog: vector orthogonal to ref_prll
         #
         goal_direction = self.goal_global_frame - self.pos_global_frame
+        self.past_dist_to_goal = self.dist_to_goal
         self.dist_to_goal = math.sqrt(goal_direction[0]**2 + goal_direction[1]**2)
+        if self.t == 0:
+            self.past_dist_to_goal = self.dist_to_goal
         if self.dist_to_goal > 1e-8:
             ref_prll = goal_direction / self.dist_to_goal
         else:
