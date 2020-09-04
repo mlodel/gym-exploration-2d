@@ -72,10 +72,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.min_speed = -4.0
         #self.max_speed = 4.0
 
-        self.max_heading_change = 1.0
-        self.min_heading_change = -1.0
-        self.min_speed = -1.0
-        self.max_speed = 1.0
+        self.max_heading_change = 4.0
+        self.min_heading_change = -4.0
+        self.min_speed = -4.0
+        self.max_speed = 4.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -251,11 +251,11 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
         else:
-            if self.episode_number < 1e4:
+            if self.episode_number < 2e4:
                 self.number_of_agents = 1
-            elif self.episode_number < 2e4:
-                self.number_of_agents = 2
             elif self.episode_number < 3e4:
+                self.number_of_agents = 2
+            elif self.episode_number < 4e4:
                 self.number_of_agents = 3
             elif self.episode_number < 5e4:
                 self.number_of_agents = 4
@@ -344,7 +344,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     rewards[i] += Config.REWARD_INFEASIBLE
 
                 # if gets close to goal
-                rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(agent.past_dist_to_goal - agent.dist_to_goal)
+                rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)

@@ -452,7 +452,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
 
-    policies = [RVOPolicy, NonCooperativePolicy]
+    policies = [RVOPolicy,NonCooperativePolicy] # GA3CCADRLPolicy
     positions_list = []
     initial_position_list = []
 
@@ -465,7 +465,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([goal_x_1,goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(0,number_of_agents-1)
+    n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -484,21 +484,21 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
 
     for ag_id in range(n_agents+1):
         policy = random.choice(policies) #RVOPolicy #
-        cooperation_coef = 0.5
-        cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = 1.0
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
             agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
                                 positions_list[ag_id+1][0], positions_list[ag_id+1][1], radius, pref_speed, None, agents_policy, agents_dynamics,
                       [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
-                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        cooperation_coef = np.random.uniform(0.0, 1.0)
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
         policy = random.choice(policies)  # RVOPolicy #
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
@@ -1100,7 +1100,7 @@ def get_testcase_hololens_and_cadrl():
     return agents
 
 if __name__ == '__main__':
-    seed = 0
+    seed = 1
     carrl = False
     
     np.random.seed(seed)

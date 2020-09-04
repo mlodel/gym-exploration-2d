@@ -20,6 +20,7 @@ plt_colors.append([0.4940, 0.1840, 0.5560])  # purple
 plt_colors.append([0.9290, 0.6940, 0.1250])  # yellow
 plt_colors.append([0.3010, 0.7450, 0.9330])  # cyan
 plt_colors.append([0.6350, 0.0780, 0.1840])  # chocolate
+plt_colors.append([1.0, 0.0, 0.0])  # red
 
 def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     if plot_save_dir is None:
@@ -168,8 +169,12 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
         for i, agent in enumerate(agents):
 
             # Plot line through agent trajectory
-            color_ind = i % len(plt_colors)
-            plt_color = plt_colors[color_ind]
+            if "RVO" in str(type(agent.policy)):
+                plt_color = plt_colors[2]
+            elif "MPC" in str(type(agent.policy)):
+                plt_color = plt_colors[1]
+            else:
+                plt_color = plt_colors[7]
             t_final = agent.global_state_history[agent.step_num-1, 0]
             if circles_along_traj:
                 plt.plot(agent.global_state_history[:agent.step_num-1, 1],
@@ -180,9 +185,9 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                          agent.global_state_history[0, 4],
                          color=plt_color, marker='*', markersize=20)
                 if i == 0:
-                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num-1, -2]*2.0,
-                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num-1, -1]*2.0,
-                             color=plt_colors[4], marker='+', markersize=20)
+                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num-1, -2],
+                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num-1, -1],
+                             color=plt_colors[1], marker='+', markersize=20)
 
                 # Display circle at agent pos every circle_spacing (nom 1.5 sec)
                 circle_spacing = 0.4

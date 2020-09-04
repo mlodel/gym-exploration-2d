@@ -26,7 +26,7 @@ class Config:
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
     PLOT_EVERY_N_EPISODES = 202 # for tensorboard visualization
-    DT             = 0.2 # seconds between simulation time steps
+    DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
@@ -34,7 +34,7 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = -0.1 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = -0.05 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = 0.01  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
@@ -48,7 +48,7 @@ class Config:
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
     NUM_PAST_ACTIONS_IN_STATE = 0
 
-    NEAR_GOAL_THRESHOLD = 0.6
+    NEAR_GOAL_THRESHOLD = 0.75
     MAX_TIME_RATIO = 5.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
@@ -63,7 +63,7 @@ class Config:
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
     PLOT_CIRCLES_ALONG_TRAJ = True
-    ANIMATION_PERIOD_STEPS = 2 # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 4 # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = None
     PLT_FIG_SIZE = (10, 8)
 
