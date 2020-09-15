@@ -451,6 +451,9 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
 
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
@@ -461,8 +464,8 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     policies = [RVOPolicy,NonCooperativePolicy] # GA3CCADRLPolicy
     positions_list = []
 
-    distance = 6#np.random.uniform(4.0, 8.0)
-    angle = 0#np.random.uniform(-np.pi, np.pi)
+    distance = np.random.uniform(4.0, 8.0)
+    angle = np.random.uniform(-np.pi, np.pi)
     x0_agent_1 = distance * np.cos(angle)
     y0_agent_1 = distance * np.sin(angle)
     goal_x_1 = -x0_agent_1
@@ -471,7 +474,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    #n_agents = number_of_agents
+    #n_agents = number_of_agents-1
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -490,7 +493,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
 
     for ag_id in range(n_agents+1):
         policy = random.choice(policies) #RVOPolicy #
-        cooperation_coef = 1.0
+        cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
             if 'GA3CCADRLPolicy' in str(agents_policy):
