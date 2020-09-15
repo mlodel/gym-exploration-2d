@@ -72,10 +72,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.min_speed = -4.0
         #self.max_speed = 4.0
 
-        self.max_heading_change = 4.0
-        self.min_heading_change = -4.0
-        self.min_speed = -4.0
-        self.max_speed = 4.0
+        self.max_heading_change = 2.0
+        self.min_heading_change = -2.0
+        self.min_speed = -2.0
+        self.max_speed = 2.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -250,19 +250,19 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
+                self.scenario = "tc.train_agents_swap_circle(number_of_agents=" + str(self.number_of_agents) + ",seed="+str(self.episode_number)+")"
         else:
-            if self.episode_number < 2e4:
+            if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 1
-            elif self.episode_number < 3e4:
+            elif self.total_number_of_steps < 2e6:
                 self.number_of_agents = 2
-            elif self.episode_number < 4e4:
+            elif self.total_number_of_steps < 3e6:
                 self.number_of_agents = 3
-            elif self.episode_number < 5e4:
+            elif self.total_number_of_steps < 5e6:
                 self.number_of_agents = 4
-            elif self.episode_number < 7e4:
+            elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
-
-        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+            self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
 
         self.agents = eval(self.scenario)
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE

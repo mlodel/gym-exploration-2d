@@ -447,11 +447,13 @@ def agents_swap(number_of_agents=2, agents_policy=LearningPolicy, agents_dynamic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[]):
+def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
-
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
     policies = [RVOPolicy,NonCooperativePolicy] # GA3CCADRLPolicy
     positions_list = []
     initial_position_list = []
@@ -466,6 +468,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
+    #n_agents = number_of_agents
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -484,7 +487,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
 
     for ag_id in range(n_agents+1):
         policy = random.choice(policies) #RVOPolicy #
-        cooperation_coef = 1.0
+        cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
             agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
@@ -492,13 +495,13 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
                       [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
-                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         policy = random.choice(policies)  # RVOPolicy #
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
