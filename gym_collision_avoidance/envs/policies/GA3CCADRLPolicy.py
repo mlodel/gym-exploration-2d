@@ -8,12 +8,14 @@ from gym_collision_avoidance.envs.config import Config
 
 class GA3CCADRLPolicy(Policy):
     def __init__(self):
-        Policy.__init__(self, str="GA3C_CADRL")
+        Policy.__init__(self, str="GA3CCADRLPolicy")
         self.is_still_learning = False
 
         self.possible_actions = network.Actions()
         num_actions = self.possible_actions.num_actions
         self.nn = network.NetworkVP_rnn(network.Config.DEVICE, 'network', num_actions)
+
+        self.policy_name = "GA3CCADRLPolicy"
 
     def initialize_network(self, **kwargs):
         if 'checkpt_name' in kwargs:

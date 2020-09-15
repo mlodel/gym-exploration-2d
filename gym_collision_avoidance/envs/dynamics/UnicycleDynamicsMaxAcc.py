@@ -6,11 +6,12 @@ import math
 class UnicycleDynamicsMaxAcc(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
-        self.max_turn_rate = 5.0 # rad/s
-        self.max_acceleration = 5.0
-        self.max_linear_acc = 5.0
-        self.max_turn_acc = 5.0
+        self.max_turn_rate = 2.0 # rad/s
+        self.max_acceleration = 7.5
+        self.max_linear_acc = 7.5
+        self.max_turn_acc = 10.0
         self.current_speed = 0.0
+        self.max_speed = 2.0
         self.current_turning_rate = 0.0
         self.kp = 2.0
 
@@ -22,6 +23,7 @@ class UnicycleDynamicsMaxAcc(Dynamics):
         turn_acc = np.clip(self.kp*(turning_rate - self.current_turning_rate), -self.max_turn_acc, self.max_turn_acc)
 
         self.current_speed += linear_acc*dt
+        self.current_speed = np.clip(self.current_speed, -self.max_speed, self.max_speed)
         self.current_turning_rate += turn_acc*dt
 
         selected_heading = wrap(self.current_turning_rate*dt + self.agent.heading_global_frame)
