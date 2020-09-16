@@ -468,7 +468,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    #n_agents = number_of_agents
+    n_agents = number_of_agents -1
 
     for ag_id in range(n_agents):
         in_collision = False
