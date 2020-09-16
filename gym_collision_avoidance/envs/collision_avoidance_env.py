@@ -19,6 +19,8 @@ from gym_collision_avoidance.envs.Map import Map
 from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
+from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -57,25 +59,12 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        # if Config.TRAIN_ON_MULTIPLE_AGENTS:
-        #     self.low_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
-        #     self.high_state = np.zeros((Config.FULL_LABELED_STATE_LENGTH))
-        # else:
-        #     self.low_state = np.zeros((Config.FULL_STATE_LENGTH))
-        #     self.high_state = np.zeros((Config.FULL_STATE_LENGTH))
+        self.ego_policy = "MPCPolicy"
 
-        # Upper/Lower bounds on Actions
-        # todo: this was changed
-        # this depends on the scenario
-        #self.max_heading_change = 4.0
-        #self.min_heading_change = -4.0
-        #self.min_speed = -4.0
-        #self.max_speed = 4.0
-
-        self.max_heading_change = 2.0
-        self.min_heading_change = -2.0
-        self.min_speed = -2.0
-        self.max_speed = 2.0
+        self.max_heading_change = 4.0
+        self.min_heading_change = -4.0
+        self.min_speed = -4.0
+        self.max_speed = 4.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -262,7 +251,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.number_of_agents = 4
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
-            self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+            self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")"
 
         self.agents = eval(self.scenario)
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
@@ -495,6 +484,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if Config.EVALUATE_MODE:
             # Episode ends when every agent is done
             game_over = which_agents_done[0]
+            #game_over = np.all(which_agents_done)
         elif Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]

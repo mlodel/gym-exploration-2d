@@ -37,3 +37,7 @@ python setup.py install
 
 # Install DRL Long's requirements
 python -m pip install torch torchvision
+
+# install python3-tk
+# install ffmpeg
+

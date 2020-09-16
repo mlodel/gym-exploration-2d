@@ -165,6 +165,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
 
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
+    plt.title(agents[0].policy.policy_name)
     if max_time > 1e-4:
         for i, agent in enumerate(agents):
 
@@ -173,8 +174,11 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                 plt_color = plt_colors[2]
             elif "MPC" in str(type(agent.policy)):
                 plt_color = plt_colors[1]
+            elif "GA3CCADRLPolicy" in str(type(agent.policy)):
+                plt_color = plt_colors[1]
             else:
                 plt_color = plt_colors[7]
+
             t_final = agent.global_state_history[agent.step_num-1, 0]
             if circles_along_traj:
                 plt.plot(agent.global_state_history[:agent.step_num-1, 1],

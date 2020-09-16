@@ -11,3 +11,4 @@ moviepy
 baselines
 stable_baselines
 optuna
+sklearn
