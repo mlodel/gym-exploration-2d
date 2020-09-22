@@ -239,7 +239,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-                self.scenario = "tc.train_agents_swap_circle(number_of_agents=" + str(self.number_of_agents) + ",seed="+str(self.episode_number)+")"
+                self.scenario = "tc.train_agents_swap_circle(number_of_agents=" + str(self.number_of_agents) +", agents_policy="+self.ego_policy+ ",seed="+str(self.episode_number)+")"
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 1
