@@ -557,7 +557,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    n_agents = number_of_agents-1
+    #n_agents = number_of_agents-1
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -640,7 +640,11 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
 
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents * 2-1):
+    n_agents = random.randint(0, np.maximum(number_of_agents, 0))
+    # n_agents = number_of_agents-1
+    # n_agents = number_of_agents - 1
+
+    for ag_id in range(n_agents * 2-1):
         in_collision = False
         while not in_collision:
             x0_agent_1 = np.random.uniform(-7.5, 7.5)
@@ -649,7 +653,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
             in_collision = is_pose_valid(initial_pose, init_positions_list)
         init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents):
+    for ag_id in range(n_agents):
         #policy = random.choice(policies) #RVOPolicy #
         if np.random.uniform(0,1)>0.9:
             policy = NonCooperativePolicy
@@ -719,7 +723,11 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents * 2-1):
+    n_agents = random.randint(0, np.maximum(number_of_agents, 0))
+    # n_agents = number_of_agents-1
+    # n_agents = number_of_agents - 1
+
+    for ag_id in range(n_agents*2-1):
         in_collision = False
         while not in_collision:
             x0_agent_1 = np.random.uniform(-7.5, 7.5)
@@ -735,7 +743,7 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
             in_collision = is_pose_valid(goal, goal_positions_list)
             goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
-    for ag_id in range(number_of_agents):
+    for ag_id in range(n_agents):
         #policy = random.choice(policies) #RVOPolicy #
         if np.random.uniform(0,1)>0.9:
             policy = NonCooperativePolicy
@@ -789,7 +797,11 @@ def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPoli
     positions_list.append(np.array([goal_x_1,goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents-1):
+    n_agents = random.randint(0, np.maximum(number_of_agents - 1, 0))
+    # n_agents = number_of_agents-1
+    #n_agents = number_of_agents - 1
+
+    for ag_id in range(n_agents):
         in_collision = False
         while not in_collision:
             x0_agent_1 = np.random.uniform(-8.0, -6.0) * random.choice(side)
@@ -802,7 +814,7 @@ def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPoli
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(number_of_agents):
+    for ag_id in range(n_agents+1):
         policy = random.choice(policies) #RVOPolicy #
         cooperation_coef = 0.5
         cooperation_coef = np.random.uniform(0.0, 1.0)
