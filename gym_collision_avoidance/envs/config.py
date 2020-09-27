@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 100# for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
     DT             = 0.2 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -42,7 +42,8 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = False
+    CURRICULUM_LEARNING = True
+    HOMOGENEOUS_TESTING = False
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector

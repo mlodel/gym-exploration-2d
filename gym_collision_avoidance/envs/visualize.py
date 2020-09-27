@@ -7,7 +7,7 @@ import matplotlib.patches as ptch
 from matplotlib.collections import LineCollection
 import glob
 import imageio
-
+from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
 
 matplotlib.rcParams.update({'font.size': 24})
@@ -20,6 +20,9 @@ plt_colors.append([0.4940, 0.1840, 0.5560])  # purple
 plt_colors.append([0.9290, 0.6940, 0.1250])  # yellow
 plt_colors.append([0.3010, 0.7450, 0.9330])  # cyan
 plt_colors.append([0.6350, 0.0780, 0.1840])  # chocolate
+plt_colors.append([0.8, 0.0, 0.80])  # magenta
+plt_colors.append([0.62, 0.62, 0.62])  # grey
+plt_colors.append([0.2, 0.6, 0.1])  # light blue
 plt_colors.append([1.0, 0.0, 0.0])  # red
 
 def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
@@ -165,7 +168,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
 
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
-    plt.title(agents[0].policy.policy_name)
+    #plt.title(agents[0].policy.policy_name)
     if max_time > 1e-4:
         for i, agent in enumerate(agents):
 
@@ -178,6 +181,9 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                 plt_color = plt_colors[1]
             else:
                 plt_color = plt_colors[7]
+
+            if Config.HOMOGENEOUS_TESTING:
+                plt_color = plt_colors[i]
 
             t_final = agent.global_state_history[agent.step_num-1, 0]
             if circles_along_traj:

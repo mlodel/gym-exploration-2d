@@ -21,6 +21,8 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+#from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -55,11 +57,12 @@ class CollisionAvoidanceEnv(gym.Env):
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
         self.number_of_agents = 1
-        self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+")"
+        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        #self.scenario = "train_agents_swap_circle"
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "MPCPolicy"
+        self.ego_policy = "LearningMPCPolicy"
 
         self.max_heading_change = 4.0
         self.min_heading_change = -4.0
@@ -239,7 +242,8 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-                self.scenario = "tc.train_agents_swap_circle(number_of_agents=" + str(self.number_of_agents) + ",seed="+str(self.episode_number)+")"
+            self.agents = eval("tc." + self.scenario[2] + "(number_of_agents=" + str(
+                self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 1
@@ -251,9 +255,10 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.number_of_agents = 4
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
-            self.scenario = "tc.train_agents_swap_circle(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")"
-
-        self.agents = eval(self.scenario)
+            scenario_index = np.random.randint(0,len(self.scenario))
+            self.agents = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
+            #self.agents = eval("tc." + self.scenario + "(number_of_agents=" + str(
+            #    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
 
         for agent in self.agents:
@@ -483,8 +488,10 @@ class CollisionAvoidanceEnv(gym.Env):
         
         if Config.EVALUATE_MODE:
             # Episode ends when every agent is done
-            game_over = which_agents_done[0]
-            #game_over = np.all(which_agents_done)
+            if Config.HOMOGENEOUS_TESTING:
+                game_over = np.all(which_agents_done)
+            else:
+                game_over = which_agents_done[0]
         elif Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]
