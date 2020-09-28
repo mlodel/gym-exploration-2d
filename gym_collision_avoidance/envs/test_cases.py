@@ -28,7 +28,7 @@ from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-#from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 #from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics

@@ -21,7 +21,7 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-#from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
@@ -242,8 +242,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-            self.agents = eval("tc." + self.scenario[2] + "(number_of_agents=" + str(
-                self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
+            self.agents = eval("tc." + self.scenario[0] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 1
