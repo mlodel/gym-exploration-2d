@@ -112,9 +112,9 @@ def get_testcase_random(num_agents=None, side_length=None, speed_bnds=None, radi
         agents_sensors=agents_sensors)
     return agents
 
-def is_pose_valid(new_pose, position_list):
+def is_pose_valid(new_pose, position_list,distance=1.5):
     for pose in position_list:
-        if np.linalg.norm(new_pose - pose) < 1.5:
+        if np.linalg.norm(new_pose - pose) < distance:
             return False
     return True
 
@@ -481,7 +481,7 @@ def homogeneous_agents_swap(number_of_agents=2, agents_policy=MPCPolicy, agents_
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    if seed:
+    if not seed:
         n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
@@ -558,7 +558,8 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    #n_agents = number_of_agents -1
+    if not seed:
+        n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -609,7 +610,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
 
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
@@ -651,7 +652,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
             x0_agent_1 = np.random.uniform(-7.5, 7.5)
             y0_agent_1 = np.random.uniform(-7.5, 7.5)
             initial_pose = np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(initial_pose, init_positions_list)
+            in_collision = is_pose_valid(initial_pose, init_positions_list,4.0)
         init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(n_agents):
@@ -688,7 +689,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
 
         agents.append(
             Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
-                  init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
+                  init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
@@ -716,10 +717,15 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
     policies = [RVOPolicy,NonCooperativePolicy] # GA3CCADRLPolicy
     init_positions_list = []
     goal_positions_list = []
-    x0_agent_1 = np.random.uniform(-7.5, 7.5)
-    y0_agent_1 = np.random.uniform(-7.5, 7.5)
-    goal_x_1 = np.random.uniform(-7.5, 7.5)
-    goal_y_1 = np.random.uniform(-7.5, 7.5)
+    in_collision = False
+    while not in_collision:
+        x0_agent_1 = np.random.uniform(-7.5, 7.5)
+        y0_agent_1 = np.random.uniform(-7.5, 7.5)
+        goal_x_1 = np.random.uniform(-7.5, 7.5)
+        goal_y_1 = np.random.uniform(-7.5, 7.5)
+        goal = np.array([goal_x_1, goal_y_1])
+        initial_pose = np.array([x0_agent_1, y0_agent_1])
+        in_collision = is_pose_valid(initial_pose, [goal],4.0)
 
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
@@ -730,20 +736,23 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
     # n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents*2-1):
-        in_collision = False
-        while not in_collision:
+        is_valid = False
+        while not is_valid:
             x0_agent_1 = np.random.uniform(-7.5, 7.5)
             y0_agent_1 = np.random.uniform(-7.5, 7.5)
             initial_pose = np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(initial_pose, init_positions_list)
-            init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
-        in_collision = False
-        while not in_collision:
+            is_valid_1 = is_pose_valid(initial_pose, init_positions_list)
+
             goal_x_1 = np.random.uniform(-7.5, 7.5)
             goal_y_1 = np.random.uniform(-7.5, 7.5)
             goal = np.array([goal_x_1, goal_y_1])
-            in_collision = is_pose_valid(goal, goal_positions_list)
-            goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
+            is_valid_2 = is_pose_valid(goal, goal_positions_list)
+
+            is_valid_3 = is_pose_valid(goal, [initial_pose],3.0)
+            is_valid = is_valid_1 and is_valid_2 and is_valid_3
+
+        init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+        goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
     for ag_id in range(n_agents):
         #policy = random.choice(policies) #RVOPolicy #
