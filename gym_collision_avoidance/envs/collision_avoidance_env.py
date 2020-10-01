@@ -242,10 +242,15 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-            self.agents = eval("tc." + self.scenario[0] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
+            scenario_index = np.random.randint(0, len(self.scenario))
+            if Config.ANIMATE_EPISODES:
+                self.agents = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
+            else:
+                self.agents = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
+                    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         else:
             if self.total_number_of_steps < 1e6:
-                self.number_of_agents = 1
+                self.number_of_agents = 5
             elif self.total_number_of_steps < 2e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 3e6:
