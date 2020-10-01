@@ -481,7 +481,8 @@ def homogeneous_agents_swap(number_of_agents=2, agents_policy=MPCPolicy, agents_
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
-    n_agents = number_of_agents - 1
+    if seed:
+        n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -580,7 +581,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
@@ -605,7 +606,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                   positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
@@ -640,7 +641,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
 
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(0, np.maximum(number_of_agents, 0))
+    n_agents = random.randint(1, np.maximum(number_of_agents, 1))
     # n_agents = number_of_agents-1
     # n_agents = number_of_agents - 1
 
@@ -659,7 +660,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
@@ -684,7 +685,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         agents.append(
             Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
                   init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
@@ -723,8 +724,9 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = random.randint(0, np.maximum(number_of_agents, 0))
-    # n_agents = number_of_agents-1
+    n_agents = random.randint(1, np.maximum(number_of_agents, 1))
+    if seed:
+        n_agents = number_of_agents-1
     # n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents*2-1):
@@ -749,7 +751,7 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         cooperation_coef = 0.8
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
@@ -774,7 +776,7 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
             policy = NonCooperativePolicy
         else:
             policy = RVOPolicy
-        policy = RVOPolicy
+
         agents.append(
             Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
                   goal_positions_list[2*ag_id+1][0], goal_positions_list[2*ag_id+1][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
