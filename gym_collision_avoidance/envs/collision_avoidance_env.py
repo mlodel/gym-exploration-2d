@@ -243,6 +243,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
             scenario_index = np.random.randint(0, len(self.scenario))
+            scenario_index = 0
             if Config.ANIMATE_EPISODES:
                 self.agents = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
             else:
@@ -496,6 +497,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 game_over = np.all(which_agents_done)
             else:
                 game_over = which_agents_done[0]
+                # hack just to get the plots with all agents finishing at same time
+                game_over = np.all(which_agents_done)
         elif Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]

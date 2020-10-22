@@ -10,6 +10,7 @@ import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
 
+from matplotlib.lines import Line2D
 matplotlib.rcParams.update({'font.size': 24})
 
 plt_colors = []
@@ -124,6 +125,15 @@ def plot_episode(agents, in_evaluate_mode,
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label='GO-MPC',
+                              markerfacecolor=plt_colors[1], markersize=15),
+                       #Line2D([0], [0], marker='o', color='w', label='Non-cooperative Agent',
+                       #       markerfacecolor=plt_colors[10], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Cooperative Agent',
+                              markerfacecolor=plt_colors[2], markersize=15)]
+
+    ax.legend(handles=legend_elements, loc='upper right')
+
     plt.draw()
 
     if limits is not None:
@@ -132,6 +142,9 @@ def plot_episode(agents, in_evaluate_mode,
         plt.ylim(ylim)
     else:
         ax.axis('equal')
+        # hack to avoid zoom
+        plt.xlim([-8.0,8.0])
+        plt.ylim([-8.0,8.0])
 
     if in_evaluate_mode and save:
         fig_name = base_fig_name.format(
@@ -170,7 +183,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
     max_time_alpha_scalar = 1.2
     #plt.title(agents[0].policy.policy_name)
     if max_time > 1e-4:
-        for i, agent in enumerate(agents):
+        for i, agent in reversed(list(enumerate(agents))):
 
             # Plot line through agent trajectory
             if "RVO" in str(type(agent.policy)):
@@ -180,7 +193,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
             elif "GA3CCADRLPolicy" in str(type(agent.policy)):
                 plt_color = plt_colors[1]
             else:
-                plt_color = plt_colors[7]
+                plt_color = plt_colors[10]
 
             if Config.HOMOGENEOUS_TESTING:
                 plt_color = plt_colors[i]
