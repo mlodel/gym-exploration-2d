@@ -41,13 +41,20 @@ class RVOPolicy(Policy):
         
         self.rvo_agents = [None]*self.n_agents
 
+        #Process the obstacles
+        self.sim.processObstacles()
+
         # Init simulation
         for a in range(self.n_agents):
             self.rvo_agents[a] = self.sim.addAgent((0,0))
         
         self.is_init = True
 
-    def find_next_action(self, obs, agents, agent_index):
+    def find_next_action(self, obs, agents, agent_index, obstacle):
+        #Add obstacles to environment
+        for i in range(len(obstacle)):
+            self.sim.addObstacle(obstacle[i])
+
         # Initialize vectors on first call to infer number of agents
         if not self.is_init:
             self.n_agents = len(agents)

@@ -25,11 +25,11 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-<<<<<<< HEAD
+#<<<<<<< HEAD
     PLOT_EVERY_N_EPISODES = 1000# for tensorboard visualization
-=======
+#=======
     PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
->>>>>>> 51b0a359ef1cad81a0469cbb9069a9a2707d7cb2
+#>>>>>>> 51b0a359ef1cad81a0469cbb9069a9a2707d7cb2
     DT             = 0.2 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent

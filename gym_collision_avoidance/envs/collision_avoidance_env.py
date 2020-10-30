@@ -119,6 +119,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.perturbed_obs = None
 
+        self.obstacle = None
+
     def step(self, actions, dt=None):
         ###############################
         # This is the main function. An external process will compute an action for every agent
@@ -154,7 +156,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         """"""
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
-            plot_episode(self.agents, False, self.map, self.test_case_index,
+            plot_episode(self.agents, self.obstacle, False, self.map, self.test_case_index,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
                 plot_policy_name=self.plot_policy_name,
@@ -165,7 +167,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 show=False,
                 save=True)
         if Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 and self.episode_step_number % self.animation_period_steps == 0:
-            plot_episode(self.agents, False, self.map, self.episode_number,
+            plot_episode(self.agents, self.obstacle, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
                 plot_policy_name=self.plot_policy_name,
@@ -188,11 +190,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def reset(self):
         if Config.ANIMATE_EPISODES and Config.EVALUATE_MODE and self.episode_step_number is not None and self.episode_step_number > 0 and self.plot_episodes and self.test_case_index >= 0:
-            plot_episode(self.agents, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+            plot_episode(self.agents, self.obstacle, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             if Config.ANIMATE_EPISODES:
                 animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, test_case_index=self.test_case_index, agents=self.agents)
         elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 2:
-            plot_episode(self.agents, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+            plot_episode(self.agents, self.obstacle, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
@@ -224,7 +226,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index)
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacle)
 
         # After all agents have selected actions, run one dynamics update
         for i, agent in enumerate(self.agents):
@@ -244,9 +246,9 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.prev_episode_agents = copy.deepcopy(self.agents)
             scenario_index = np.random.randint(0, len(self.scenario))
             if Config.ANIMATE_EPISODES:
-                self.agents = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
+                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
             else:
-                self.agents = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
+                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         else:
             if self.total_number_of_steps < 1e6:
@@ -260,7 +262,7 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
             scenario_index = np.random.randint(0,len(self.scenario))
-            self.agents = eval("tc."+self.scenario[0]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
+            self.agents, self.obstacle = eval("tc."+self.scenario[0]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
             #self.agents = eval("tc." + self.scenario + "(number_of_agents=" + str(
             #    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
