@@ -51,7 +51,7 @@ class RVOPolicy(Policy):
         self.is_init = True
 
     def find_next_action(self, obs, agents, agent_index, obstacle):
-        #Add obstacles to environment
+        #Add obstacles to environment (added by Sant)
         for i in range(len(obstacle)):
             self.sim.addObstacle(obstacle[i])
 

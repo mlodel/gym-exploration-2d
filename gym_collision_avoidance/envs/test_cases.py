@@ -449,7 +449,7 @@ def agents_swap(number_of_agents=2, agents_policy=LearningPolicy, agents_dynamic
                   [OtherAgentsStatesSensor], 0))
     return agents
 
-def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None):
+def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None, obstacle=None):
     #In this scenario there is an obstacle in the middle and there is one agent that needs to cross the room, avoiding the obstacle
     pref_speed = 1.0
     radius = 0.5
@@ -478,7 +478,7 @@ def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents
 
     return agents, obstacle
 
-def agent_with_door(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None):
+def agent_with_door(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -529,7 +529,7 @@ def agent_with_door(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics
 
     return agents, obstacle
 
-def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None):
+def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -586,7 +586,7 @@ def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, a
 
     return agents, obstacle
 
-def agent_with_corridor(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None):
+def agent_with_corridor(number_of_agents=4, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -637,7 +637,7 @@ def agent_with_corridor(number_of_agents=4, agents_policy=RVOPolicy, agents_dyna
 
     return agents, obstacle
 
-def agent_with_corridor_2(number_of_agents=8, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None):
+def agent_with_corridor_2(number_of_agents=8, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -687,7 +687,7 @@ def agent_with_corridor_2(number_of_agents=8, agents_policy=RVOPolicy, agents_dy
 
     return agents, obstacle
 
-def agent_with_crossing(number_of_agents=1, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None):
+def agent_with_crossing(number_of_agents=1, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -844,6 +844,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
+    obstacle = []
     if seed:
         random.seed(seed)
         np.random.seed(seed)
@@ -930,7 +931,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                   positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
-    return agents
+    return agents, obstacle
 
 def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)

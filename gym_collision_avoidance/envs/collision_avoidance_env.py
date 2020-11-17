@@ -10,6 +10,7 @@ import numpy as np
 import itertools
 import copy
 import os
+import matplotlib.pyplot as plt
 
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
@@ -57,7 +58,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
         self.number_of_agents = 1
-        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        #self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        self.scenario = ["agent_with_multiple_obstacles", "agent_with_corridor"]
+        #self.scenario = ["agent_with_obstacle", "train_agents_random_positions"]
         #self.scenario = "train_agents_swap_circle"
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
@@ -154,6 +157,10 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
+        # Get batch grid
+        batch_grid = self._get_grid()
+        # Add batch_grid to the next_observation dictionary
+        #next_observations[0]['batch_grid'] = batch_grid # This does not work??
         """"""
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
             plot_episode(self.agents, self.obstacle, False, self.map, self.test_case_index,
@@ -185,6 +192,9 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             which_agents_done_dict[agent.id] = which_agents_done[i]
 
+        # Add batch_grid to infos dictionary, since it did not work with observations.
+        which_agents_done_dict['batch_grid'] = batch_grid
+
         return next_observations, rewards, game_over, \
             {'which_agents_done': which_agents_done_dict}
 
@@ -206,6 +216,9 @@ class CollisionAvoidanceEnv(gym.Env):
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
+        #Reset batch grid
+        #self._get_grid() #todo: I am not sure what to reset here??
+        #self.batch_grid = np.zeros([60,60])
         return self._get_obs()
 
     def close(self):
@@ -226,7 +239,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacle)
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacle) #obstacle is added by Sant
 
         # After all agents have selected actions, run one dynamics update
         for i, agent in enumerate(self.agents):
@@ -234,8 +247,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def update_top_down_map(self):
         self.map.add_agents_to_map(self.agents)
-        # plt.imshow(self.map.map)
-        # plt.pause(0.1)
+        #plt.imshow(self.map.map)
+        #plt.pause(0.1)
 
     def set_agents(self, agents):
         self.default_agents = agents
@@ -275,15 +288,55 @@ class CollisionAvoidanceEnv(gym.Env):
         self.static_map_filename = map_filename
 
     def _init_static_map(self):
+        #self.set_static_map('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/002.png')
+        '''
+        ## Michael everetts version:
         if isinstance(self.static_map_filename, list):
             static_map_filename = np.random.choice(self.static_map_filename)
         else:
             static_map_filename = self.static_map_filename
+        '''
+        ## Sants version:
+        # Check if there are obstacles given
+        if self.obstacle is None:
+            static_map_filename = None
+        else: 
+            static_map_filename = self.obstacle
 
-        x_width = 16 # meters
-        y_width = 16 # meters
+        x_width = 30 # 16 # meters #changed this
+        y_width = 30 # 16 # meters #changed this
         grid_cell_size = 0.1 # meters/grid cell
         self.map = Map(x_width, y_width, grid_cell_size, static_map_filename)
+
+    def _get_grid(self):
+        # This function gets the submap grid around the agent including the static obstacles
+
+        # Necessary inputs
+        submap_width = 6
+        submap_height = 6
+        grid_cell_size = 0.1 # Resolution
+
+        # Get position of ego agent
+        ego_agent = self.agents[0]
+        ego_agent_pos = ego_agent.pos_global_frame
+
+        # Get map indices of ego agent
+        ego_agent_pos_idx, _ = self.map.world_coordinates_to_map_indices(ego_agent_pos)
+
+        span_x = int(np.ceil(submap_width / grid_cell_size)) # 60
+        span_y = int(np.ceil(submap_height / grid_cell_size)) # 60
+
+        # Get submap indices around ego agent
+        start_idx_x, start_idx_y, end_idx_x, end_idx_y = self.map.getSubmapByIndices(ego_agent_pos_idx[0], ego_agent_pos_idx[1], span_x, span_y)
+
+        # Obtain static map including all obstacles
+        # static_map = self.map.get_occupancy_grid(self.obstacle) # Old version
+        static_map = self.map.static_map.astype(float)
+
+        # Get the batch_grid with filled in values
+        batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+
+        return batch_grid
 
     def _compute_rewards(self):
         ###############################
@@ -466,7 +519,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 # Collision with another agent!
                 collision_with_agent[i] = True
             i += 1
-        """TODO: Static Collision Avoidance check
+        #TODO: Static Collision Avoidance check
         for i in agent_inds:
             agent = self.agents[i]
             [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
@@ -477,7 +530,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if in_map and np.any(self.map.static_map[mask]):
                 # Collision with wall!
                 collision_with_wall[i] = True
-        """
+
 
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
 
