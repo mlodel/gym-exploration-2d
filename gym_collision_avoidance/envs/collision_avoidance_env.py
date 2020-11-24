@@ -158,9 +158,8 @@ class CollisionAvoidanceEnv(gym.Env):
         next_observations = self._get_obs()
 
         # Get batch grid
-        batch_grid = self._get_grid()
-        # Add batch_grid to the next_observation dictionary
-        #next_observations[0]['batch_grid'] = batch_grid # This does not work??
+        #batch_grid = self._get_grid()
+
         """"""
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
             plot_episode(self.agents, self.obstacle, False, self.map, self.test_case_index,
@@ -216,9 +215,7 @@ class CollisionAvoidanceEnv(gym.Env):
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
-        #Reset batch grid
-        #self._get_grid() #todo: I am not sure what to reset here??
-        #self.batch_grid = np.zeros([60,60])
+
         return self._get_obs()
 
     def close(self):
@@ -520,6 +517,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 collision_with_agent[i] = True
             i += 1
         #TODO: Static Collision Avoidance check
+        """
         for i in agent_inds:
             agent = self.agents[i]
             [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
@@ -530,6 +528,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if in_map and np.any(self.map.static_map[mask]):
                 # Collision with wall!
                 collision_with_wall[i] = True
+        """
 
 
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
