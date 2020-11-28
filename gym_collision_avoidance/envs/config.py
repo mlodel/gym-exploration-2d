@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 1000# for tensorboard visualization
     DT             = 0.2 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -34,8 +34,8 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = 0.0 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = 0.0 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
-    REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
+    REWARD_DISTANCE_TO_GOAL = 0.01  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     ENABLE_COLLISION_AVOIDANCE = True
@@ -68,7 +68,13 @@ class Config:
     PLT_LIMITS = None
     PLT_FIG_SIZE = (10, 8)
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
+    # Gridmap parameters
+    v = 60 # Pixels
+    SUBMAP_WIDTH = 60 # Pixels
+    SUBMAP_HEIGHT = 60 # Pixels
+    SUBMAP_RESOLUTION = 0.1 # Pixel / meter
+
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
@@ -138,6 +144,14 @@ class Config:
             'std': np.tile(np.array([5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0, 5.0, 1.0], dtype=np.float32), (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1)),
             'mean': np.tile(np.array([0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0, 0.0, 1.0], dtype=np.float32), (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1)),
             },
+        'local_grid': {
+            'dtype': np.float32,
+            'size': (SUBMAP_WIDTH, SUBMAP_HEIGHT),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'get_sensor_data("local_grid")',
+            'std': np.ones((SUBMAP_WIDTH,SUBMAP_HEIGHT), dtype=np.float32),
+            'mean': np.ones((SUBMAP_WIDTH,SUBMAP_HEIGHT), dtype=np.float32),
+        },
         'laserscan': {
             'dtype': np.float32,
             'size': LASERSCAN_LENGTH,
