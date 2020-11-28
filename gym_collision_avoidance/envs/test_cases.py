@@ -579,10 +579,10 @@ def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, a
         agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                           positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                           None, agents_policy, agents_dynamics,
-                          [OtherAgentsStatesSensor], 2*ag_id))
+                          [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id))
         agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                           positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, agents_policy, agents_dynamics,
-                          [OtherAgentsStatesSensor], 2*ag_id+1))
+                          [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id+1))
 
     return agents, obstacle
 
@@ -630,10 +630,10 @@ def agent_with_corridor(number_of_agents=4, agents_policy=RVOPolicy, agents_dyna
         agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                           positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                           None, agents_policy, agents_dynamics,
-                          [OtherAgentsStatesSensor], 2*ag_id))
+                          [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id))
         agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                           positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, agents_policy, agents_dynamics,
-                          [OtherAgentsStatesSensor], 2*ag_id+1))
+                          [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id+1))
 
     return agents, obstacle
 
