@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 class OccupancyGridSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
-        self.x_width = 5
-        self.y_width = 5
-        self.grid_cell_size = 0.01 # currently ignored
+        self.x_width = Config.SUBMAP_WIDTH
+        self.y_width = Config.SUBMAP_HEIGHT
+        self.grid_cell_size = Config.SUBMAP_RESOLUTION
 
         self.name = 'local_grid'
 
@@ -70,8 +70,8 @@ class OccupancyGridSensor(Sensor):
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
 
-        span_x = int(np.ceil(Config.SUBMAP_HEIGHT))  # 60
-        span_y = int(np.ceil(Config.SUBMAP_WIDTH))  # 60
+        span_x = int(np.ceil(self.x_widthT))  # 60
+        span_y = int(np.ceil(self.y_width))  # 60
 
         # Get submap indices around ego agent
         start_idx_x, start_idx_y, end_idx_x, end_idx_y = top_down_map.getSubmapByIndices(ego_agent_pos_idx[0],
@@ -79,10 +79,12 @@ class OccupancyGridSensor(Sensor):
 
         # Obtain static map including all obstacles
         # static_map = self.map.get_occupancy_grid(self.obstacle) # Old version
-        static_map = top_down_map.static_map.astype(float)
+        #static_map = top_down_map.static_map.astype(float)
 
         # Get the batch_grid with filled in values
-        batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        #batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        # Get the batch_grid with filled in values
+        batch_grid = top_down_map.map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
 
         return batch_grid
 

@@ -157,15 +157,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
-        # Get batch grid
 
-        self._get_grid()
-        # Add batch_grid to the next_observation dictionary
-        #next_observations[0]['batch_grid'] = batch_grid # This does not work??
-
-        #batch_grid = self._get_grid()
-
-        """"""
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
             plot_episode(self.agents, self.obstacle, False, self.map, self.test_case_index,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
@@ -196,9 +188,6 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             which_agents_done_dict[agent.id] = which_agents_done[i]
 
-        # Add batch_grid to infos dictionary, since it did not work with observations.
-        which_agents_done_dict['batch_grid'] = self.batch_grid
-
         return next_observations, rewards, game_over, \
             {'which_agents_done': which_agents_done_dict}
 
@@ -220,13 +209,7 @@ class CollisionAvoidanceEnv(gym.Env):
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
-<<<<<<< HEAD
-        #Reset batch grid
-        #self._get_grid()
-        self.batch_grid = np.zeros([60,60])  # todo: I am not sure if this is correct?
-=======
 
->>>>>>> 6ef2bfa26782f39785d0bbf8401e7517afd7828a
         return self._get_obs()
 
     def close(self):
@@ -266,7 +249,6 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
             scenario_index = np.random.randint(0, len(self.scenario))
-            scenario_index = 0
             if Config.ANIMATE_EPISODES:
                 self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
             else:
@@ -316,36 +298,6 @@ class CollisionAvoidanceEnv(gym.Env):
         y_width = 30 # 16 # meters #changed this
         grid_cell_size = 0.1 # meters/grid cell
         self.map = Map(x_width, y_width, grid_cell_size, static_map_filename)
-
-    def _get_grid(self):
-        # This function gets the submap grid around the agent including the static obstacles
-
-        # Necessary inputs
-        submap_width = 6
-        submap_height = 6
-        grid_cell_size = 0.1 # Resolution
-
-        # Get position of ego agent
-        ego_agent = self.agents[0]
-        ego_agent_pos = ego_agent.pos_global_frame
-
-        # Get map indices of ego agent
-        ego_agent_pos_idx, _ = self.map.world_coordinates_to_map_indices(ego_agent_pos)
-
-        span_x = int(np.ceil(submap_width / grid_cell_size)) # 60
-        span_y = int(np.ceil(submap_height / grid_cell_size)) # 60
-
-        # Get submap indices around ego agent
-        start_idx_x, start_idx_y, end_idx_x, end_idx_y = self.map.getSubmapByIndices(ego_agent_pos_idx[0], ego_agent_pos_idx[1], span_x, span_y)
-
-        # Obtain static map including all obstacles
-        # static_map = self.map.get_occupancy_grid(self.obstacle) # Old version
-        static_map = self.map.static_map.astype(float)
-
-        # Get the batch_grid with filled in values
-        self.batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
-
-        return self.batch_grid
 
     def _compute_rewards(self):
         ###############################

@@ -55,7 +55,7 @@ class Config:
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 5.0
+    RVO_TIME_HORIZON = 1.0
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
