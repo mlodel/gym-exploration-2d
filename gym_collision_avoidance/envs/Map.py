@@ -32,6 +32,7 @@ class Map():
             # Convert to bool
             self.static_map = self.static_map.astype(bool)
 
+        #self.origin_coords = np.array([(self.x_width/2.)/self.grid_cell_size, (self.y_width/2.)/self.grid_cell_size])
         self.map = None # This will store the current static+dynamic map at each timestep
 
     def world_coordinates_to_map_indices(self, pos):
@@ -39,7 +40,8 @@ class Map():
         gx = int(np.floor(self.origin_coords[0]-pos[1]/self.grid_cell_size))
         gy = int(np.floor(self.origin_coords[1]+pos[0]/self.grid_cell_size))
         grid_coords = np.array([gx, gy])
-        in_map = gx >= 0 and gy >= 0 and gx < self.dims[0] and gy < self.dims[1] # replaced self.map.shape[0] with self.dims[0]
+	#in_map = gx >= 0 and gy >= 0 and gx < self.map.shape[0] and gy < self.map.shape[1]        
+	in_map = gx >= 0 and gy >= 0 and gx < self.dims[0] and gy < self.dims[1] # replaced self.map.shape[0] with self.dims[0]
         return grid_coords, in_map
 
     def world_coordinates_to_map_indices_vec(self, pos):

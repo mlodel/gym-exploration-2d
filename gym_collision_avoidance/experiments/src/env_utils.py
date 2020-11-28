@@ -48,7 +48,7 @@ def run_episode(env, one_env):
         steps += 1
 
     # After end of episode, compute statistics about the agents
-    agents = one_env.agents
+    agents = one_env.prev_episode_agents
     # agents = one_env.prev_episode_agents
     time_to_goal = np.array([a.t for a in agents])
     extra_time_to_goal = np.array([a.t - a.straight_line_time_to_reach_goal for a in agents])

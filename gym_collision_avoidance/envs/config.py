@@ -25,8 +25,8 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 1000# for tensorboard visualization
-    DT             = 0.2 # seconds between simulation time steps
+    PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
+    DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
@@ -34,8 +34,8 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = 0.0 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = 0.0 # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP   = 0.0 # default reward given if none of the others apply (encourage speed)
-    REWARD_DISTANCE_TO_GOAL = 0.01  # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
+    REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     ENABLE_COLLISION_AVOIDANCE = True
@@ -44,6 +44,9 @@ class Config:
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
     CURRICULUM_LEARNING = True
     HOMOGENEOUS_TESTING = False
+
+    #MPC
+    FORCES_N = 15
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector

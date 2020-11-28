@@ -126,6 +126,38 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
+    legend_elements = []
+
+    for agent in agents:
+        if "RVO" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='RVO',
+                              markerfacecolor=plt_colors[2], markersize=15)
+        elif "MPC" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='MPC',
+                   markerfacecolor=plt_colors[1], markersize=15)
+        elif "GA3CCADRLPolicy" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='GA3C'+ str(agent.id),
+                   markerfacecolor=plt_colors[8], markersize=15)
+        else:
+            leg = Line2D([0], [0], marker='o', color='w', label='Non cooperative',
+                                          markerfacecolor=plt_colors[8], markersize=15)
+        label_exists = False
+        for legend in legend_elements:
+            label_exists = label_exists or (legend.get_label() in  str(type(agent.policy)))
+        if not label_exists:
+            legend_elements.append(leg)
+    """
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label='GO-MPC',
+                              markerfacecolor=plt_colors[7], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Predicted Trajectory',
+                              markerfacecolor=plt_colors[1], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Guidance Network',
+                              markerfacecolor=plt_colors[8], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Cooperative Agent',
+                              markerfacecolor=plt_colors[2], markersize=15)]
+    """
+    ax.legend(handles=legend_elements, loc='upper right')
+
     plt.draw()
 
     if limits is not None:
@@ -174,6 +206,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
     #plt.title(agents[0].policy.policy_name)
+    other_plt_color = plt_colors[2]
     if max_time > 1e-4:
         # Add obstacles
         for i in range(len(obstacle)):
@@ -224,6 +257,38 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                     ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
                                  radius=agent.radius, fc=c, ec=plt_color,
                                  fill=True))
+
+                if "Social" in str(type(agent.policy)):
+                    for id,other_agent in enumerate(agents):
+                        # Plot line through agent trajectory
+                        if "RVO" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[2]
+                        elif "MPC" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[1]
+                        elif "GA3CCADRLPolicy" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[1]
+                        else:
+                            other_plt_color = plt_colors[10]
+
+                        for ind in range(agent.policy.FORCES_N):
+                            alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                            c = rgba2rgb(other_plt_color + [float(alpha)])
+                            ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind],
+                                                    radius=agent.radius, fc=c, ec=other_plt_color,
+                                                    fill=True))
+                        if id == 0:
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                c = rgba2rgb(plt_colors[8] + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.predicted_traj[ind],
+                                                        radius=agent.radius, fc=c, ec=plt_colors[8],
+                                                        fill=True))
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
+                                c = rgba2rgb(plt_colors[7] + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
+                                                        radius=agent.radius, fc=c, ec=plt_colors[7],
+                                                        fill=True))
 
                 # Display text of current timestamp every text_spacing (nom 1.5 sec)
                 """

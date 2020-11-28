@@ -22,7 +22,9 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-#from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+#from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
@@ -66,6 +68,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = tc.go_to_goal
 
         self.ego_policy = "LearningMPCPolicy"
+        self.other_agents_policy = "RVOPolicy"
 
         self.max_heading_change = 4.0
         self.min_heading_change = -4.0
@@ -124,6 +127,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.obstacle = None
 
+	self.prediction_model = None
+
     def step(self, actions, dt=None):
         ###############################
         # This is the main function. An external process will compute an action for every agent
@@ -147,6 +152,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.episode_step_number += 1
         self.total_number_of_steps += 1
+
+        # Generate Predictions
+        if self.prediction_model:
+            self._prediction_step()
 
         # Take action
         self._take_action(actions, dt)
@@ -205,7 +214,17 @@ class CollisionAvoidanceEnv(gym.Env):
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
+
+        if self.prediction_model:
+            if self.episode_number > 1:
+                self.prediction_model.reset_states(len(self.agents))
+            else:
+                self.prediction_model.load_model(len(self.agents))
+
+        self.plot_policy_name = self.agents[0].policy.str + '_'+str(self.prediction_model)
+
         self._init_static_map()
+
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
@@ -215,6 +234,20 @@ class CollisionAvoidanceEnv(gym.Env):
     def close(self):
         print("--- Closing CollisionAvoidanceEnv! ---")
         return
+
+    def _prediction_step(self):
+        if self.episode_step_number > 1:
+            self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
+        else:
+            # For the first time step Use CV model
+            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 2))
+            for ag_id, agent in enumerate(self.agents):
+                for t in range(Config.FORCES_N):
+                    self.predicted_trajectory[ag_id, t,:] = agent.pos_global_frame + agent.vel_global_frame * Config.DT
+        indices = np.arange(len(self.agents))
+        for id, agent in enumerate(self.agents):
+            agent.policy.predicted_trajectory =  self.predicted_trajectory[indices != id]
+            agent.policy.all_predicted_trajectory = self.predicted_trajectory
 
     def _take_action(self, actions, dt):
         num_actions_per_agent = 2  # speed, delta heading angle
@@ -250,10 +283,10 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.prev_episode_agents = copy.deepcopy(self.agents)
             scenario_index = np.random.randint(0, len(self.scenario))
             if Config.ANIMATE_EPISODES:
-                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", agents_policy=" + self.ego_policy + ", seed="+str(self.episode_number)+")")
+                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number)+")")
             else:
                 self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
-                    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
+                    self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 5
@@ -266,9 +299,26 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
             scenario_index = np.random.randint(0,len(self.scenario))
-            self.agents, self.obstacle = eval("tc."+self.scenario[0]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
-            #self.agents = eval("tc." + self.scenario + "(number_of_agents=" + str(
-            #    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
+            self.agents = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
+
+        if "GA3C" in str(self.ego_policy):
+            if self.episode_number == 1:
+                self.policies=[]
+                ga3c_params = {
+                    'policy': GA3CCADRLPolicy,
+                    'checkpt_dir': 'IROS18',
+                    'checkpt_name': 'network_01900000'
+                }
+                for _ in range(self.number_of_agents*2):
+                    self.policies.append(GA3CCADRLPolicy())
+                    self.policies[-1].initialize_network(**ga3c_params)
+                for i,agent in enumerate(self.agents):
+                    agent.policy = self.policies[i]
+            else:
+                if self.agents[0].policy == "GA3CCADRLPolicy":
+                    for i,agent in enumerate(self.agents):
+                        agent.policy = self.policies[i]
+
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
 
         for agent in self.agents:
