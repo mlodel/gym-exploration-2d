@@ -158,7 +158,7 @@ class CollisionAvoidanceEnv(gym.Env):
         next_observations = self._get_obs()
 
         # Get batch grid
-        batch_grid = self._get_grid()
+        self._get_grid()
         # Add batch_grid to the next_observation dictionary
         #next_observations[0]['batch_grid'] = batch_grid # This does not work??
         """"""
@@ -193,7 +193,7 @@ class CollisionAvoidanceEnv(gym.Env):
             which_agents_done_dict[agent.id] = which_agents_done[i]
 
         # Add batch_grid to infos dictionary, since it did not work with observations.
-        which_agents_done_dict['batch_grid'] = batch_grid
+        which_agents_done_dict['batch_grid'] = self.batch_grid
 
         return next_observations, rewards, game_over, \
             {'which_agents_done': which_agents_done_dict}
@@ -217,8 +217,8 @@ class CollisionAvoidanceEnv(gym.Env):
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']), dtype=Config.STATE_INFO_DICT[state]['dtype'])
         #Reset batch grid
-        #self._get_grid() #todo: I am not sure what to reset here??
-        #self.batch_grid = np.zeros([60,60])
+        #self._get_grid()
+        self.batch_grid = np.zeros([60,60])  # todo: I am not sure if this is correct?
         return self._get_obs()
 
     def close(self):
@@ -334,9 +334,9 @@ class CollisionAvoidanceEnv(gym.Env):
         static_map = self.map.static_map.astype(float)
 
         # Get the batch_grid with filled in values
-        batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        self.batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
 
-        return batch_grid
+        return self.batch_grid
 
     def _compute_rewards(self):
         ###############################
