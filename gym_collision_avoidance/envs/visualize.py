@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import os
 import matplotlib.patches as ptch
+from matplotlib.patches import Polygon
 from matplotlib.collections import LineCollection
 import glob
 import imageio
@@ -86,7 +87,7 @@ def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_
     #clip = mp.VideoFileClip(animation_filename)
     #clip.write_videofile(animation_filename[:-4]+".mp4")
 
-def plot_episode(agents, in_evaluate_mode,
+def plot_episode(agents, obstacle, in_evaluate_mode,
     env_map=None, test_case_index=0, env_id=0,
     circles_along_traj=True, plot_save_dir=None, plot_policy_name=None,
     save_for_animation=False, limits=None, perturbed_obs=None,
@@ -109,9 +110,9 @@ def plot_episode(agents, in_evaluate_mode,
 
     if perturbed_obs is None:
         # Normal case of plotting
-        max_time = draw_agents(agents, circles_along_traj, ax)
+        max_time = draw_agents(agents, obstacle, circles_along_traj, ax)
     else:
-        max_time = draw_agents(agents, circles_along_traj, ax, last_index=-2)
+        max_time = draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-2)
         plot_perturbed_observation(agents, ax, perturbed_obs)
 
     # Label the axes
@@ -164,12 +165,16 @@ def plot_episode(agents, in_evaluate_mode,
         plt.pause(0.0001)
 
 
-def draw_agents(agents, circles_along_traj, ax, last_index=-1):
+def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
 
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
     #plt.title(agents[0].policy.policy_name)
     if max_time > 1e-4:
+        # Add obstacles
+        for i in range(len(obstacle)):
+            ax.add_patch(plt.Polygon(np.array(obstacle[i])))
+
         for i, agent in enumerate(agents):
 
             # Plot line through agent trajectory
