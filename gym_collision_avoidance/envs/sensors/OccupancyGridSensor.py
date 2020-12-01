@@ -70,7 +70,7 @@ class OccupancyGridSensor(Sensor):
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
 
-        span_x = int(np.ceil(self.x_widthT))  # 60
+        span_x = int(np.ceil(self.x_width))  # 60
         span_y = int(np.ceil(self.y_width))  # 60
 
         # Get submap indices around ego agent

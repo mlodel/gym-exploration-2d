@@ -50,10 +50,11 @@ class RVOPolicy(Policy):
         
         self.is_init = True
 
-    def find_next_action(self, obs, agents, agent_index, obstacle):
+    def find_next_action(self, obs, agents, agent_index, obstacles):
         #Add obstacles to environment (added by Sant)
-        for i in range(len(obstacle)):
-            self.sim.addObstacle(obstacle[i])
+
+        for obstacle in obstacles:
+            self.sim.addObstacle(obstacle)
 
         # Initialize vectors on first call to infer number of agents
         if not self.is_init:

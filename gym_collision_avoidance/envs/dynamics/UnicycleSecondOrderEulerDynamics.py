@@ -6,7 +6,7 @@ import math
 class UnicycleSecondOrderEulerDynamics(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
-        self.max_turn_rate = 5.0 # rad/s
+        self.max_turn_rate = 3.0 # rad/s
 
     def step(self, action, dt):
         selected_speed = np.linalg.norm(self.agent.vel_global_frame)+action[0]*dt

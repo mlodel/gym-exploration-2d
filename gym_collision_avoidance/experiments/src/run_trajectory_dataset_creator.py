@@ -15,7 +15,7 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 
 np.random.seed(1)
 
-Config.EVALUATE_MODE = True
+Config.EVALUATE_MODE = False
 Config.SAVE_EPISODE_PLOTS = False
 Config.SHOW_EPISODE_PLOTS = False
 Config.ANIMATE_EPISODES = False
@@ -144,6 +144,7 @@ def main():
 
     one_env.plot_save_dir = plot_save_dir
     one_env.scenario = ["homogeneous_agents_swap","homogeneous_agents_pairwise_swap","homogeneous_agents_random_positions","homogeneous_corridor_scenario"]
+    one_env.scenario = ["agent_with_corridor"]
     one_env.ego_policy = "RVOPolicy"
     one_env.number_of_agents = 5
     env.reset()
@@ -165,13 +166,13 @@ def main():
         times_to_goal, extra_times_to_goal, collision, all_at_goal, any_stuck, agents = run_episode(env, one_env)
 
         # Change the global state history according with the number of steps required to finish the episode
-        if all_at_goal:
-            for agent in agents:
-                agent.global_state_history = agent.global_state_history[:agent.step_num]
-            last_time = add_traj(agents, trajs, dt,last_time,writer)
-            test_case +=1
+        #if all_at_goal:
+        for agent in agents:
+            agent.global_state_history = agent.global_state_history[:agent.step_num]
+        last_time = add_traj(agents, trajs, dt,last_time,writer)
+        test_case +=1
 
-            pbar.update(1)
+        pbar.update(1)
 
         if (test_case % 2000 == 0) and (test_case>8):
             fname = pkl_dir+'RVO'+ str(id) + '.pkl'

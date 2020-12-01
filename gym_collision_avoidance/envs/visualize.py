@@ -26,6 +26,7 @@ plt_colors.append([0.8, 0.0, 0.80])  # magenta
 plt_colors.append([0.62, 0.62, 0.62])  # grey
 plt_colors.append([0.2, 0.6, 0.1])  # light blue
 plt_colors.append([1.0, 0.0, 0.0])  # red
+plt_colors.append([0.0, 0.0, 0.0])  # red
 
 def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     if plot_save_dir is None:
@@ -167,8 +168,18 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     else:
         ax.axis('equal')
         # hack to avoid zoom
-        plt.xlim([-8.0,8.0])
-        plt.ylim([-8.0,8.0])
+        x_pos = []
+        y_pos = []
+        if obstacles:
+            for obstacle in obstacles:
+                for pos in obstacle:
+                    x_pos.append(pos[0])
+                    y_pos.append(pos[1])
+            plt.xlim([min(x_pos),max(x_pos)])
+            plt.ylim([min(y_pos),max(y_pos)])
+        else:
+            plt.xlim([-10.0,10.0])
+            plt.ylim([-10.0,10.0])
 
     if in_evaluate_mode and save:
         fig_name = base_fig_name.format(
@@ -210,7 +221,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
     if max_time > 1e-4:
         # Add obstacles
         for i in range(len(obstacle)):
-            ax.add_patch(plt.Polygon(np.array(obstacle[i])))
+            ax.add_patch(plt.Polygon(np.array(obstacle[i]),ec=plt_colors[-1]))
 
         for i, agent in reversed(list(enumerate(agents))):
 

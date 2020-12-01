@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 1000 # for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -44,6 +44,7 @@ class Config:
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
     CURRICULUM_LEARNING = True
     HOMOGENEOUS_TESTING = False
+    PERFORMANCE_TEST = True
 
     #MPC
     FORCES_N = 15
@@ -62,7 +63,7 @@ class Config:
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
-    MAX_NUM_AGENTS_IN_ENVIRONMENT = 10
+    MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
@@ -72,12 +73,11 @@ class Config:
     PLT_FIG_SIZE = (10, 8)
 
     # Gridmap parameters
-    v = 60 # Pixels
     SUBMAP_WIDTH = 60 # Pixels
     SUBMAP_HEIGHT = 60 # Pixels
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']#,'local_grid']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM

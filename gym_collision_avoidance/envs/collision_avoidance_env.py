@@ -59,9 +59,9 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
-        self.number_of_agents = 1
-        #self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
-        self.scenario = ["agent_with_multiple_obstacles", "agent_with_corridor"]
+        self.number_of_agents = 2
+        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
         #self.scenario = ["agent_with_obstacle", "train_agents_random_positions"]
         #self.scenario = "train_agents_swap_circle"
         #self.scenario = "tc.corridor_scenario(0)"
@@ -125,9 +125,12 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.perturbed_obs = None
 
-        self.obstacle = None
+        self.obstacles = None
 
-	self.prediction_model = None
+        self.prediction_model = None
+
+        self.prev_scenario_index = 0
+        self.scenario_index = 0
 
     def step(self, actions, dt=None):
         ###############################
@@ -168,7 +171,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
 
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
-            plot_episode(self.agents, self.obstacle, False, self.map, self.test_case_index,
+            plot_episode(self.agents, self.obstacles, False, self.map, self.test_case_index,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
                 plot_policy_name=self.plot_policy_name,
@@ -179,7 +182,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 show=False,
                 save=True)
         if Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 and self.episode_step_number % self.animation_period_steps == 0:
-            plot_episode(self.agents, self.obstacle, False, self.map, self.episode_number,
+            plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
                 plot_policy_name=self.plot_policy_name,
@@ -202,11 +205,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def reset(self):
         if Config.ANIMATE_EPISODES and Config.EVALUATE_MODE and self.episode_step_number is not None and self.episode_step_number > 0 and self.plot_episodes and self.test_case_index >= 0:
-            plot_episode(self.agents, self.obstacle, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+            plot_episode(self.agents, self.obstacles, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             if Config.ANIMATE_EPISODES:
                 animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, test_case_index=self.test_case_index, agents=self.agents)
-        elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 2:
-            plot_episode(self.agents, self.obstacle, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+        elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 0:
+            plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
@@ -214,15 +217,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.begin_episode = True
         self.episode_step_number = 0
         self._init_agents()
-
-        if self.prediction_model:
-            if self.episode_number > 1:
-                self.prediction_model.reset_states(len(self.agents))
-            else:
-                self.prediction_model.load_model(len(self.agents))
-
-        self.plot_policy_name = self.agents[0].policy.str + '_'+str(self.prediction_model)
-
+        self._init_prediction_model()
         self._init_static_map()
 
         for state in Config.STATES_IN_OBS:
@@ -263,33 +258,45 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacle) #obstacle is added by Sant
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
 
         # After all agents have selected actions, run one dynamics update
         for i, agent in enumerate(self.agents):
             agent.take_action(all_actions[i,:], dt)
 
     def update_top_down_map(self):
-        self.map.add_agents_to_map(self.agents)
+        print("Not adding agents to map")
+        #self.map.add_agents_to_map(self.agents)
         #plt.imshow(self.map.map)
         #plt.pause(0.1)
 
     def set_agents(self, agents):
         self.default_agents = agents
 
+    def _init_prediction_model(self):
+        if self.prediction_model:
+            if self.episode_number > 1:
+                self.prediction_model.reset_states(len(self.agents))
+            else:
+                self.prediction_model.load_model(len(self.agents))
+            self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
+        else:
+            self.plot_policy_name = self.agents[0].policy.str + '_CV'
+
     def _init_agents(self):
         if self.evaluate:
             if self.agents is not None:
                 self.prev_episode_agents = copy.deepcopy(self.agents)
-            scenario_index = np.random.randint(0, len(self.scenario))
-            if Config.ANIMATE_EPISODES:
-                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number)+")")
+            self.prev_scenario_index = self.scenario_index
+            self.scenario_index = np.random.randint(0, len(self.scenario))
+            if Config.ANIMATE_EPISODES or Config.PERFORMANCE_TEST:
+                self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number)+")")
             else:
-                self.agents, self.obstacle = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
+                self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
             if self.total_number_of_steps < 1e6:
-                self.number_of_agents = 5
+                self.number_of_agents = 2
             elif self.total_number_of_steps < 2e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 3e6:
@@ -299,7 +306,8 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
             scenario_index = np.random.randint(0,len(self.scenario))
-            self.agents = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
+            self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
+                               ", other_agents_policy=" + self.other_agents_policy+ ")")
 
         if "GA3C" in str(self.ego_policy):
             if self.episode_number == 1:
@@ -339,10 +347,10 @@ class CollisionAvoidanceEnv(gym.Env):
         '''
         ## Sants version:
         # Check if there are obstacles given
-        if self.obstacle is None:
+        if self.obstacles is None:
             static_map_filename = None
         else: 
-            static_map_filename = self.obstacle
+            static_map_filename = self.obstacles
 
         x_width = 30 # 16 # meters #changed this
         y_width = 30 # 16 # meters #changed this
@@ -500,16 +508,21 @@ class CollisionAvoidanceEnv(gym.Env):
                 collision_with_agent[j] = True
                 if i == 0 and collision_with_agent[i]:
                     print("Ego-agent collided")
-        for i in agent_inds:
-            agent = self.agents[i]
-            [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
-            mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
-            # plt.figure('static map')
-            # plt.imshow(self.map.static_map + mask)
-            # plt.pause(0.1)
-            if in_map and np.any(self.map.static_map[mask]):
-                # Collision with wall!
-                collision_with_wall[i] = True
+        if self.obstacles:
+            for i in agent_inds:
+                agent = self.agents[i]
+                [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
+                mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
+                # plt.figure('static map')
+                # plt.imshow(self.map.static_map + mask)
+                # plt.pause(0.1)
+                if in_map and np.any(self.map.static_map[mask]):
+                    # Collision with wall!
+                    collision_with_wall[i] = True
+        else:
+            for i in agent_inds:
+                collision_with_wall[i] = False
+
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
 
     def check_action_for_collisions(self,action,ego_agent,other_agents):
