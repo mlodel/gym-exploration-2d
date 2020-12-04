@@ -33,6 +33,7 @@ from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 #from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
+from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
@@ -1899,7 +1900,6 @@ def preset_testCases(num_agents, full_test_suite=False, vpref_constraint=False, 
             assert(0)
     return test_cases
 
-
 def gen_circle_test_case(num_agents, radius):
     tc = np.zeros((num_agents, 6))
     for i in range(num_agents):
@@ -1930,7 +1930,7 @@ def get_testcase_hololens_and_ga3c_cadrl():
               # Agent(-goal_x1, goal_y1, goal_x1, -goal_y1, 0.5, 1.0, 0.5, ExternalPolicy, ExternalDynamics, [], 5)]
     return agents
 
-def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None, obstacle=None):
     #In this scenario there is an obstacle in the middle and there is one agent that needs to cross the room, avoiding the obstacle
     pref_speed = 1.0
     radius = 0.5
@@ -1939,7 +1939,8 @@ def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents
     #Add obstacle in the middle
     obstacle = []
     #Square
-    obstacle_1 = [(1, 1), (-1, 1), (-1, -1), (1, -1)]
+    obstacle_1 = [(2, 2), (-0, 2), (-0, -0), (2, -0)]
+    obs = np.array(obstacle_1)
     #Triangle
     #obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
     obstacle.append(obstacle_1)
@@ -1950,12 +1951,13 @@ def agent_with_obstacle(number_of_agents=1, agents_policy=LearningPolicy, agents
     y0_agent_1 = distance * np.sin(angle)
     goal_x_1 = -x0_agent_1
     goal_y_1 = -y0_agent_1
-    agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, RVOPolicy,
-                        UnicycleDynamicsMaxAcc,
-                        [OtherAgentsStatesSensor], 0))
-    agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, RVOPolicy,
-                        UnicycleDynamicsMaxAcc,
-                        [OtherAgentsStatesSensor], 0))
+    # FirstOrderDynamics
+    agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
+                        UnicycleSecondOrderEulerDynamics,
+                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
+    agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
+                        UnicycleDynamics,
+                        [OtherAgentsStatesSensor], 1))
 
     return agents, obstacle
 

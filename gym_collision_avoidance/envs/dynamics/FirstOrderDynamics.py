@@ -3,19 +3,13 @@ from gym_collision_avoidance.envs.dynamics.Dynamics import Dynamics
 from gym_collision_avoidance.envs.util import wrap, find_nearest
 import math
 
-class UnicycleSecondOrderEulerDynamics(Dynamics):
+class FirstOrderDynamics(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
-        self.max_turn_rate = 3.0 # rad/s
-        self.max_vel = 2.0
 
     def step(self, action, dt):
-        selected_speed = np.clip(np.linalg.norm(self.agent.vel_global_frame)+action[0]*dt, 0, self.max_vel)
-        turning_rate = self.agent.angular_speed_global_frame +action[1]*dt
-
-        self.agent.angular_speed_global_frame = np.clip(turning_rate, -self.max_turn_rate, self.max_turn_rate)
-
-        selected_heading = wrap(self.agent.angular_speed_global_frame*dt + self.agent.heading_global_frame)
+        selected_speed = action[0]
+        selected_heading = wrap(action[1]* dt + self.agent.heading_global_frame)
 
         dx = selected_speed * np.cos(selected_heading) * dt
         dy = selected_speed * np.sin(selected_heading) * dt
@@ -27,3 +21,11 @@ class UnicycleSecondOrderEulerDynamics(Dynamics):
         self.agent.delta_heading_global_frame = wrap(selected_heading -
                                                self.agent.heading_global_frame)
         self.agent.heading_global_frame = selected_heading
+
+        # turning dir: needed for cadrl value fn
+        if abs(self.agent.turning_dir) < 1e-5:
+            self.agent.turning_dir = 0.11 * np.sign(selected_heading)
+        elif self.agent.turning_dir * selected_heading < 0:
+            self.agent.turning_dir = max(-np.pi, min(np.pi, -self.agent.turning_dir + selected_heading))
+        else:
+            self.agent.turning_dir = np.sign(self.agent.turning_dir) * max(0.0, abs(self.agent.turning_dir)-0.1)

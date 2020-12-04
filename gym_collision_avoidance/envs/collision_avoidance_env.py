@@ -22,6 +22,7 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 #from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
@@ -60,9 +61,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
         self.number_of_agents = 2
-        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        #self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
         #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
-        #self.scenario = ["agent_with_obstacle", "train_agents_random_positions"]
+        self.scenario = ["agent_with_obstacle"]
         #self.scenario = "train_agents_swap_circle"
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
@@ -168,7 +169,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Take observation
         next_observations = self._get_obs()
-
 
         if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
             plot_episode(self.agents, self.obstacles, False, self.map, self.test_case_index,
@@ -352,10 +352,10 @@ class CollisionAvoidanceEnv(gym.Env):
         else: 
             static_map_filename = self.obstacles
 
-        x_width = 30 # 16 # meters #changed this
-        y_width = 30 # 16 # meters #changed this
-        grid_cell_size = 0.1 # meters/grid cell
-        self.map = Map(x_width, y_width, grid_cell_size, static_map_filename)
+        self.map = Map(Config.MAP_WIDTH, Config.MAP_HEIGHT, Config.SUBMAP_RESOLUTION, static_map_filename)
+
+        for agent in self.agents:
+            agent.policy.map = self.map
 
     def _compute_rewards(self):
         ###############################
@@ -517,7 +517,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 # plt.imshow(self.map.static_map + mask)
                 # plt.pause(0.1)
                 if in_map and np.any(self.map.static_map[mask]):
-                    # Collision with wall!
+                    print("Collision with wall!")
                     collision_with_wall[i] = True
         else:
             for i in agent_inds:

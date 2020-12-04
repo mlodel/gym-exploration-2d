@@ -54,7 +54,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 2.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
@@ -77,7 +77,11 @@ class Config:
     SUBMAP_HEIGHT = 60 # Pixels
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']#,'local_grid']
+    # STATIC MAP
+    MAP_WIDTH = 30 # Meters
+    MAP_HEIGHT = 30 # Meters
+
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM

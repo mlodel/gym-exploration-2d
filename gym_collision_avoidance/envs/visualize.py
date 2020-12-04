@@ -168,6 +168,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     else:
         ax.axis('equal')
         # hack to avoid zoom
+        """
         x_pos = []
         y_pos = []
         if obstacles:
@@ -178,8 +179,9 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
             plt.xlim([min(x_pos),max(x_pos)])
             plt.ylim([min(y_pos),max(y_pos)])
         else:
-            plt.xlim([-10.0,10.0])
-            plt.ylim([-10.0,10.0])
+        """
+        plt.xlim([-10.0,10.0])
+        plt.ylim([-10.0,10.0])
 
     if in_evaluate_mode and save:
         fig_name = base_fig_name.format(
@@ -319,6 +321,9 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                             agent.global_state_history[ind, 2]+y_text_offset,
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
+                if "Static" in str(type(agent.policy)):
+                    obstacles = np.array(agent.policy.static_obstacles.obstacles)
+                    ax.add_patch(plt.Polygon(obstacles, ec=plt_colors[-1],fill=False))
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1
                 alpha = 1 - \
@@ -360,6 +365,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                 #         agent.global_state_history[ind, 2] + y_text_offset,
                 #         '%.1f' % agent.global_state_history[ind, 0],
                 #         color=plt_color)
+
         return max_time
 
 def plot_perturbed_observation(agents, ax, perturbed_info):
