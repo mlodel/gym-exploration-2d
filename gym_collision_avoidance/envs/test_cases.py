@@ -1183,7 +1183,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
         if ag_id == 0:
                 agents.append(Agent(positions_list[0][0], positions_list[0][1],
                                     positions_list[1][0], positions_list[1][1], radius, pref_speed,
-                                    None, ego_agent_policy, agents_dynamics,
+                                    None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
                                     [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],

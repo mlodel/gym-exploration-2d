@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 1000 # for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -59,8 +59,8 @@ class Config:
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 1.0
-    RVO_COLLAB_COEFF = 0.5
+    RVO_TIME_HORIZON = 4.0
+    RVO_COLLAB_COEFF = 0.8
     RVO_ANTI_COLLAB_T = 1.0
 
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 2

@@ -27,7 +27,7 @@ Config.TRAIN_SINGLE_AGENT = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'test_swap_dataset'
+results_subdir = 'free_space_dataset'
 
 
 policies = {
@@ -144,7 +144,7 @@ def main():
 
     one_env.plot_save_dir = plot_save_dir
     one_env.scenario = ["homogeneous_agents_swap","homogeneous_agents_pairwise_swap","homogeneous_agents_random_positions","homogeneous_corridor_scenario"]
-    one_env.scenario = ["agent_with_corridor"]
+    #one_env.scenario = ["agent_with_corridor"]
     one_env.ego_policy = "RVOPolicy"
     one_env.number_of_agents = 5
     env.reset()
@@ -174,7 +174,7 @@ def main():
 
         pbar.update(1)
 
-        if (test_case % 2000 == 0) and (test_case>8):
+        if (test_case % 1000 == 0) and (test_case>8):
             fname = pkl_dir+'RVO'+ str(id) + '.pkl'
             #fname = pkl_dir + 'RVO' + str(id) + '.json'
             # Protocol 2 makes it compatible for Python 2 and 3

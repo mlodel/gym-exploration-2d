@@ -64,17 +64,17 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
         #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
         self.scenario = ["agent_with_obstacle"]
-        #self.scenario = "train_agents_swap_circle"
+        self.scenario = ["train_agents_swap_circle"]
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
         self.ego_policy = "LearningMPCPolicy"
         self.other_agents_policy = "RVOPolicy"
 
-        self.max_heading_change = 4.0
-        self.min_heading_change = -4.0
-        self.min_speed = -4.0
-        self.max_speed = 4.0
+        self.max_heading_change = 1.0
+        self.min_heading_change = 0.0
+        self.min_speed = 0.0
+        self.max_speed = 1.0
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -295,17 +295,11 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
-            if self.total_number_of_steps < 1e6:
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < 2e6:
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < 3e6:
-                self.number_of_agents = 3
-            elif self.total_number_of_steps < 5e6:
-                self.number_of_agents = 4
-            elif self.total_number_of_steps < 7e6:
-                self.number_of_agents = 5
-            scenario_index = np.random.randint(0,len(self.scenario))
+            if self.total_number_of_steps < 1e5:
+                self.scenario = ["train_agents_swap_circle"]
+            else:
+                self.scenario = ["agent_with_obstacle"]
+            scenario_index = 0#np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", other_agents_policy=" + self.other_agents_policy+ ")")
 
