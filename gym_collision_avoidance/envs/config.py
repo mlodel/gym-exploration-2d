@@ -12,7 +12,7 @@ class Config:
     SAVE_EPISODE_PLOTS = False
     TRAIN_MODE           = False # Enable to see the trained agent in action (for testing)
     PLAY_MODE           = False # Enable to see the trained agent in action (for testing)
-    EVALUATE_MODE       = False # Enable to see the trained agent in action (for testing)
+    EVALUATE_MODE       = True # Enable to see the trained agent in action (for testing)
     TRAIN_SINGLE_AGENT = True
 
     LSTM_HIDDEN_SIZE = 16
@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 1 # for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -47,20 +47,21 @@ class Config:
     PERFORMANCE_TEST = True
 
     #MPC
-    FORCES_N = 15
+    FORCES_N = 20
+    FORCES_DT = 0.2
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 2.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 4.0
-    RVO_COLLAB_COEFF = 0.8
+    RVO_TIME_HORIZON = 1.0
+    RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 2
@@ -81,7 +82,7 @@ class Config:
     MAP_WIDTH = 30 # Meters
     MAP_HEIGHT = 30 # Meters
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'heading_ego_frame','radius', 'pref_speed', 'other_agents_states']#,'local_grid']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM

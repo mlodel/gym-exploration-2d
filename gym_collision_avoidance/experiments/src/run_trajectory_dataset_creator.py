@@ -27,7 +27,7 @@ Config.TRAIN_SINGLE_AGENT = False
 Config.DT = 0.1
 start_from_last_configuration = False
 
-results_subdir = 'free_space_dataset'
+results_subdir = 'free_space_dataset2'
 
 
 policies = {
@@ -45,7 +45,7 @@ policies = {
             }
 
 num_agents_to_test = [2]
-num_test_cases = 10000
+num_test_cases = 3000
 test_case_args = {}
 Config.NUM_TEST_CASES = num_test_cases
 
@@ -143,7 +143,7 @@ def main():
     os.makedirs(pkl_dir, exist_ok=True)
 
     one_env.plot_save_dir = plot_save_dir
-    one_env.scenario = ["homogeneous_agents_swap","homogeneous_agents_pairwise_swap","homogeneous_agents_random_positions","homogeneous_corridor_scenario"]
+    one_env.scenario = ["single_agents_swap", "single_agents_random_swap","single_agents_random_positions", "single_corridor_scenario"]
     #one_env.scenario = ["agent_with_corridor"]
     one_env.ego_policy = "RVOPolicy"
     one_env.number_of_agents = 5
@@ -160,8 +160,6 @@ def main():
     pbar = tqdm(total=num_test_cases)
     id = 0
     while test_case < num_test_cases:
-        one_env.number_of_agents = 5
-        one_env.test_case_index = test_case
 
         times_to_goal, extra_times_to_goal, collision, all_at_goal, any_stuck, agents = run_episode(env, one_env)
 
@@ -174,7 +172,7 @@ def main():
 
         pbar.update(1)
 
-        if (test_case % 1000 == 0) and (test_case>8):
+        if (test_case % 500 == 0) and (test_case>8):
             fname = pkl_dir+'RVO'+ str(id) + '.pkl'
             #fname = pkl_dir + 'RVO' + str(id) + '.json'
             # Protocol 2 makes it compatible for Python 2 and 3
