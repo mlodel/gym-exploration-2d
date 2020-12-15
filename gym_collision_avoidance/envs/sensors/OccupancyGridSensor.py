@@ -1,7 +1,10 @@
 import numpy as np
 from gym_collision_avoidance.envs.sensors.Sensor import Sensor
 from gym_collision_avoidance.envs.config import Config
+import math
+import pylab as pl
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 class OccupancyGridSensor(Sensor):
     def __init__(self):
@@ -9,7 +12,7 @@ class OccupancyGridSensor(Sensor):
         self.x_width = Config.SUBMAP_WIDTH
         self.y_width = Config.SUBMAP_HEIGHT
         self.grid_cell_size = Config.SUBMAP_RESOLUTION
-
+        self.plot = False
         self.name = 'local_grid'
 
     def sense(self, agents, agent_index, top_down_map):
@@ -63,7 +66,6 @@ class OccupancyGridSensor(Sensor):
 
         """
         # Get position of ego agent
-
         ego_agent = agents[agent_index]
         ego_agent_pos = ego_agent.pos_global_frame
 
@@ -82,15 +84,35 @@ class OccupancyGridSensor(Sensor):
         #static_map = top_down_map.static_map.astype(float)
 
         # Get the batch_grid with filled in values
-        #batch_grid = static_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        #batch_grid = np.zeros((int(self.y_width/top_down_map.grid_cell_size), int(self.x_width/top_down_map.grid_cell_size)), dtype=bool)
         # Get the batch_grid with filled in values
-        batch_grid = top_down_map.map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        batch_grid = top_down_map.map[start_idx_y:end_idx_y,start_idx_x:end_idx_x]
+
+        if self.plot:
+            self.plot_top_down_map(top_down_map, ego_agent_pos_idx, start_idx_y, start_idx_x)
+            self.plot_batch_grid(batch_grid)
 
         return batch_grid
 
     def resize(self, og_map):
         resized_og_map = og_map.copy()
         return resized_og_map
+
+    # Plot
+    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_y, start_idx_x):
+        fig = plt.figure("Top down map")
+        ax = fig.subplots(1)
+        ax.imshow(top_down_map.map, aspect='equal')
+        ax.scatter(ego_agent_idx[0], ego_agent_idx[1], s=100, c='red', marker='o')
+        rect = patches.Rectangle((start_idx_x, start_idx_y), self.x_width, self.y_width, linewidth=1, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+        plt.show()
+
+    def plot_batch_grid(self, batch_grid):
+        plt.figure("batch_grid")
+        plt.imshow(batch_grid, aspect='equal')
+        plt.scatter(self.x_width/2, self.y_width/2, s=100, c='red', marker='o')
+        plt.show()
 
 if __name__ == '__main__':
     from gym_collision_avoidance.envs.Map import Map

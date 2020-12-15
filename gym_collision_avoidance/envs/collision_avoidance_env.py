@@ -295,7 +295,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
-            if self.total_number_of_steps < 1e5:
+            if self.total_number_of_steps < 110000:
                 self.scenario = ["train_agents_swap_circle"]
             else:
                 self.scenario = ["agent_with_obstacle"]
@@ -341,7 +341,7 @@ class CollisionAvoidanceEnv(gym.Env):
         '''
         ## Sants version:
         # Check if there are obstacles given
-        if self.obstacles is None:
+        if len(self.obstacles) == 0:
             static_map_filename = None
         else: 
             static_map_filename = self.obstacles
@@ -538,18 +538,18 @@ class CollisionAvoidanceEnv(gym.Env):
                 collision_with_agent[i] = True
             i += 1
         #TODO: Static Collision Avoidance check
-        """
-        for i in agent_inds:
-            agent = self.agents[i]
-            [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
-            mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
-            # plt.figure('static map')
-            # plt.imshow(self.map.static_map + mask)
-            # plt.pause(0.1)
-            if in_map and np.any(self.map.static_map[mask]):
-                # Collision with wall!
-                collision_with_wall[i] = True
-        """
+        if self.obstacles:
+            for i in agent_inds:
+                agent = self.agents[i]
+                [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.pos_global_frame)
+                mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
+                # plt.figure('static map')
+                # plt.imshow(self.map.static_map + mask)
+                # plt.pause(0.1)
+                if in_map and np.any(self.map.static_map[mask]):
+                    # Collision with wall!
+                    collision_with_wall[i] = True
+
 
 
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
