@@ -9,16 +9,15 @@ import matplotlib.pyplot as plt
 class AngularMapSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
-        self.discretization = 5 #degrees
-        self.no_of_slices = 72
-        self.max_range = 6
-        self.x_width = 120
-        self.y_width = 120
+        self.no_of_slices = Config.NUM_OF_SLICES
+        self.max_range = Config.MAX_RANGE
+        self.x_width = 20 * self.max_range
+        self.y_width = 20 * self.max_range
         # For full FOV:
         self.angle_max = math.pi
         self.angle_min = -math.pi
         self.name = 'angular_map'
-        self.plot = False
+        self.plot = True
 
     def sense(self, agents, agent_index, top_down_map):
         '''
@@ -29,9 +28,6 @@ class AngularMapSensor(Sensor):
         calculates the distance to the the ego_agent and in which slice it is using polar coordinates.
         Then it saves the point of the obstacle that is closest to the agent inside that slice.
         '''
-        # Initialize angular map
-        Angular_Map = self.max_range * np.ones([self.no_of_slices])  # vector of 72
-
         # Get position of ego agent
         ego_agent = agents[agent_index]
         ego_agent_pos = ego_agent.pos_global_frame
@@ -48,6 +44,21 @@ class AngularMapSensor(Sensor):
                                                                                          span_y)
         # Get the batch_grid with filled in values
         batch_grid = top_down_map.map[start_idx_y:end_idx_y, start_idx_x:end_idx_x]
+
+        angular_map = self.angular_map_from_batch_grid(batch_grid)
+        #todo: create for laser scan data
+        #angular_map = self.angular_map_from_laser_scan()
+
+        if self.plot:
+            self.plot_angular_grid(angular_map)
+
+        return angular_map
+
+    def angular_map_from_batch_grid(self, batch_grid):
+        ## Get data from batch grid
+
+        # Initialize angular map
+        Angular_Map = self.max_range * np.ones([self.no_of_slices])  # vector of 72
 
         # Get all indices where an obstacle is
         idx = np.where(batch_grid == True)
@@ -71,10 +82,6 @@ class AngularMapSensor(Sensor):
                 rad_idx = rad_idx + self.no_of_slices
             Angular_Map[rad_idx] = min(Angular_Map[rad_idx], l2norm)
 
-        if self.plot:
-            # Angular_Map /= self.max_range
-            self.plot_angular_grid(Angular_Map)
-
         return Angular_Map
 
     def indices_to_map_world_coordinates(self, ind):
@@ -92,16 +99,17 @@ class AngularMapSensor(Sensor):
         self.plot_Angular_map_vector(ax_ped_grid, Angular_Map, max_range=6.0, min_angle=0.0,
                                      max_angle=2 * np.pi)
         ax_ped_grid.plot(30, 30, color='r', marker='o', markersize=4)
-        ax_ped_grid.arrow(0, 0, 1, 0, head_width=0.1,
-                          head_length=self.max_range)  # agent poiting direction
+        ax_ped_grid.scatter(0, 0, s=100, c='red', marker='o')
+        #ax_ped_grid.arrow(0, 0, 1, 0, head_width=0.5,
+        #                 head_length=0.5)  # agent poiting direction
         # x- and y-range only need to be [-1, 1] since the pedestrian grid is normalized
         ax_ped_grid.set_xlim([-self.max_range - 1, self.max_range + 1])
         ax_ped_grid.set_ylim([-self.max_range - 1, self.max_range + 1])
         fig.canvas.draw()
 
         # sleep(0.5)  # Time in seconds.
-        pl.show(block=False)
-        sleep(0.5)  # Time in seconds.
+        #pl.show(block=False)
+        #sleep(0.5)  # Time in seconds.
 
     def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6, min_angle=0.0, max_angle=2 * np.pi):
         number_elements = Angular_Map.shape[0]

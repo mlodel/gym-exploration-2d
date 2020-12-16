@@ -1939,10 +1939,11 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
     #Add obstacle in the middle
     obstacle = []
     #Square
-    #obstacle_1 = [(2, 2), (-0, 2), (-0, -0), (2, -0)]
+    obstacle_1 = [(2, 2), (-0, 2), (-0, -0), (2, -0)]
+    #obstacle_1 = [(-1,-1), (-3,-1), (-3,-3), (-1, -3)] # Different location
     #obs = np.array(obstacle_1)
     #Triangle
-    obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
+    #obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
     obstacle.append(obstacle_1)
     other_agents_policy = RVOPolicy
     distance = np.random.uniform(6.0, 8.0)

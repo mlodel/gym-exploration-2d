@@ -81,7 +81,12 @@ class Config:
     MAP_WIDTH = 30 # Meters
     MAP_HEIGHT = 30 # Meters
 
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal','radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid']
+    # Angular Map
+    NUM_OF_SLICES = 72
+    MAX_RANGE = 6
+
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid']
+    # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
@@ -158,6 +163,14 @@ class Config:
             'attr': 'get_sensor_data("local_grid")',
             'std': np.ones((SUBMAP_WIDTH,SUBMAP_HEIGHT), dtype=np.float32),
             'mean': np.ones((SUBMAP_WIDTH,SUBMAP_HEIGHT), dtype=np.float32),
+        },
+        'angular_map': {
+            'dtype': np.float32,
+            'size': NUM_OF_SLICES,
+            'bounds': [0., 6.],
+            'attr': 'get_sensor_data("angular_map")',
+            'std': np.ones(NUM_OF_SLICES, dtype=np.float32),
+            'mean': np.ones(NUM_OF_SLICES, dtype=np.float32),
         },
         'laserscan': {
             'dtype': np.float32,
