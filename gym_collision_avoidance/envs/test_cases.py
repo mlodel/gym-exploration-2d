@@ -39,6 +39,7 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import Unicycl
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
 from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
+from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OtherAgentsStatesSensor import OtherAgentsStatesSensor
 from gym_collision_avoidance.envs.config import Config
@@ -1184,7 +1185,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
                 agents.append(Agent(positions_list[0][0], positions_list[0][1],
                                     positions_list[1][0], positions_list[1][1], radius, pref_speed,
                                     None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                                    [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
+                                    [OtherAgentsStatesSensor, AngularMapSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
@@ -1955,7 +1956,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
     # FirstOrderDynamics
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
+                        [OtherAgentsStatesSensor,AngularMapSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         UnicycleDynamics,
                         [OtherAgentsStatesSensor], 1))
@@ -2258,7 +2259,7 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, agents_dynamics,
-                              [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id))
+                              [OtherAgentsStatesSensor,AngularMapSensor], 2*ag_id))
         else:
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,

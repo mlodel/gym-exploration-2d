@@ -296,7 +296,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
             if self.total_number_of_steps < 110000:
-                self.scenario = ["train_agents_swap_circle"]
+                self.scenario = ["agent_with_obstacle"]#["train_agents_swap_circle"]
             else:
                 self.scenario = ["agent_with_obstacle"]
             scenario_index = 0#np.random.randint(0,len(self.scenario))

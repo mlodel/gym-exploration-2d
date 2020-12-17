@@ -1,5 +1,6 @@
 import numpy as np
 from gym_collision_avoidance.envs.sensors.Sensor import Sensor
+from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.config import Config
 import math
 import pylab as pl
@@ -14,7 +15,6 @@ class OccupancyGridSensor(Sensor):
         self.grid_cell_size = Config.SUBMAP_RESOLUTION
         self.plot = False
         self.name = 'local_grid'
-
 
     def sense(self, agents, agent_index, top_down_map):
 
