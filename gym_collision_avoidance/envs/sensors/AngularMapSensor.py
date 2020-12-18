@@ -18,7 +18,9 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = False
+        self.plot = True
+
+        # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
         self.Laserscan = False
         self.Occupancygrid = True
 
@@ -32,12 +34,7 @@ class AngularMapSensor(Sensor):
 
             self.angles = np.linspace(self.min_angle, self.max_angle, self.num_beams)
             self.ranges = np.arange(self.min_range, self.max_range, self.range_resolution)
-            self.debug = True
-
-        if self.Occupancygrid:
-            self.grid_cell_size = Config.SUBMAP_RESOLUTION
-            #self.plot = False
-            self.name = 'local_grid'
+            self.debug = False
 
     def sense(self, agents, agent_index, top_down_map):
         '''
@@ -58,10 +55,8 @@ class AngularMapSensor(Sensor):
         # Angles
         self.radial_resolution = (self.angle_max - self.angle_min) / self.no_of_slices
 
-        ## Batch grid
+        ## Occupancy grid
         if self.Occupancygrid:
-            sensor = OccupancyGridSensor
-            batch_grid = sensor.sense(self, agents, agent_index, top_down_map)
             angular_map = self.angular_map_from_batch_grid(Angular_Map, top_down_map)
 
         ## Laserscan
@@ -76,33 +71,22 @@ class AngularMapSensor(Sensor):
         return angular_map
 
     def angular_map_from_batch_grid(self, Angular_Map, top_down_map):
-        ## Get data from batch grid
-
+        ## Get data from occupancy grid
         ego_agent_pos = self.ego_agent.pos_global_frame
 
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
-
-        span_x = int(np.ceil(self.x_width))
-        span_y = int(np.ceil(self.y_width))
-
-        # Get submap indices around ego agent
-        start_idx_x, start_idx_y, end_idx_x, end_idx_y = top_down_map.getSubmapByIndices(ego_agent_pos_idx[0],
-                                                                                         ego_agent_pos_idx[1], span_x,
-                                                                                         span_y)
-        # Get the batch_grid with filled in values
-        batch_grid = top_down_map.map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
-
+        ego_idx = self.indices_to_map_world_coordinates(np.array([ego_agent_pos_idx[0], ego_agent_pos_idx[1]]),
+                                                        top_down_map)
         # Get all indices where an obstacle is
-        idx = np.where(batch_grid == True)
+        idx = np.where(top_down_map.map == True)
 
-        ego_idx = np.array([0, 0])
         # Get euclidean distance
         for i in range(len(idx[0])):
             ind_x = idx[0][i]
             ind_y = idx[1][i]
-            ind = self.indices_to_map_world_coordinates(np.array([ind_x, ind_y]))
-            rel_coords = ind - ego_idx  # Relative coordinate
+            ind = self.indices_to_map_world_coordinates(np.array([ind_x, ind_y]), top_down_map)
+            rel_coords = ind - ego_idx
             # Convert to polar coordinates
             l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
             l2norm = l2norm * 0.1
@@ -113,19 +97,25 @@ class AngularMapSensor(Sensor):
                 rad_idx = rad_idx + self.no_of_slices
             Angular_Map[rad_idx] = min(Angular_Map[rad_idx], l2norm)
 
+        if self.plot is True:
+            self.plot_top_down_map(top_down_map, ego_agent_pos_idx)
+
         return Angular_Map
 
-    #todo: not working properly yet
     def angular_map_from_laser_scan(self, Angular_Map, ranges):
         # Take the heading of the agent into account
         heading = self.ego_agent.heading_global_frame
-        phi = self.angles + heading
 
-        # Get correct ranges for a specific slice
+        # Convert slice angles to start angle of the laserscan
+        angles = self.angles + heading
+        phi = angles - (np.pi - heading)
+
+        # Get correct slice index for angles
         rad_idx = phi / self.radial_resolution
         rad_idx = rad_idx.astype(int)
+        rad_idx = rad_idx - rad_idx[0]
 
-        # range value = distance value already!!
+        # range value = distance value
         j = 0
         for i in rad_idx:
             if i >= 0 and i < self.no_of_slices:
@@ -134,9 +124,9 @@ class AngularMapSensor(Sensor):
 
         return Angular_Map
 
-    def indices_to_map_world_coordinates(self, ind):
-        pos_x = (ind[1]-(self.x_width/2))
-        pos_y = -(ind[0]-(self.y_width/2))
+    def indices_to_map_world_coordinates(self, ind, top_down_map):
+        pos_x = (ind[1]-(top_down_map.map.shape[0]/2))
+        pos_y = -(ind[0]-(top_down_map.map.shape[1]/2))
         world_coords = np.array([pos_x, pos_y])
         return world_coords
 
@@ -163,13 +153,16 @@ class AngularMapSensor(Sensor):
 
     def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6, min_angle=0.0, max_angle=2 * np.pi):
         number_elements = Angular_Map.shape[0]
-        angular_resolution = (self.angle_max - self.angle_min) / self.no_of_slices
 
         cmap = pl.get_cmap('gnuplot')
 
         for ii in range(number_elements):
-            angle_start = (min_angle + ii * angular_resolution) * 180 / np.pi
-            angle_end = (min_angle + (ii + 1) * angular_resolution) * 180 / np.pi
+            if self.Laserscan:
+                angle_start = ((min_angle - (np.pi - self.ego_agent.heading_global_frame)) + ii * self.radial_resolution) * 180 / np.pi
+                angle_end = ((min_angle - (np.pi - self.ego_agent.heading_global_frame)) + (ii + 1) * self.radial_resolution) * 180 / np.pi
+            if self.Occupancygrid:
+                angle_start = (min_angle + ii * self.radial_resolution) * 180 / np.pi
+                angle_end = (min_angle + (ii + 1) * self.radial_resolution) * 180 / np.pi
 
             distance_cone = pl.matplotlib.patches.Wedge((0.0, 0.0),
                                                         Angular_Map[ii],
@@ -178,4 +171,13 @@ class AngularMapSensor(Sensor):
                                                         alpha=0.5)
 
             ax.add_artist(distance_cone)
+
+    # Plot
+    def plot_top_down_map(self, top_down_map, ego_agent_idx):
+        fig = plt.figure("Top down map")
+        ax = fig.subplots(1)
+        ax.imshow(top_down_map.map, aspect='equal')
+        ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
+        plt.show()
+
 

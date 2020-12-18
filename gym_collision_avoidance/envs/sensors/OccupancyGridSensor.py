@@ -96,7 +96,7 @@ class OccupancyGridSensor(Sensor):
         return batch_grid
 
     # Plot
-    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_y, start_idx_x):
+    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y):
         fig = plt.figure("Top down map")
         ax = fig.subplots(1)
         ax.imshow(top_down_map.map, aspect='equal')

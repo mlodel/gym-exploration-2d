@@ -2070,7 +2070,7 @@ def agent_with_multiple_obstacles(number_of_agents=1, ego_agent_policy=MPCPolicy
         agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                           positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                           None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                          [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id))
+                          [OtherAgentsStatesSensor,AngularMapSensor], 2*ag_id))
         agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                           positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, other_agents_policy, UnicycleDynamics,
                           [OtherAgentsStatesSensor], 2*ag_id+1))
