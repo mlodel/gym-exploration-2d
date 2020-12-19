@@ -259,7 +259,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                 circle_times = np.arange(0.0, t_final,
                                          circle_spacing)
                 if circle_times.size == 0:
-                    break
+                    continue
                 _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],
                                               circle_times)
                 for ind in circle_inds[0:]:

@@ -235,10 +235,11 @@ class CollisionAvoidanceEnv(gym.Env):
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 2))
+            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
-                    self.predicted_trajectory[ag_id, t,:] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
+                    self.predicted_trajectory[ag_id, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
+                    self.predicted_trajectory[ag_id, t, 4:6] = agent.vel_global_frame
         indices = np.arange(len(self.agents))
         for id, agent in enumerate(self.agents):
             agent.policy.predicted_trajectory =  self.predicted_trajectory[indices != id]
