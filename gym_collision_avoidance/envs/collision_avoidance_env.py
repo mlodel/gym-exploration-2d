@@ -310,23 +310,25 @@ class CollisionAvoidanceEnv(gym.Env):
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", other_agents_policy=" + self.other_agents_policy+ ")")
 
-        if "GA3C" in str(self.ego_policy):
-            if self.episode_number == 1:
-                self.policies=[]
-                ga3c_params = {
-                    'policy': GA3CCADRLPolicy,
-                    'checkpt_dir': 'IROS18',
-                    'checkpt_name': 'network_01900000'
-                }
-                for _ in range(self.number_of_agents*2):
+
+        if self.episode_number == 1:
+            self.policies=[]
+            ga3c_params = {
+                'policy': GA3CCADRLPolicy,
+                'checkpt_dir': 'IROS18',
+                'checkpt_name': 'network_01900000'
+            }
+            for ag in self.agents:
+                if "GA3C" in str(ag.policy):
                     self.policies.append(GA3CCADRLPolicy())
                     self.policies[-1].initialize_network(**ga3c_params)
-                for i,agent in enumerate(self.agents):
-                    agent.policy = self.policies[i]
-            else:
-                if self.agents[0].policy == "GA3CCADRLPolicy":
-                    for i,agent in enumerate(self.agents):
-                        agent.policy = self.policies[i]
+                    ag.policy = self.policies[-1]
+        else:
+            i = 0
+            for ag in self.agents:
+                if "GA3C" in str(ag.policy):
+                    ag.policy = self.policies[i]
+                    i += 1
 
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
 

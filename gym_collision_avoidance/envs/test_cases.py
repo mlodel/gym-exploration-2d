@@ -2079,7 +2079,7 @@ def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, a
 
     return agents, obstacle
 
-def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
