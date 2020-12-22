@@ -286,7 +286,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                         for ind in range(agent.policy.FORCES_N):
                             alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
                             c = rgba2rgb(other_plt_color + [float(alpha)])
-                            ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind],
+                            ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
                                                     radius=agent.radius, fc=c, ec=other_plt_color,
                                                     fill=True))
                         if id == 0:
