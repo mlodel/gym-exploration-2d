@@ -283,24 +283,26 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                         else:
                             other_plt_color = plt_colors[10]
 
-                        for ind in range(agent.policy.FORCES_N):
-                            alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
-                            c = rgba2rgb(other_plt_color + [float(alpha)])
-                            ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
-                                                    radius=agent.radius, fc=c, ec=other_plt_color,
-                                                    fill=True))
+                        if Config.PLOT_PREDICTIONS:
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                c = rgba2rgb(other_plt_color + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
+                                                        radius=agent.radius, fc=c, ec=other_plt_color,
+                                                        fill=True))
+                            if id == 0:
+                                for ind in range(agent.policy.FORCES_N):
+                                    alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
+                                    c = rgba2rgb(plt_colors[7] + [float(alpha)])
+                                    ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
+                                                            radius=agent.radius, fc=c, ec=plt_colors[7],
+                                                            fill=True))
                         if id == 0:
                             for ind in range(agent.policy.FORCES_N):
                                 alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
                                 c = rgba2rgb(plt_colors[8] + [float(alpha)])
                                 ax.add_patch(plt.Circle(agent.policy.predicted_traj[ind],
                                                         radius=agent.radius, fc=c, ec=plt_colors[8],
-                                                        fill=True))
-                            for ind in range(agent.policy.FORCES_N):
-                                alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
-                                c = rgba2rgb(plt_colors[7] + [float(alpha)])
-                                ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
-                                                        radius=agent.radius, fc=c, ec=plt_colors[7],
                                                         fill=True))
 
                 # Display text of current timestamp every text_spacing (nom 1.5 sec)

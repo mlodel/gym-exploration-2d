@@ -45,9 +45,10 @@ class Config:
     CURRICULUM_LEARNING = True
     HOMOGENEOUS_TESTING = True
     PERFORMANCE_TEST = True
+    PLOT_PREDICTIONS = True
 
     #MPC
-    FORCES_N = 20
+    FORCES_N = 15
     FORCES_DT = 0.2
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
