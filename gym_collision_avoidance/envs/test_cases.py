@@ -28,6 +28,7 @@ from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
@@ -1141,7 +1142,7 @@ def change_side(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=Ext
 
     return agents
 
-def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=UnicycleDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1168,8 +1169,8 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(int(n_agents/2)-1):
-        in_collision = False
-        while not in_collision:
+        is_valid = False
+        while not is_valid:
             distance = np.random.uniform(4.0, 6.0)
             angle = np.random.uniform(-np.pi, np.pi)
             x0_agent_1 = distance*np.cos(angle)
@@ -1178,41 +1179,41 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
             goal_y_1 = -y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+            is_valid = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(int(n_agents/2)):
-        policy = random.choice(other_agents_policy) #RVOPolicy #
-        #if np.random.uniform(0,1)>0.5:
-        #    policy = NonCooperativePolicy
-        #else:
-        #    policy = RVOPolicy
+        #policy = random.choice(other_agents_policy) #RVOPolicy #
+        if np.random.uniform(0,1)>0.8:
+            policy = NonCooperativePolicy
+        else:
+            policy = RVOPolicy
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
                 agents.append(Agent(positions_list[0][0], positions_list[0][1],
                                     positions_list[1][0], positions_list[1][1], radius, pref_speed,
-                                    None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+                                    None, ego_agent_policy, ego_agent_dynamics,
                                     [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
-                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, other_agents_dynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
         #cooperation_coef = np.random.uniform(0.0, 1.0)
-        policy = random.choice(other_agents_policy)  # RVOPolicy #
-        #if np.random.uniform(0,1)>0.5:
-        #    policy = NonCooperativePolicy
-        #else:
-        #    policy = RVOPolicy
-        #policy = RVOPolicy
+        #policy = random.choice(other_agents_policy)  # RVOPolicy #
+        if np.random.uniform(0,1)>0.8:
+            policy = NonCooperativePolicy
+        else:
+            policy = RVOPolicy
+
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , other_agents_dynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents, obstacle
 
-def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=UnicycleDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1226,52 +1227,52 @@ def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,ot
     other_agents_policy = [RVOPolicy, NonCooperativePolicy]
 
     init_positions_list = []
-    x0_agent_1 = np.random.uniform(-7.5, 7.5)
-    y0_agent_1 = np.random.uniform(-7.5, 7.5)
+    x0_agent_1 = np.random.uniform(-8.0, 8.0)
+    y0_agent_1 = np.random.uniform(-8.0, 8.0)
 
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(n_agents - 1):
-        in_collision = False
-        while not in_collision:
-            x0_agent_1 = np.random.uniform(-7.5, 7.5)
-            y0_agent_1 = np.random.uniform(-7.5, 7.5)
+        is_valid = False
+        while not is_valid:
+            x0_agent_1 = np.random.uniform(-8.0, 8.0)
+            y0_agent_1 = np.random.uniform(-8.0, 8.0)
             initial_pose = np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(initial_pose, init_positions_list,4.0)
+            is_valid = is_pose_valid(initial_pose, init_positions_list,4.0)
         init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(int(n_agents/2)):
-        policy = random.choice(other_agents_policy) #RVOPolicy #
-        #if np.random.uniform(0,1)>0.9:
-        #    policy = NonCooperativePolicy
-        #else:
-        #    policy = RVOPolicy
+        #policy = random.choice(other_agents_policy) #RVOPolicy #
+        if np.random.uniform(0,1)>0.8:
+            policy = NonCooperativePolicy
+        else:
+            policy = RVOPolicy
 
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
                 agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
                                     init_positions_list[2*ag_id + 1][0], init_positions_list[2*ag_id + 1][1], radius, pref_speed,
-                                    None, ego_agent_policy, agents_dynamics,
+                                    None, ego_agent_policy, ego_agent_dynamics,
                                     [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
-                                init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                                init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, other_agents_dynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         policy = random.choice(other_agents_policy)  # RVOPolicy #
-        #if np.random.uniform(0,1)>0.9:
-        #    policy = NonCooperativePolicy
-        #else:
-        #    policy = RVOPolicy
+        if np.random.uniform(0,1)>0.8:
+            policy = NonCooperativePolicy
+        else:
+            policy = RVOPolicy
 
         agents.append(
             Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
-                  init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1], radius, pref_speed, None,policy , other_agents_dynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents, []
 
-def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=UnicycleDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1286,15 +1287,15 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy
 
     init_positions_list = []
     goal_positions_list = []
-    in_collision = False
-    while not in_collision:
-        x0_agent_1 = np.random.uniform(-7.5, 7.5)
-        y0_agent_1 = np.random.uniform(-7.5, 7.5)
-        goal_x_1 = np.random.uniform(-7.5, 7.5)
-        goal_y_1 = np.random.uniform(-7.5, 7.5)
+    is_valid = False
+    while not is_valid:
+        x0_agent_1 = np.random.uniform(-8.0, 8.0)
+        y0_agent_1 = np.random.uniform(-8.0, 8.0)
+        goal_x_1 = np.random.uniform(-8.0, 8.0)
+        goal_y_1 = np.random.uniform(-8.0, 8.0)
         goal = np.array([goal_x_1, goal_y_1])
         initial_pose = np.array([x0_agent_1, y0_agent_1])
-        in_collision = is_pose_valid(initial_pose, [goal],4.0)
+        is_valid = is_pose_valid(initial_pose, [goal],4.0)
 
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
     init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
@@ -1302,17 +1303,17 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy
     for ag_id in range(n_agents - 1):
         is_valid = False
         while not is_valid:
-            x0_agent_1 = np.random.uniform(-7.5, 7.5)
-            y0_agent_1 = np.random.uniform(-7.5, 7.5)
+            x0_agent_1 = np.random.uniform(-8.0, 8.0)
+            y0_agent_1 = np.random.uniform(-8.0, 8.0)
             initial_pose = np.array([x0_agent_1, y0_agent_1])
             is_valid_1 = is_pose_valid(initial_pose, init_positions_list)
 
-            goal_x_1 = np.random.uniform(-7.5, 7.5)
-            goal_y_1 = np.random.uniform(-7.5, 7.5)
+            goal_x_1 = np.random.uniform(-8.0, 8.0)
+            goal_y_1 = np.random.uniform(-8.0, 8.0)
             goal = np.array([goal_x_1, goal_y_1])
             is_valid_2 = is_pose_valid(goal, goal_positions_list)
 
-            is_valid_3 = is_pose_valid(goal, [initial_pose],3.0)
+            is_valid_3 = is_pose_valid(goal, [initial_pose],4.0)
             is_valid = is_valid_1 and is_valid_2 and is_valid_3
 
         init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
@@ -1329,11 +1330,11 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy
         if ag_id == 0:
             agents.append(Agent(init_positions_list[ag_id][0], init_positions_list[ag_id][1],
                                 goal_positions_list[ag_id][0], goal_positions_list[ag_id][1], radius, pref_speed,
-                                None, ego_agent_policy, agents_dynamics,
+                                None, ego_agent_policy, ego_agent_dynamics,
                                 [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
-                                goal_positions_list[2*ag_id][0], goal_positions_list[2*ag_id][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                                goal_positions_list[2*ag_id][0], goal_positions_list[2*ag_id][1], radius, pref_speed, None, policy, other_agents_dynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         policy = random.choice(other_agents_policy)  # RVOPolicy #
@@ -1343,7 +1344,7 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy
         #    policy = RVOPolicy
         agents.append(
             Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
-                  goal_positions_list[2*ag_id+1][0], goal_positions_list[2*ag_id+1][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  goal_positions_list[2*ag_id+1][0], goal_positions_list[2*ag_id+1][1], radius, pref_speed, None,policy , other_agents_dynamics,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
 
     return agents, []
@@ -2079,7 +2080,7 @@ def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, a
 
     return agents, obstacle
 
-def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleSecondOrderEulerDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []

@@ -21,7 +21,10 @@ from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
+from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 #from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
@@ -61,20 +64,22 @@ class CollisionAvoidanceEnv(gym.Env):
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
         self.number_of_agents = 2
-        #self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
         #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
-        self.scenario = ["agent_with_obstacle"]
-        self.scenario = ["train_agents_swap_circle"]
+        #self.scenario = ["agent_with_obstacle"]
+        #self.scenario = ["train_agents_swap_circle"]
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
         self.ego_policy = "LearningMPCPolicy"
         self.other_agents_policy = "RVOPolicy"
+        self.ego_agent_dynamics = "FirstOrderDynamics"
+        self.other_agents_dynamics = "UnicycleDynamics"
 
-        self.max_heading_change = 0.5
-        self.min_heading_change = -0.5
-        self.min_speed = -0.5
-        self.max_speed = 0.5
+        self.max_heading_change = 4
+        self.min_heading_change = -4
+        self.min_speed = -4
+        self.max_speed = 4
 
         ### The gym.spaces library doesn't support Python2.7 (syntax of Super().__init__())
         self.action_space_type = Config.ACTION_SPACE_TYPE
@@ -265,6 +270,12 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             agent.take_action(all_actions[i,:], dt)
 
+        # If agents follow a Multi-Agent MPC Policy Update their predicted plans
+        for i, agent in enumerate(self.agents):
+            if str(agent.policy) == 'MultiAgentMPCPolicy':
+                agent.policy.update_predicted_trajectory()
+
+
     def update_top_down_map(self):
         print("Not adding agents to map")
         #self.map.add_agents_to_map(self.agents)
@@ -284,6 +295,8 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
             self.plot_policy_name = self.agents[0].policy.str + '_CV'
 
+        self._prediction_step()
+
     def _init_agents(self):
         if self.evaluate:
             if self.agents is not None:
@@ -299,16 +312,16 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 2e6:
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < 3e6:
-                self.number_of_agents = 3
-            elif self.total_number_of_steps < 5e6:
                 self.number_of_agents = 4
+            elif self.total_number_of_steps < 3e6:
+                self.number_of_agents = 6
+            elif self.total_number_of_steps < 5e6:
+                self.number_of_agents = 8
             elif self.total_number_of_steps < 7e6:
-                self.number_of_agents = 5
+                self.number_of_agents = 10
             scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
-                               ", other_agents_policy=" + self.other_agents_policy+ ")")
+                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
 
 
         if self.episode_number == 1:
@@ -335,6 +348,12 @@ class CollisionAvoidanceEnv(gym.Env):
         for agent in self.agents:
             agent.max_heading_change = self.max_heading_change
             agent.max_speed = self.max_speed
+
+        for agent in self.agents:
+            if str(agent.policy) == 'MultiAgentMPCPolicy':
+                agent.policy.current_state_[0] = agent.pos_global_frame[0]
+                agent.policy.current_state_[1] = agent.pos_global_frame[1]
+                agent.policy.update_predicted_trajectory()
 
     def set_static_map(self, map_filename):
         self.static_map_filename = map_filename
