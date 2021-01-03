@@ -250,7 +250,7 @@ class CollisionAvoidanceEnv(gym.Env):
                     self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         else:
             if self.total_number_of_steps < 1e6:
-                self.number_of_agents = 5
+                self.number_of_agents = 1
             elif self.total_number_of_steps < 2e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 3e6:
@@ -260,7 +260,7 @@ class CollisionAvoidanceEnv(gym.Env):
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 5
             scenario_index = np.random.randint(0,len(self.scenario))
-            self.agents = eval("tc."+self.scenario[0]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
+            self.agents = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", agents_policy="+self.ego_policy+ ")")
             #self.agents = eval("tc." + self.scenario + "(number_of_agents=" + str(
             #    self.number_of_agents) + ", agents_policy=" + self.ego_policy + ")")
         self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
