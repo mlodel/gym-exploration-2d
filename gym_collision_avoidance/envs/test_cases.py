@@ -2080,7 +2080,7 @@ def agent_with_multiple_obstacles(number_of_agents=4, agents_policy=RVOPolicy, a
 
     return agents, obstacle
 
-def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleSecondOrderEulerDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -2132,16 +2132,16 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
         if ag_id == 0:
             agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
                               goal_positions_list[2*ag_id][0], goal_positions_list[2*ag_id][1], radius, pref_speed,
-                              None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+                              None, ego_agent_policy, ego_agent_dynamics,
                               [OtherAgentsStatesSensor,OccupancyGridSensor], 2*ag_id))
         else:
             agents.append(Agent(init_positions_list[2 * ag_id][0], init_positions_list[2 * ag_id][1],
                                 goal_positions_list[2 * ag_id][0], goal_positions_list[2 * ag_id][1], radius, pref_speed,
-                                None, other_agents_policy, agents_dynamics,
+                                None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor, OccupancyGridSensor], 2 * ag_id))
         agents.append(Agent(init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1],
                             goal_positions_list[2 * ag_id + 1][0], goal_positions_list[2 * ag_id + 1][1], radius, pref_speed,
-                            None, other_agents_policy, agents_dynamics,
+                            None, other_agents_policy, other_agents_dynamics,
                             [OtherAgentsStatesSensor, OccupancyGridSensor], 2 * ag_id +1))
 
     return agents, obstacle
