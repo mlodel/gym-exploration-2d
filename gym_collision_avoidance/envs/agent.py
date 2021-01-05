@@ -7,16 +7,23 @@ import math
 class Agent(object):
     def __init__(self, start_x, start_y, goal_x, goal_y, radius,
                  pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 0.5):
-        self.policy = policy()
+
+        if policy =="GA3CCADRLPolicy":
+            self.policy = "GA3CCADRLPolicy"
+        else:
+            self.policy = policy()
+
         self.dynamics_model = dynamics_model(self)
         self.sensors = [sensor() for sensor in sensors]
 
         # Global Frame states
         self.pos_global_frame = np.array([start_x, start_y], dtype='float64')
         self.goal_global_frame = np.array([goal_x, goal_y], dtype='float64')
+        self.next_goal = np.array([goal_x, goal_y], dtype='float64')
         self.rel_goal = self.goal_global_frame - self.pos_global_frame
         self.vel_global_frame = np.array([0.0, 0.0], dtype='float64')
         self.speed_global_frame = 0.0
+        self.angular_speed_global_frame = 0.0
 
         if initial_heading is None:
             vec_to_goal = self.goal_global_frame - self.pos_global_frame
@@ -141,9 +148,10 @@ class Agent(object):
                 self.was_at_goal_already = True
             if self.in_collision:
                 self.was_in_collision_already = True
-            self._update_state_history()
-            self.t += dt
-            self.step_num += 1
+            #self._update_state_history()
+            #if not self.is_at_goal:
+            #    self.t += dt
+            #self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return

@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 import matplotlib
 import os
 import matplotlib.patches as ptch
+from matplotlib.patches import Polygon
 from matplotlib.collections import LineCollection
 import glob
 import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
 
+from matplotlib.lines import Line2D
 matplotlib.rcParams.update({'font.size': 24})
 
 plt_colors = []
@@ -24,6 +26,7 @@ plt_colors.append([0.8, 0.0, 0.80])  # magenta
 plt_colors.append([0.62, 0.62, 0.62])  # grey
 plt_colors.append([0.2, 0.6, 0.1])  # light blue
 plt_colors.append([1.0, 0.0, 0.0])  # red
+plt_colors.append([0.0, 0.0, 0.0])  # red
 
 def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     if plot_save_dir is None:
@@ -86,7 +89,7 @@ def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_
     #clip = mp.VideoFileClip(animation_filename)
     #clip.write_videofile(animation_filename[:-4]+".mp4")
 
-def plot_episode(agents, in_evaluate_mode,
+def plot_episode(agents, obstacles, in_evaluate_mode,
     env_map=None, test_case_index=0, env_id=0,
     circles_along_traj=True, plot_save_dir=None, plot_policy_name=None,
     save_for_animation=False, limits=None, perturbed_obs=None,
@@ -109,9 +112,9 @@ def plot_episode(agents, in_evaluate_mode,
 
     if perturbed_obs is None:
         # Normal case of plotting
-        max_time = draw_agents(agents, circles_along_traj, ax)
+        max_time = draw_agents(agents, obstacles, circles_along_traj, ax)
     else:
-        max_time = draw_agents(agents, circles_along_traj, ax, last_index=-2)
+        max_time = draw_agents(agents, obstacles, circles_along_traj, ax, last_index=-2)
         plot_perturbed_observation(agents, ax, perturbed_obs)
 
     # Label the axes
@@ -124,6 +127,38 @@ def plot_episode(agents, in_evaluate_mode,
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
+    legend_elements = []
+
+    for agent in agents:
+        if "RVO" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='RVO',
+                              markerfacecolor=plt_colors[2], markersize=15)
+        elif "MPC" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='MPC',
+                   markerfacecolor=plt_colors[1], markersize=15)
+        elif "GA3CCADRLPolicy" in str(type(agent.policy)):
+            leg = Line2D([0], [0], marker='o', color='w', label='GA3C'+ str(agent.id),
+                   markerfacecolor=plt_colors[8], markersize=15)
+        else:
+            leg = Line2D([0], [0], marker='o', color='w', label='Non cooperative',
+                                          markerfacecolor=plt_colors[8], markersize=15)
+        label_exists = False
+        for legend in legend_elements:
+            label_exists = label_exists or (legend.get_label() in  str(type(agent.policy)))
+        if not label_exists:
+            legend_elements.append(leg)
+    """
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label='GO-MPC',
+                              markerfacecolor=plt_colors[7], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Predicted Trajectory',
+                              markerfacecolor=plt_colors[1], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Guidance Network',
+                              markerfacecolor=plt_colors[8], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Cooperative Agent',
+                              markerfacecolor=plt_colors[2], markersize=15)]
+    """
+    ax.legend(handles=legend_elements, loc='upper right')
+
     plt.draw()
 
     if limits is not None:
@@ -132,6 +167,21 @@ def plot_episode(agents, in_evaluate_mode,
         plt.ylim(ylim)
     else:
         ax.axis('equal')
+        # hack to avoid zoom
+        """
+        x_pos = []
+        y_pos = []
+        if obstacles:
+            for obstacle in obstacles:
+                for pos in obstacle:
+                    x_pos.append(pos[0])
+                    y_pos.append(pos[1])
+            plt.xlim([min(x_pos),max(x_pos)])
+            plt.ylim([min(y_pos),max(y_pos)])
+        else:
+        """
+        plt.xlim([-10.0,10.0])
+        plt.ylim([-10.0,10.0])
 
     if in_evaluate_mode and save:
         fig_name = base_fig_name.format(
@@ -164,13 +214,18 @@ def plot_episode(agents, in_evaluate_mode,
         plt.pause(0.0001)
 
 
-def draw_agents(agents, circles_along_traj, ax, last_index=-1):
+def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
 
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
     #plt.title(agents[0].policy.policy_name)
+    other_plt_color = plt_colors[2]
     if max_time > 1e-4:
-        for i, agent in enumerate(agents):
+        # Add obstacles
+        for i in range(len(obstacle)):
+            ax.add_patch(plt.Polygon(np.array(obstacle[i]),ec=plt_colors[-1]))
+
+        for i, agent in reversed(list(enumerate(agents))):
 
             # Plot line through agent trajectory
             if "RVO" in str(type(agent.policy)):
@@ -193,18 +248,18 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                 # Plot goal position
                 plt.plot(agent.global_state_history[0, 3],
                          agent.global_state_history[0, 4],
-                         color=plt_color, marker='*', markersize=20)
+                         color=plt_color, marker='+', markersize=20)
                 if i == 0:
-                    plt.plot(agent.global_state_history[agent.step_num-1, 1]+agent.global_state_history[agent.step_num-1, -2],
-                             agent.global_state_history[agent.step_num-1, 2]+agent.global_state_history[agent.step_num-1, -1],
-                             color=plt_colors[1], marker='+', markersize=20)
+                    plt.plot(agent.next_goal[0],
+                             agent.next_goal[1],
+                             color=plt_colors[1], marker='*', markersize=20)
 
                 # Display circle at agent pos every circle_spacing (nom 1.5 sec)
                 circle_spacing = 0.4
                 circle_times = np.arange(0.0, t_final,
                                          circle_spacing)
                 if circle_times.size == 0:
-                    break
+                    continue
                 _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],
                                               circle_times)
                 for ind in circle_inds[0:]:
@@ -215,6 +270,40 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                     ax.add_patch(plt.Circle(agent.global_state_history[ind, 1:3],
                                  radius=agent.radius, fc=c, ec=plt_color,
                                  fill=True))
+
+                if "Social" in str(type(agent.policy)):
+                    for id,other_agent in enumerate(agents):
+                        # Plot line through agent trajectory
+                        if "RVO" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[2]
+                        elif "MPC" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[1]
+                        elif "GA3CCADRLPolicy" in str(type(other_agent.policy)):
+                            other_plt_color = plt_colors[1]
+                        else:
+                            other_plt_color = plt_colors[10]
+
+                        if Config.PLOT_PREDICTIONS:
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                c = rgba2rgb(other_plt_color + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
+                                                        radius=agent.radius, fc=c, ec=other_plt_color,
+                                                        fill=True))
+                            if id == 0:
+                                for ind in range(agent.policy.FORCES_N):
+                                    alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
+                                    c = rgba2rgb(plt_colors[7] + [float(alpha)])
+                                    ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
+                                                            radius=agent.radius, fc=c, ec=plt_colors[7],
+                                                            fill=True))
+                        if id == 0:
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                c = rgba2rgb(plt_colors[8] + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.predicted_traj[ind],
+                                                        radius=agent.radius, fc=c, ec=plt_colors[8],
+                                                        fill=True))
 
                 # Display text of current timestamp every text_spacing (nom 1.5 sec)
                 """
@@ -234,6 +323,9 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                             agent.global_state_history[ind, 2]+y_text_offset,
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
+                if "Static" in str(type(agent.policy)):
+                    obstacles = np.array(agent.policy.static_obstacles.obstacles)
+                    ax.add_patch(plt.Polygon(obstacles, ec=plt_colors[-1],fill=False))
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1
                 alpha = 1 - \
@@ -275,6 +367,7 @@ def draw_agents(agents, circles_along_traj, ax, last_index=-1):
                 #         agent.global_state_history[ind, 2] + y_text_offset,
                 #         '%.1f' % agent.global_state_history[ind, 0],
                 #         color=plt_color)
+
         return max_time
 
 def plot_perturbed_observation(agents, ax, perturbed_info):

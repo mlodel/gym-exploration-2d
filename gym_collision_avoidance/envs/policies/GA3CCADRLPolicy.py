@@ -30,7 +30,7 @@ class GA3CCADRLPolicy(Policy):
 
         self.nn.simple_load(checkpt_dir + checkpt_name)
 
-    def find_next_action(self, obs, agents, i):
+    def find_next_action(self, obs, agents, i, obstacles):
         host_agent = agents[i]
         other_agents = agents[:i]+agents[i+1:]
         obs = self.agents_to_ga3c_cadrl_state(host_agent, other_agents)
