@@ -44,7 +44,7 @@ class Config:
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
     CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
-    PERFORMANCE_TEST = False
+    PERFORMANCE_TEST = True
     PLOT_PREDICTIONS = False
 
     #MPC
