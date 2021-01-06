@@ -23,8 +23,10 @@ from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
+from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
+from mpc_rl_collision_avoidance.policies.SecondOrderMPCRLPolicy import SecondOrderMPCRLPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
 from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
@@ -73,9 +75,9 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "LearningMPCPolicy"
+        self.ego_policy = "SecondOrderMPCRLPolicy"
         self.other_agents_policy = "RVOPolicy"
-        self.ego_agent_dynamics = "FirstOrderDynamics"
+        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         self.other_agents_dynamics = "UnicycleDynamics"
 
         self.max_heading_change = 4

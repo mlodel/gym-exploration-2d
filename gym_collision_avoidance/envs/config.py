@@ -42,9 +42,9 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = True
+    CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
-    PERFORMANCE_TEST = True
+    PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = False
 
     #MPC
