@@ -44,13 +44,13 @@ class Config:
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
     CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
-    PERFORMANCE_TEST = True
+    PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = False
 
     #MPC
     FORCES_N = 20
     FORCES_DT = 0.1
-    REPEAT_STEPS = 2
+    REPEAT_STEPS = 4
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
