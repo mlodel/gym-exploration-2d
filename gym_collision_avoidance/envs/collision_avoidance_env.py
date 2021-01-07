@@ -71,7 +71,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
         #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
         #self.scenario = ["agent_with_obstacle"]
-        #self.scenario = ["train_agents_swap_circle"]
+        self.scenario = ["train_agents_swap_circle"]
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
