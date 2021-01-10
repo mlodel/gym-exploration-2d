@@ -38,11 +38,14 @@ def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     collision_plot_dir = plot_save_dir + "/collisions/"
     os.makedirs(collision_plot_dir, exist_ok=True)
 
+    deadlock_plot_dir = plot_save_dir + "/deadlocks/"
+    os.makedirs(deadlock_plot_dir, exist_ok=True)
+
     base_fig_name = "{test_case}_{policy}_{num_agents}agents{step}.{extension}"
-    return plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir
+    return plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir
 
 def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_case_index=0, agents=None):
-    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
+    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
     
     if not os.path.exists(plot_save_dir):
         os.makedirs(plot_save_dir)
@@ -98,7 +101,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     if max([agent.step_num for agent in agents]) == 0:
         return
 
-    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
+    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
 
     fig = plt.figure(env_id)
     fig.set_size_inches(fig_size[0], fig_size[1])
@@ -195,6 +198,9 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
 
         if agents[0].in_collision:
             plt.savefig(collision_plot_dir+fig_name)
+
+        if agents[0].ran_out_of_time:
+            plt.savefig(deadlock_plot_dir + fig_name)
 
     if save_for_animation:
         try:

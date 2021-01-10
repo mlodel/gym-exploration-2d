@@ -20,6 +20,7 @@ from gym_collision_avoidance.envs.agent import Agent
 
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
+from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
 # from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.CADRLPolicy import CADRLPolicy
@@ -43,6 +44,8 @@ from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGr
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OtherAgentsStatesSensor import OtherAgentsStatesSensor
 from gym_collision_avoidance.envs.config import Config
+from gym_collision_avoidance.envs.utils import DataHandlerLSTM
+
 
 import os
 import pickle
@@ -1348,6 +1351,72 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
 
     return agents, []
+
+def pedestrian_scenario(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+    radius = 0.5# np.random.uniform(0.5, 0.5)
+    agents = []
+    obstacle = []
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
+        n_agents = np.maximum(number_of_agents, 2)
+    else:
+        n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+
+    positions_list = []
+    other_agents_policy = [RVOPolicy, NonCooperativePolicy,PedestrianDatasetPolicy]
+
+    ## Load Dataset
+    # Create Datahandler class
+    data_prep = DataHandlerLSTM.DataHandlerLSTM('st')
+    # Only used to create a map from png
+    # Make sure this parameters are correct otherwise it will fail training and ploting the results
+    map_args = {"file_name": 'map.png',
+                "resolution": 0.1,
+                "map_center": np.array([8., 8.]),
+                "map_size": np.array([16., 16.]), }
+    # Load dataset
+    data_prep.processData(**map_args)
+
+    for ag_id in range(int(n_agents/2)):
+        policy = random.choice(other_agents_policy) #RVOPolicy #
+        #if np.random.uniform(0,1)>0.8:
+        #    policy = NonCooperativePolicy
+        #else:
+        #    policy = RVOPolicy
+        cooperation_coef = 0.5
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        if ag_id == 0:
+                agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                    positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                    None, ego_agent_policy, ego_agent_dynamics,
+                                    [OtherAgentsStatesSensor], 0))
+        else:
+            agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, other_agents_dynamics,
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+
+        if str(agents[-1].policy) == 'PedestrianDatasetPolicy':
+            agents[-1].policy.trajectory = data_prep.getRandomTrajectory()
+
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        policy = random.choice(other_agents_policy)  # RVOPolicy #
+        #if np.random.uniform(0,1)>0.8:
+        #    policy = NonCooperativePolicy
+        #else:
+        #    policy = RVOPolicy
+
+        agents.append(
+            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+
+        if str(agents[-1].policy) == 'PedestrianDatasetPolicy':
+            agents[-1].policy.trajectory = data_prep.getRandomTrajectory()
+
+    return agents, obstacle
+
 
 def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPolicy, agents_dynamics=UnicycleSecondOrderEulerDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)

@@ -75,9 +75,11 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "SecondOrderMPCRLPolicy"
+        #self.ego_policy = "SecondOrderMPCRLPolicy"
+        self.ego_policy = "FirstOrderMPCRLPolicy"
+        #self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        self.ego_agent_dynamics = "FirstOrderDynamics"
         self.other_agents_policy = "RVOPolicy"
-        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         self.other_agents_dynamics = "UnicycleDynamics"
 
         self.max_heading_change = 4
@@ -308,10 +310,12 @@ class CollisionAvoidanceEnv(gym.Env):
             self.prev_scenario_index = self.scenario_index
             self.scenario_index = np.random.randint(0, len(self.scenario))
             if Config.ANIMATE_EPISODES or Config.PERFORMANCE_TEST:
-                self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number)+")")
+                self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy+ ", other_agents_policy=" + self.other_agents_policy + ", seed="+str(self.episode_number) +
+                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics  +")")
             else:
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
-                    self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
+                    self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy  + ", other_agents_policy=" + self.other_agents_policy +
+                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics + ")")
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
