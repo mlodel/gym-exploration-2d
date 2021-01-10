@@ -42,7 +42,7 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = False
+    CURRICULUM_LEARNING = True
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = False
@@ -50,7 +50,7 @@ class Config:
     #MPC
     FORCES_N = 20
     FORCES_DT = 0.1
-    REPEAT_STEPS = 4
+    REPEAT_STEPS = 2
 
     LASERSCAN_LENGTH = 512 # num range readings in one scan
     NUM_STEPS_IN_OBS_HISTORY = 1 # number of time steps to store in observation vector
