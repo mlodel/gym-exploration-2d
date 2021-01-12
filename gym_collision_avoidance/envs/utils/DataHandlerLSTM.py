@@ -168,17 +168,19 @@ class DataHandlerLSTM():
 
 		self.compute_min_max_values()
 
-	def compute_min_max_values(self):
-		mean_v = 0
-		mean_pos = 0
-		sigma_v = 0
-		sigma_pos = 0
+	def shift_data(self):
 
 		for traj_id in range(len(self.trajectory_set)):
 			for t_id in range(1, self.trajectory_set[traj_id][1].pose_vec.shape[0]):
-				self.trajectory_set[traj_id][1].vel_vec[t_id, :2] = (self.trajectory_set[traj_id][1].pose_vec[t_id, :2] -
-				                                                     self.trajectory_set[traj_id][1].pose_vec[t_id - 1,
-				                                                     :2]) / self.dt
+				self.trajectory_set[traj_id][1].pose_vec[t_id,0] -= (self.max_pos_x-self.min_pos_y)/2
+				self.trajectory_set[traj_id][1].pose_vec[t_id, 1] -= (self.max_pos_y-self.min_pos_y)/2
+
+	def compute_min_max_values(self):
+		self.mean_pos_x = 0
+		self.mean_pos_y = 0
+
+		for traj_id in range(len(self.trajectory_set)):
+			for t_id in range(1, self.trajectory_set[traj_id][1].pose_vec.shape[0]):
 				self.min_pos_x = min(self.min_pos_x,self.trajectory_set[traj_id][1].pose_vec[t_id,0])
 				self.min_pos_y = min(self.min_pos_y, self.trajectory_set[traj_id][1].pose_vec[t_id, 1])
 				self.max_pos_x = max(self.max_pos_x, self.trajectory_set[traj_id][1].pose_vec[t_id, 0])
@@ -188,10 +190,8 @@ class DataHandlerLSTM():
 				self.max_vel_x = max(self.max_vel_x, self.trajectory_set[traj_id][1].vel_vec[t_id, 0])
 				self.max_vel_y = max(self.max_vel_y, self.trajectory_set[traj_id][1].vel_vec[t_id, 1])
 
-			mean_v += np.mean(self.trajectory_set[traj_id][1].vel_vec[:, :2],axis=0)/len(self.trajectory_set)
-			sigma_v += np.std(self.trajectory_set[traj_id][1].vel_vec[:, :2], axis=0)/len(self.trajectory_set)
-			mean_pos += np.mean(self.trajectory_set[traj_id][1].pose_vec[:, :2], axis=0)/len(self.trajectory_set)
-			sigma_pos += np.std(self.trajectory_set[traj_id][1].pose_vec[:, :2], axis=0)/len(self.trajectory_set)
+			self.mean_pos_x += np.mean(self.trajectory_set[traj_id][1].pose_vec[:, 0], axis=0)/len(self.trajectory_set)
+			self.mean_pos_y += np.mean(self.trajectory_set[traj_id][1].pose_vec[:, 1], axis=0)/len(self.trajectory_set)
 
 		self.calc_scale()
 
@@ -347,6 +347,10 @@ class DataHandlerLSTM():
 		#if "test" not in self.args.scenario:
 		random.shuffle(self.trajectory_set)
 
+		self.compute_min_max_values()
+
+		self.shift_data()
+
 		data = {
 			"trajectories" : self.trajectory_set,
 			"agent_container" : self.agent_container,
@@ -357,7 +361,9 @@ class DataHandlerLSTM():
 			"min_vel_x" : self.min_vel_x,
 			"min_vel_y" : self.min_vel_y,
 			"max_vel_x" : self.max_vel_x,
-			"max_vel_y" : self.max_vel_y
+			"max_vel_y" : self.max_vel_y,
+			"mean_pos_x" : self.mean_pos_x,
+			"mean_pos_y" : self.mean_pos_y,
 		}
 		pkl.dump(data, open(save_path, 'wb'),protocol=2)
 
@@ -371,7 +377,17 @@ class DataHandlerLSTM():
 		self.trajectory_set = tmp_self["trajectories"]
 		self.agent_container = tmp_self["agent_container"]
 
-		self.compute_min_max_values()
+		#self.compute_min_max_values()
+		self.min_pos_x = tmp_self["min_pos_x"]
+		self.min_pos_y = tmp_self["min_pos_y"]
+		self.max_pos_x = tmp_self["max_pos_x"]
+		self.max_pos_y = tmp_self["max_pos_y"]
+		self.min_vel_x = tmp_self["min_vel_x"]
+		self.min_vel_y = tmp_self["min_vel_y"]
+		self.max_vel_x = tmp_self["max_vel_x"]
+		self.max_vel_y = tmp_self["max_vel_y"]
+		self.mean_pos_x = tmp_self["mean_pos_x"]
+		self.mean_pos_y =tmp_self["mean_pos_y"]
 
 		# Dataset Statistics
 		cnt = 0

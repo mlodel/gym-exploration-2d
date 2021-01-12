@@ -25,7 +25,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 10000# for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 1000# for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
@@ -83,6 +83,8 @@ class Config:
     # STATIC MAP
     MAP_WIDTH = 30 # Meters
     MAP_HEIGHT = 30 # Meters
+
+    SCENARIOS_FOR_TRAINING = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'heading_ego_frame','radius', 'pref_speed', 'other_agents_states']#,'local_grid']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
