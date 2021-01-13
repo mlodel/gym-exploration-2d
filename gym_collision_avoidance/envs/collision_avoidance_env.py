@@ -13,6 +13,7 @@ import os
 import matplotlib.pyplot as plt
 
 from gym_collision_avoidance.envs.config import Config
+from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 from gym_collision_avoidance.envs.visualize import plot_episode, animate_episode
 from gym_collision_avoidance.envs.agent import Agent
@@ -69,17 +70,17 @@ class CollisionAvoidanceEnv(gym.Env):
         self.animation_period_steps = Config.ANIMATION_PERIOD_STEPS
 
         self.number_of_agents = 2
-        self.scenario = ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        self.scenario = Config.SCENARIOS_FOR_TRAINING
         #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
         #self.scenario = ["agent_with_obstacle"]
         #self.scenario = ["train_agents_swap_circle"]
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        #self.ego_policy = "SecondOrderMPCRLPolicy"
-        self.ego_policy = "FirstOrderMPCRLPolicy"
-        #self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
-        self.ego_agent_dynamics = "FirstOrderDynamics"
+        self.ego_policy = "SecondOrderMPCRLPolicy"
+        #self.ego_policy = "FirstOrderMPCRLPolicy"
+        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        #self.ego_agent_dynamics = "FirstOrderDynamics"
         self.other_agents_policy = "RVOPolicy"
         self.other_agents_dynamics = "UnicycleDynamics"
 
@@ -316,7 +317,8 @@ class CollisionAvoidanceEnv(gym.Env):
             else:
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy  + ", other_agents_policy=" + self.other_agents_policy +
-                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics + ")")
+                               ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
+                                                   + ")")
         else:
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
@@ -363,6 +365,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.policy.current_state_[0] = agent.pos_global_frame[0]
                 agent.policy.current_state_[1] = agent.pos_global_frame[1]
                 agent.policy.update_predicted_trajectory()
+            #if str(agent.policy) == 'PedestrianDatasetPolicy':
+            #    agent.policy.trajectory = self.data_prep.getRandomTrajectory()
 
     def set_static_map(self, map_filename):
         self.static_map_filename = map_filename

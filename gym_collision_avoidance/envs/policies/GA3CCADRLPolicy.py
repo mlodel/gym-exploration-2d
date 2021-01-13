@@ -16,6 +16,7 @@ class GA3CCADRLPolicy(Policy):
         self.nn = network.NetworkVP_rnn(network.Config.DEVICE, 'network', num_actions)
 
         self.policy_name = "GA3CCADRLPolicy"
+        self.solve_time = 0
 
     def initialize_network(self, **kwargs):
         if 'checkpt_name' in kwargs:
