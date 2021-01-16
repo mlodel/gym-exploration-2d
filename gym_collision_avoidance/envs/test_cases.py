@@ -17,10 +17,10 @@ np.random.seed(1)
 import sys
 sys.path.append('/home/bdebrito/code/mpc-rl-collision-avoidance')
 from gym_collision_avoidance.envs.agent import Agent
-from gym_collision_avoidance.envs.utils import DataHandlerLSTM
+#from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
-from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
+#from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
 # from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.CADRLPolicy import CADRLPolicy
@@ -44,7 +44,7 @@ from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGr
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OtherAgentsStatesSensor import OtherAgentsStatesSensor
 from gym_collision_avoidance.envs.config import Config
-from gym_collision_avoidance.envs.dataset import Dataset
+#from gym_collision_avoidance.envs.dataset import Dataset
 
 
 import os

@@ -13,7 +13,7 @@ import os
 import matplotlib.pyplot as plt
 
 from gym_collision_avoidance.envs.config import Config
-from gym_collision_avoidance.envs.utils import DataHandlerLSTM
+#from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 from gym_collision_avoidance.envs.visualize import plot_episode, animate_episode
 from gym_collision_avoidance.envs.agent import Agent
@@ -77,10 +77,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "SecondOrderMPCRLPolicy"
-        #self.ego_policy = "FirstOrderMPCRLPolicy"
-        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
-        #self.ego_agent_dynamics = "FirstOrderDynamics"
+        #self.ego_policy = "SecondOrderMPCRLPolicy"
+        self.ego_policy = "FirstOrderMPCRLPolicy"
+        #self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        self.ego_agent_dynamics = "FirstOrderDynamics"
         self.other_agents_policy = "RVOPolicy"
         self.other_agents_dynamics = "UnicycleDynamics"
 
