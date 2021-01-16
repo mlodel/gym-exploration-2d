@@ -498,7 +498,7 @@ class CollisionAvoidanceEnv(gym.Env):
             else:
                 game_over = which_agents_done[0]
                 # hack just to get the plots with all agents finishing at same time
-                game_over = np.all(which_agents_done)
+                #game_over = np.all(which_agents_done)
         elif Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]

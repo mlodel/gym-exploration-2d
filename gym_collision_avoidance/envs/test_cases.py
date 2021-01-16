@@ -20,6 +20,8 @@ from gym_collision_avoidance.envs.agent import Agent
 
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
+from gym_collision_avoidance.envs.policies.NonCVPolicy import NonCVPolicy
+from gym_collision_avoidance.envs.policies.CircularPolicy import CircularPolicy
 # from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.CADRLPolicy import CADRLPolicy
@@ -608,6 +610,101 @@ def change_side(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=Ext
 
     return agents
 
+def test_non_cv_agents(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
+    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+    radius = 0.5# np.random.uniform(0.5, 0.5)
+    agents = []
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    ga3c_params =  {
+         'policy': GA3CCADRLPolicy,
+         'checkpt_dir': 'IROS18',
+         'checkpt_name': 'network_01900000'
+         }
+    """
+    ga3c_params =  {
+         'policy': GA3CCADRLPolicy,
+         'checkpt_dir': 'ICRA21',
+         'checkpt_name': 'network_01990000'
+         }
+    """
+
+    policies = [RVOPolicy,CircularPolicy,NonCVPolicy] # GA3CCADRLPolicy
+    positions_list = []
+
+    distance = np.random.uniform(4.0, 8.0)
+    angle = np.random.uniform(-np.pi, np.pi)
+    #distance = 6.0
+    #angle = 0
+    x0_agent_1 = distance * np.cos(angle)
+    y0_agent_1 = distance * np.sin(angle)
+    goal_x_1 = -x0_agent_1
+    goal_y_1 = -y0_agent_1
+    positions_list.append(np.array([goal_x_1,goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    #n_agents = random.randint(0,np.maximum(number_of_agents-1,0))
+    #if not seed:
+    n_agents = number_of_agents - 1
+
+    for ag_id in range(n_agents):
+        in_collision = False
+        while not in_collision:
+            distance = np.random.uniform(4.0, 6.0)
+            angle = np.random.uniform(-np.pi, np.pi)
+            x0_agent_1 = distance*np.cos(angle)
+            y0_agent_1 = distance*np.sin(angle)
+            goal_x_1 = -x0_agent_1
+            goal_y_1 = -y0_agent_1
+            goal=np.array([goal_x_1,goal_y_1])
+            initial_pose= np.array([x0_agent_1, y0_agent_1])
+            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    ag_id = 0
+    for _ in range(n_agents+1):
+        policy = RVOPolicy
+        cooperation_coef = 0.5
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        if ag_id == 0:
+            if 'GA3CCADRLPolicy' in str(agents_policy):
+                agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
+                                    positions_list[ag_id + 1][0], positions_list[ag_id + 1][1], radius, pref_speed,
+                                    None, agents_policy, UnicycleDynamicsMaxAcc,
+                                    [OtherAgentsStatesSensor], 0))
+                agents[0].policy.initialize_network(**ga3c_params)
+            else:
+                agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
+                                    positions_list[ag_id + 1][0], positions_list[ag_id + 1][1], radius, pref_speed,
+                                    None, agents_policy, agents_dynamics,
+                                    [OtherAgentsStatesSensor], 0))
+        else:
+            agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+        policy = random.choice(policies)  # RVOPolicy
+        agents.append(
+            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+        ag_id += 1
+    """
+    for _ in range(1):
+        #policy = NonCVPolicy
+        policy = CircularPolicy
+
+        agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
+                            positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+        agents.append(
+            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+    """
+    return agents
+
 def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -670,7 +767,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
             policy = RVOPolicy
         policy = RVOPolicy
         cooperation_coef = 0.5
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         if ag_id == 0:
             if 'GA3CCADRLPolicy' in str(agents_policy):
                 agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
@@ -687,7 +784,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         #policy = random.choice(policies)  # RVOPolicy #
         if np.random.uniform(0,1)>0.5:
             policy = NonCooperativePolicy
@@ -696,7 +793,7 @@ def train_agents_swap_circle(number_of_agents=2, agents_policy=MPCPolicy, agents
         policy = RVOPolicy
         agents.append(
             Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamicsMaxAcc,
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents
 
@@ -707,13 +804,13 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
     if seed:
         random.seed(seed)
         np.random.seed(seed)
-
+    """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
          'checkpt_dir': 'IROS18',
          'checkpt_name': 'network_01900000'
          }
-    """"""
+    """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
          'checkpt_dir': 'ICRA21',
@@ -749,7 +846,7 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
             policy = RVOPolicy
 
         cooperation_coef = 0.5
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         if ag_id == 0:
             if 'GA3CCADRLPolicy' in str(agents_policy):
                 agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
@@ -764,9 +861,9 @@ def train_agents_pairwise_swap(number_of_agents=2, agents_policy=MPCPolicy, agen
                                     [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
-                                init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
+                                init_positions_list[2*ag_id+1][0], init_positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamicsMaxAcc,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         #policy = random.choice(policies)  # RVOPolicy #
         if np.random.uniform(0,1)>0.9:
             policy = NonCooperativePolicy
@@ -786,13 +883,13 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
     if seed:
         random.seed(seed)
         np.random.seed(seed)
-
+    """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
          'checkpt_dir': 'IROS18',
          'checkpt_name': 'network_01900000'
          }
-    """"""
+    """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
          'checkpt_dir': 'ICRA21',
@@ -847,8 +944,8 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
         else:
             policy = RVOPolicy
 
-        cooperation_coef = 0.8
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        #cooperation_coef = 0.5
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         if ag_id == 0:
             if 'GA3CCADRLPolicy' in str(agents_policy):
                 agents.append(Agent(init_positions_list[ag_id][0], init_positions_list[ag_id][1],
@@ -865,7 +962,7 @@ def train_agents_random_positions(number_of_agents=2, agents_policy=MPCPolicy, a
             agents.append(Agent(init_positions_list[2*ag_id][0], init_positions_list[2*ag_id][1],
                                 goal_positions_list[2*ag_id][0], goal_positions_list[2*ag_id][1], radius, pref_speed, None, policy, UnicycleDynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        cooperation_coef = np.random.uniform(0.1, 1.0)
         #policy = random.choice(policies)  # RVOPolicy #
         if np.random.uniform(0,1)>0.9:
             policy = NonCooperativePolicy

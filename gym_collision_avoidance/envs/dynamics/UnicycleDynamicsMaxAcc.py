@@ -7,13 +7,12 @@ class UnicycleDynamicsMaxAcc(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
         self.max_turn_rate = 2.0 # rad/s
-        self.max_acceleration = 7.5
-        self.max_linear_acc = 7.5
-        self.max_turn_acc = 10.0
+        self.max_linear_acc = 2.0
+        self.max_turn_acc = 3.0
         self.current_speed = 0.0
         self.max_speed = 2.0
         self.current_turning_rate = 0.0
-        self.kp = 2.0
+        self.kp = 1.0
 
     def step(self, action, dt):
         selected_speed = action[0]

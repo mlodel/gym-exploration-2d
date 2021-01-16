@@ -125,15 +125,16 @@ def plot_episode(agents, in_evaluate_mode,
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
+    """
     legend_elements = [Line2D([0], [0], marker='o', color='w', label='GO-MPC',
                               markerfacecolor=plt_colors[1], markersize=15),
-                       #Line2D([0], [0], marker='o', color='w', label='Non-cooperative Agent',
-                       #       markerfacecolor=plt_colors[10], markersize=15),
+                       Line2D([0], [0], marker='o', color='w', label='Non-cooperative Agent',
+                              markerfacecolor=plt_colors[10], markersize=15),
                        Line2D([0], [0], marker='o', color='w', label='Cooperative Agent',
                               markerfacecolor=plt_colors[2], markersize=15)]
 
     ax.legend(handles=legend_elements, loc='upper right')
-
+    """
     plt.draw()
 
     if limits is not None:
