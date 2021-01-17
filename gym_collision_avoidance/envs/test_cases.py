@@ -1146,6 +1146,7 @@ def change_side(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=Ext
     return agents
 
 def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+    print("train_agents_swap_circle")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1237,6 +1238,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
     return agents, obstacle
 
 def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+    print("train_agents_pairwise_swap")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1274,8 +1276,10 @@ def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,ot
             x0_agent_1 = np.random.uniform(-7.5, 7.5)
             y0_agent_1 = np.random.uniform(-7.5, 7.5)
             initial_pose = np.array([x0_agent_1, y0_agent_1])
-            is_valid = is_pose_valid(initial_pose, init_positions_list,4.0)
+            is_valid = is_pose_valid(initial_pose, init_positions_list,2.0)
         init_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    random.shuffle(init_positions_list)
 
     for ag_id in range(int(n_agents/2)):
         #policy = random.choice(other_agents_policy) #RVOPolicy #
@@ -1316,6 +1320,7 @@ def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,ot
     return agents, []
 
 def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+    print("train_agents_random_positions")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
