@@ -295,10 +295,50 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy+ ")")
         else:
+
             if self.total_number_of_steps < 110000:
-                self.scenario = ["agent_with_obstacle"]#["train_agents_swap_circle"]
+                self.scenario = ["agent_with_multiple_obstacles"]
             else:
+                self.scenario = ["test_agent_with_obstacle"]
+            '''
+            if self.total_number_of_steps < 110000:
+                # MPC
+                self.scenario = ["train_agents_swap_circle"]
+                self.number_of_agents = 2
+            elif self.total_number_of_steps < (1e6 + 10000):
+                # Learning
                 self.scenario = ["agent_with_obstacle"]
+                self.number_of_agents = 2
+            elif self.total_number_of_steps < (1e6 + 90000):
+                # MPC
+                self.scenario = ["train_agents_swap_circle"]
+                self.number_of_agents = 3
+            elif self.total_number_of_steps < (5e6 + 10000):
+                # Learning
+                self.scenario = ["agent_with_2diff_obstacles"]
+                self.number_of_agents = 2
+            elif self.total_number_of_steps < (5e6 + 90000):
+                # MPC
+                self.scenario = ["train_agents_swap_circle"]
+                self.number_of_agents = 4
+            elif self.total_number_of_steps < (9e6 + 10000):
+                # Learning
+                self.scenario = ["agent_with_2_obstacles"]
+                self.number_of_agents = 2
+            elif self.total_number_of_steps < (9e6 + 90000):
+                # MPC
+                self.scenario = ["train_agents_swap_circle"]
+                self.number_of_agents = 5
+            elif self.total_number_of_steps < (13e6 + 10000):
+                # Learning
+                self.scenario = ["agent_with_3_obstacles"]
+                self.number_of_agents = 2
+            elif self.total_number_of_steps >= (13e6 + 10000):
+                # Learning
+                self.scenario = ["agent_with_3_obstacles"]
+                self.number_of_agents = 3
+            '''
+
             scenario_index = 0#np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", other_agents_policy=" + self.other_agents_policy+ ")")

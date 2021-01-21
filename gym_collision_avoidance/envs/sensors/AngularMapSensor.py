@@ -7,6 +7,7 @@ from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 class AngularMapSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
@@ -49,6 +50,9 @@ class AngularMapSensor(Sensor):
         # Get position of ego agent
         self.ego_agent = agents[agent_index]
 
+        # Take the heading of the agent into account
+        self.heading = self.ego_agent.heading_global_frame
+
         # Initialize angular map
         Angular_Map = self.max_range * np.ones([self.no_of_slices])  # vector of 72
 
@@ -67,6 +71,11 @@ class AngularMapSensor(Sensor):
 
         if self.plot:
             self.plot_angular_grid(angular_map)
+            if self.Laserscan:
+                ego_agent_pos = self.ego_agent.pos_global_frame
+                # Get map indices of ego agent
+                ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
+                self.plot_top_down_map(top_down_map, ego_agent_pos_idx)
 
         return angular_map
 
@@ -76,22 +85,29 @@ class AngularMapSensor(Sensor):
 
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
-        ego_idx = self.indices_to_map_world_coordinates(np.array([ego_agent_pos_idx[0], ego_agent_pos_idx[1]]),
-                                                        top_down_map)
+
         # Get all indices where an obstacle is
         idx = np.where(top_down_map.map == True)
+
+        # Orientation
+        if self.heading < 0:
+            self.orientation = self.heading + np.pi
+        else:
+            self.orientation = self.heading - np.pi
 
         # Get euclidean distance
         for i in range(len(idx[0])):
             ind_x = idx[0][i]
             ind_y = idx[1][i]
-            ind = self.indices_to_map_world_coordinates(np.array([ind_x, ind_y]), top_down_map)
-            rel_coords = ind - ego_idx
+            ind = np.array([ind_x, ind_y])
+            rel_coords = ind - ego_agent_pos_idx
+
             # Convert to polar coordinates
             l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
             l2norm = l2norm * 0.1
-            # We start counting from positive x-axis
-            phi = math.atan2(rel_coords[1], rel_coords[0])
+
+            # We start counting from positive x-axis (+self.orientation) and clockwise
+            phi = math.atan2(rel_coords[0], rel_coords[1]) + self.orientation
             rad_idx = int(phi / self.radial_resolution)
             if rad_idx < 0:
                 rad_idx = rad_idx + self.no_of_slices
@@ -103,15 +119,12 @@ class AngularMapSensor(Sensor):
         return Angular_Map
 
     def angular_map_from_laser_scan(self, Angular_Map, ranges):
-        # Take the heading of the agent into account
-        heading = self.ego_agent.heading_global_frame
-
         # Convert slice angles to start angle of the laserscan
-        angles = self.angles + heading
-        phi = angles - (np.pi - heading)
+        angles = self.angles + self.heading
+        self.phi = angles
 
         # Get correct slice index for angles
-        rad_idx = phi / self.radial_resolution
+        rad_idx = self.phi / self.radial_resolution
         rad_idx = rad_idx.astype(int)
         rad_idx = rad_idx - rad_idx[0]
 
@@ -124,20 +137,12 @@ class AngularMapSensor(Sensor):
 
         return Angular_Map
 
-    def indices_to_map_world_coordinates(self, ind, top_down_map):
-        pos_x = (ind[1]-(top_down_map.map.shape[0]/2))
-        pos_y = -(ind[0]-(top_down_map.map.shape[1]/2))
-        world_coords = np.array([pos_x, pos_y])
-        return world_coords
-
     # Plot
     def plot_angular_grid(self, Angular_Map):
         fig = pl.figure("Angular grid")
         ax_ped_grid = pl.subplot()
         ax_ped_grid.clear()
-        #Angular_Map_flipped = np.flip(Angular_Map)
-        self.plot_Angular_map_vector(ax_ped_grid, Angular_Map, max_range=6.0, min_angle=0.0,
-                                     max_angle=2 * np.pi)
+        self.plot_Angular_map_vector(ax_ped_grid, Angular_Map, max_range=6.0)
         ax_ped_grid.plot(30, 30, color='r', marker='o', markersize=4)
         ax_ped_grid.scatter(0, 0, s=100, c='red', marker='o')
         #ax_ped_grid.arrow(0, 0, 1, 0, head_width=0.5,
@@ -151,18 +156,22 @@ class AngularMapSensor(Sensor):
         #pl.show(block=False)
         #sleep(0.5)  # Time in seconds.
 
-    def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6, min_angle=0.0, max_angle=2 * np.pi):
+    def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6):
         number_elements = Angular_Map.shape[0]
-
+        if self.Occupancygrid:
+            Angular_Map = Angular_Map[::-1]
+            min_angle = self.orientation# reverse the entire array
         cmap = pl.get_cmap('gnuplot')
+
 
         for ii in range(number_elements):
             if self.Laserscan:
-                angle_start = ((min_angle - (np.pi - self.ego_agent.heading_global_frame)) + ii * self.radial_resolution) * 180 / np.pi
-                angle_end = ((min_angle - (np.pi - self.ego_agent.heading_global_frame)) + (ii + 1) * self.radial_resolution) * 180 / np.pi
+                angle_start = ((self.phi[0]) + ii * self.radial_resolution) * 180 / np.pi
+                angle_end = ((self.phi[0]) + (ii + 1) * self.radial_resolution) * 180 / np.pi
             if self.Occupancygrid:
                 angle_start = (min_angle + ii * self.radial_resolution) * 180 / np.pi
                 angle_end = (min_angle + (ii + 1) * self.radial_resolution) * 180 / np.pi
+
 
             distance_cone = pl.matplotlib.patches.Wedge((0.0, 0.0),
                                                         Angular_Map[ii],

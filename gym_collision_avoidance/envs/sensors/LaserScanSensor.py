@@ -28,7 +28,7 @@ class LaserScanSensor(Sensor):
         # Approx 200x faster than sense_old (0.002sec per call vs. 0.4sec) :)
         host_agent = agents[agent_index]
 
-        angles = self.angles + host_agent.heading_global_frame
+        angles = self.angles + (host_agent.heading_global_frame)
         ranges = self.ranges
         angles_ranges_mesh = np.meshgrid(angles, ranges)
         angles_ranges = np.dstack([angles_ranges_mesh[0], angles_ranges_mesh[1]])
