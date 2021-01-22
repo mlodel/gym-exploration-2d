@@ -7,6 +7,7 @@ from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import cv2
 
 class AngularMapSensor(Sensor):
     def __init__(self):
@@ -19,7 +20,7 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = True
+        self.plot = False
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
         self.Laserscan = False
@@ -51,7 +52,7 @@ class AngularMapSensor(Sensor):
         self.ego_agent = agents[agent_index]
 
         # Take the heading of the agent into account
-        self.heading = self.ego_agent.heading_global_frame
+        self.heading = self.ego_agent.heading_global_frame/2
 
         # Initialize angular map
         Angular_Map = self.max_range * np.ones([self.no_of_slices])  # vector of 72

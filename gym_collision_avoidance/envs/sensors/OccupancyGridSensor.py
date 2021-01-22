@@ -6,6 +6,7 @@ import math
 import pylab as pl
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import cv2
 
 class OccupancyGridSensor(Sensor):
     def __init__(self):
@@ -69,7 +70,8 @@ class OccupancyGridSensor(Sensor):
         # Get position of ego agent
         ego_agent = agents[agent_index]
         ego_agent_pos = ego_agent.pos_global_frame
-        ego_agent_heading = ego_agent.heading_global_frame
+        ego_agent_heading = ego_agent.heading_global_frame/4
+
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
 
@@ -80,28 +82,27 @@ class OccupancyGridSensor(Sensor):
         start_idx_x, start_idx_y, end_idx_x, end_idx_y = top_down_map.getSubmapByIndices(ego_agent_pos_idx[0],
                                                                                      ego_agent_pos_idx[1], span_x, span_y)
 
-        # Obtain static map including all obstacles
-        # static_map = self.map.get_occupancy_grid(self.obstacle) # Old version
-        #static_map = top_down_map.static_map.astype(float)
+        # Get the batch_grid with filled in values
+        float_map = top_down_map.map.astype(float)
+        batch_grid = float_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
 
-        # Get the batch_grid with filled in values
-        #batch_grid = np.zeros((int(self.y_width/top_down_map.grid_cell_size), int(self.x_width/top_down_map.grid_cell_size)), dtype=bool)
-        # Get the batch_grid with filled in values
-        batch_grid = top_down_map.map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
+        # Rotate grid such that it is aligned with the heading
+        batch_grid = self.rotate_grid_around_center(batch_grid,angle=-ego_agent_heading*180/np.pi)
+        batch_grid = batch_grid.astype(bool)
 
         if self.plot:
-            self.plot_top_down_map(top_down_map, ego_agent_pos_idx, start_idx_x, start_idx_y)
+            self.plot_top_down_map(top_down_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading)
             self.plot_batch_grid(batch_grid)
 
         return batch_grid
 
     # Plot
-    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y):
+    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading):
         fig = plt.figure("Top down map")
         ax = fig.subplots(1)
         ax.imshow(top_down_map.map, aspect='equal')
         ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
-        rect = patches.Rectangle((start_idx_x, start_idx_y), self.x_width, self.y_width, linewidth=1, edgecolor='r', facecolor='none')
+        rect = patches.Rectangle((start_idx_y, start_idx_x), self.x_width, self.y_width, linewidth=1, edgecolor='r', facecolor='none')
         ax.add_patch(rect)
         plt.show()
 
@@ -114,6 +115,20 @@ class OccupancyGridSensor(Sensor):
     def resize(self, og_map):
         resized_og_map = og_map.copy()
         return resized_og_map
+
+    def rotate_grid_around_center(self, grid, angle):
+        """
+        inputs:
+          grid: numpy array (gridmap) that needs to be rotated
+          angle: rotation angle in degrees
+        """
+        # Rotate grid into direction of initial heading
+        grid = grid.copy()
+        rows, cols = grid.shape
+        M = cv2.getRotationMatrix2D(center=(rows / 2, cols / 2), angle=angle, scale=1)
+        grid = cv2.warpAffine(grid, M, (rows, cols))
+
+        return grid
 
 if __name__ == '__main__':
     from gym_collision_avoidance.envs.Map import Map

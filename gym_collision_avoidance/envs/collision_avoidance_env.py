@@ -68,7 +68,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "LearningMPCPolicy"
+        self.ego_policy = "SocialMPCPolicy"
         self.other_agents_policy = "RVOPolicy"
 
         self.max_heading_change = 1.0
@@ -297,7 +297,7 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
 
             if self.total_number_of_steps < 110000:
-                self.scenario = ["agent_with_multiple_obstacles"]
+                self.scenario = ["agent_with_obstacle"]
             else:
                 self.scenario = ["test_agent_with_obstacle"]
             '''
