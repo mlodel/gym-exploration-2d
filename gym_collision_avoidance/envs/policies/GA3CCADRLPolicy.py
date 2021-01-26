@@ -16,6 +16,7 @@ class GA3CCADRLPolicy(Policy):
         self.nn = network.NetworkVP_rnn(network.Config.DEVICE, 'network', num_actions)
 
         self.policy_name = "GA3CCADRLPolicy"
+        self.solve_time = 0
 
     def initialize_network(self, **kwargs):
         if 'checkpt_name' in kwargs:
@@ -30,7 +31,7 @@ class GA3CCADRLPolicy(Policy):
 
         self.nn.simple_load(checkpt_dir + checkpt_name)
 
-    def find_next_action(self, obs, agents, i):
+    def find_next_action(self, obs, agents, i, obstacles):
         host_agent = agents[i]
         other_agents = agents[:i]+agents[i+1:]
         obs = self.agents_to_ga3c_cadrl_state(host_agent, other_agents)

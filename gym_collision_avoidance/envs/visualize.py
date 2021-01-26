@@ -38,11 +38,14 @@ def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     collision_plot_dir = plot_save_dir + "/collisions/"
     os.makedirs(collision_plot_dir, exist_ok=True)
 
+    deadlock_plot_dir = plot_save_dir + "/deadlocks/"
+    os.makedirs(deadlock_plot_dir, exist_ok=True)
+
     base_fig_name = "{test_case}_{policy}_{num_agents}agents{step}.{extension}"
-    return plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir
+    return plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir
 
 def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_case_index=0, agents=None):
-    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
+    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
     
     if not os.path.exists(plot_save_dir):
         os.makedirs(plot_save_dir)
@@ -98,7 +101,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     if max([agent.step_num for agent in agents]) == 0:
         return
 
-    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
+    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
 
     fig = plt.figure(env_id)
     fig.set_size_inches(fig_size[0], fig_size[1])
@@ -196,6 +199,9 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         if agents[0].in_collision:
             plt.savefig(collision_plot_dir+fig_name)
 
+        if agents[0].ran_out_of_time:
+            plt.savefig(deadlock_plot_dir + fig_name)
+
     if save_for_animation:
         try:
             fig_name = base_fig_name.format(
@@ -259,7 +265,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                 circle_times = np.arange(0.0, t_final,
                                          circle_spacing)
                 if circle_times.size == 0:
-                    break
+                    continue
                 _, circle_inds = find_nearest(agent.global_state_history[:agent.step_num-1,0],
                                               circle_times)
                 for ind in circle_inds[0:]:
@@ -283,24 +289,26 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                         else:
                             other_plt_color = plt_colors[10]
 
-                        for ind in range(agent.policy.FORCES_N):
-                            alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
-                            c = rgba2rgb(other_plt_color + [float(alpha)])
-                            ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind],
-                                                    radius=agent.radius, fc=c, ec=other_plt_color,
-                                                    fill=True))
+                        if Config.PLOT_PREDICTIONS:
+                            for ind in range(agent.policy.FORCES_N):
+                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                c = rgba2rgb(other_plt_color + [float(alpha)])
+                                ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
+                                                        radius=agent.radius, fc=c, ec=other_plt_color,
+                                                        fill=True))
+                            if id == 0:
+                                for ind in range(agent.policy.FORCES_N):
+                                    alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
+                                    c = rgba2rgb(plt_colors[7] + [float(alpha)])
+                                    ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
+                                                            radius=agent.radius, fc=c, ec=plt_colors[7],
+                                                            fill=True))
                         if id == 0:
                             for ind in range(agent.policy.FORCES_N):
                                 alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
                                 c = rgba2rgb(plt_colors[8] + [float(alpha)])
                                 ax.add_patch(plt.Circle(agent.policy.predicted_traj[ind],
                                                         radius=agent.radius, fc=c, ec=plt_colors[8],
-                                                        fill=True))
-                            for ind in range(agent.policy.FORCES_N):
-                                alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
-                                c = rgba2rgb(plt_colors[7] + [float(alpha)])
-                                ax.add_patch(plt.Circle(agent.policy.guidance_traj[ind],
-                                                        radius=agent.radius, fc=c, ec=plt_colors[7],
                                                         fill=True))
 
                 # Display text of current timestamp every text_spacing (nom 1.5 sec)

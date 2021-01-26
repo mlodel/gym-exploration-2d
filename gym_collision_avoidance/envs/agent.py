@@ -148,10 +148,10 @@ class Agent(object):
                 self.was_at_goal_already = True
             if self.in_collision:
                 self.was_in_collision_already = True
-            #self._update_state_history()
-            #if not self.is_at_goal:
-            #    self.t += dt
-            #self.step_num += 1
+            self._update_state_history()
+            if not self.is_at_goal:
+                self.t += dt
+            self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return
