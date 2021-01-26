@@ -94,9 +94,7 @@ class AngularMapSensor(Sensor):
 
         # Obstacles
         self.obst = Obstacle(top_down_map.obstacles)
-        #near_list = self.obst.get_list_of_nearest_obstacles(self.ego_agent, m=2)
 
-        # TODO fix the orientation
         # Orientation
         if self.heading >= 0:
             self.orientation = self.heading - np.pi
@@ -143,7 +141,7 @@ class AngularMapSensor(Sensor):
                             rel_coords = np.array([constant, idx]) - ego_agent_pos
                         l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
 
-                        # We start counting from positive x-axis (+self.orientation) and clockwise
+                        # We start counting from positive x-axis (+self.orientation)
                         phi = math.atan2(rel_coords[1], rel_coords[0]) - self.orientation
                         rad_idx = int(phi / self.radial_resolution)
                         if rad_idx < 0:

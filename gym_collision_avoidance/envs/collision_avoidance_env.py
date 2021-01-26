@@ -24,7 +24,9 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-#from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
+from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
+from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
+from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 
@@ -68,7 +70,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = "tc.corridor_scenario(0)"
         #self.scenario = tc.go_to_goal
 
-        self.ego_policy = "SocialMPCPolicy"
+        self.ego_policy = "FirstOrderMPCRLPolicy"
         self.other_agents_policy = "RVOPolicy"
 
         self.max_heading_change = 1.0
@@ -297,46 +299,25 @@ class CollisionAvoidanceEnv(gym.Env):
         else:
 
             if self.total_number_of_steps < 110000:
-                self.scenario = ["agent_with_obstacle"]
+                self.scenario = ["agent_with_crossing"]
             else:
                 self.scenario = ["test_agent_with_obstacle"]
             '''
+            #TODO fix this 
             if self.total_number_of_steps < 110000:
-                # MPC
                 self.scenario = ["train_agents_swap_circle"]
-                self.number_of_agents = 2
             elif self.total_number_of_steps < (1e6 + 10000):
-                # Learning
-                self.scenario = ["agent_with_obstacle"]
-                self.number_of_agents = 2
+                self.scenario = ["train_stage_1"]
             elif self.total_number_of_steps < (1e6 + 90000):
-                # MPC
-                self.scenario = ["train_agents_swap_circle"]
-                self.number_of_agents = 3
-            elif self.total_number_of_steps < (5e6 + 10000):
-                # Learning
-                self.scenario = ["agent_with_2diff_obstacles"]
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < (5e6 + 90000):
-                # MPC
-                self.scenario = ["train_agents_swap_circle"]
-                self.number_of_agents = 4
-            elif self.total_number_of_steps < (9e6 + 10000):
-                # Learning
-                self.scenario = ["agent_with_2_obstacles"]
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < (9e6 + 90000):
-                # MPC
-                self.scenario = ["train_agents_swap_circle"]
-                self.number_of_agents = 5
+                self.scenario = ["train_stage_2"]
             elif self.total_number_of_steps < (13e6 + 10000):
-                # Learning
-                self.scenario = ["agent_with_3_obstacles"]
-                self.number_of_agents = 2
+                self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.scenario = self.scenario[scenario_index]
             elif self.total_number_of_steps >= (13e6 + 10000):
-                # Learning
-                self.scenario = ["agent_with_3_obstacles"]
-                self.number_of_agents = 3
+                self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
+                scenario_index = np.random.randint(0,len(self.scenario))
+                self.scenario = self.scenario[scenario_index]
             '''
 
             scenario_index = 0#np.random.randint(0,len(self.scenario))

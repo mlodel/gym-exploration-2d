@@ -107,7 +107,7 @@ class Map():
     def get_occupancy_grid(self, obstacles):
 
         # This function puts the obstacles in the right places of the static grid
-        # Dimension is 300 by 300 because this is also used in the trained auto-encoder model #todo: ask if this is correct
+        # Dimension is 300 by 300 because this is also used in the trained auto-encoder model
 
         #Initialize variables
         occupancy_grid = np.zeros(shape=self.dims) #dimension (300,300), dtype float64

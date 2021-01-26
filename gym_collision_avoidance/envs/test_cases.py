@@ -1169,8 +1169,6 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
 
     distance = np.random.uniform(4.0, 8.0)
     angle = np.random.uniform(-np.pi, np.pi)
-    #distance = 6.0
-    #angle = 0
     x0_agent_1 = distance * np.cos(angle)
     y0_agent_1 = distance * np.sin(angle)
     goal_x_1 = -x0_agent_1
@@ -1178,10 +1176,10 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
     positions_list.append(np.array([goal_x_1,goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(int(n_agents/2)-1):
+    for ag_id in range(n_agents-1):
         in_collision = False
         while not in_collision:
-            distance = np.random.uniform(4.0, 6.0)
+            distance = np.random.uniform(4.0, 8.0)
             angle = np.random.uniform(-np.pi, np.pi)
             x0_agent_1 = distance*np.cos(angle)
             y0_agent_1 = distance*np.sin(angle)
@@ -1193,34 +1191,32 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(int(n_agents/2)):
+    for ag_id in range(n_agents):
         policy = random.choice(other_agents_policy) #RVOPolicy #
-        #if np.random.uniform(0,1)>0.5:
-        #    policy = NonCooperativePolicy
-        #else:
-        #    policy = RVOPolicy
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
         if ag_id == 0:
-                agents.append(Agent(positions_list[0][0], positions_list[0][1],
-                                    positions_list[1][0], positions_list[1][1], radius, pref_speed,
-                                    None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                                    [OtherAgentsStatesSensor, AngularMapSensor], 0))
+            agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+                                [OtherAgentsStatesSensor, AngularMapSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
                                 positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, UnicycleDynamics,
-                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+                                [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+
         #cooperation_coef = np.random.uniform(0.0, 1.0)
-        policy = random.choice(other_agents_policy)  # RVOPolicy #
+        #policy = random.choice(other_agents_policy)  # RVOPolicy #
         #if np.random.uniform(0,1)>0.5:
         #    policy = NonCooperativePolicy
         #else:
         #    policy = RVOPolicy
         #policy = RVOPolicy
-        agents.append(
-            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
-                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+        #agents.append(
+        #    Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+        #          positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , UnicycleDynamics,
+        #          [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+
     return agents, obstacle
 
 def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
@@ -2384,7 +2380,7 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
 
     too_close = True
     while too_close:
-        # TODO check this too_close thingie
+        # This makes sure the agent covers a minimum distance of 10 meters
         x0_agent_1 = np.random.uniform(-2.5, 2.5)
         y0_agent_1 = np.random.uniform(-9.5, 9.5)
         goal_x_1 = np.random.uniform(-2.5, 2.5)
@@ -2496,9 +2492,9 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
     obstacle = []
     obstacle_1 = [(10,10), (2, 10), (2, 2), (10, 2)]
     obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
-    #obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
+    obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
     obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
-    obstacle.extend([obstacle_1, obstacle_2, obstacle_4])
+    obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4])
 
     positions_list_1 = []
     positions_list_2 = []
