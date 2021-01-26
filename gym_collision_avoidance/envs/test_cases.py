@@ -2211,7 +2211,7 @@ def get_testcase_hololens_and_ga3c_cadrl():
               # Agent(-goal_x1, goal_y1, goal_x1, -goal_y1, 0.5, 1.0, 0.5, ExternalPolicy, ExternalDynamics, [], 5)]
     return agents
 
-def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     #In this scenario there is an obstacle in the middle and there is one agent that needs to cross the room, avoiding the obstacle
     pref_speed = 1.0
     radius = 0.5
@@ -2232,17 +2232,20 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
     y0_agent_1 = distance * np.sin(angle)
     goal_x_1 = -x0_agent_1
     goal_y_1 = -y0_agent_1
-    # FirstOrderDynamics
+
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
-                        UnicycleSecondOrderEulerDynamics,
+                        ego_agent_dynamics,
                         [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
-                        UnicycleDynamics,
+                        other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
+
+    if "MPCStaticObsPolicy" == str(agents[0].policy):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
-def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], agents_dynamics=ExternalDynamics, agents_sensors=[], seed=None, obstacle=None):
+def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     #In this scenario there is an obstacle in the middle and there is one agent that needs to cross the room, avoiding the obstacle
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5 #np.random.uniform(0.4, 0.6)
@@ -2270,17 +2273,17 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     #Triangle
     #obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
     obstacle.append(obstacle_1)
-    other_agents_policy = RVOPolicy
+
     distance = np.random.uniform(6.0, 8.0)
     angle = np.random.uniform(-np.pi, np.pi)
     x0_agent_1 = distance * np.cos(angle)
     y0_agent_1 = distance * np.sin(angle)
     goal_x_1 = -x0_agent_1
     goal_y_1 = -y0_agent_1
-    # FirstOrderDynamics
 
     n_agents = number_of_agents#random.randint(0,np.maximum(number_of_agents-1,0))
 
+    #TODO: Need to check if agents initial and goal position is in collision with an obstacle
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -2301,12 +2304,15 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
         if ag_id == 0:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
-                                None, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+                                None, ego_agent_policy, ego_agent_dynamics,
                                 [OtherAgentsStatesSensor, AngularMapSensor], 2 * ag_id))
+
+            if str(ego_agent_policy)=="MPCStaticObsPolicy":
+                agents[0].policy.static_obstacles_manager.obstacle = obstacle
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
-                                None, other_agents_policy, UnicycleDynamics,
+                                None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], 2 * ag_id))
 
     return agents, obstacle
