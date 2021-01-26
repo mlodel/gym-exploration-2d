@@ -23,6 +23,7 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
+from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy

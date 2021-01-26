@@ -1085,13 +1085,13 @@ def change_side(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=Ext
          'checkpt_dir': 'IROS18',
          'checkpt_name': 'network_01900000'
          }
-    """"""
+    """
     ga3c_params =  {
          'policy': GA3CCADRLPolicy,
          'checkpt_dir': 'ICRA21',
          'checkpt_name': 'network_01990000'
          }
-
+    """
     positions_list = []
 
     y = np.random.uniform(-1.0, 1.0)
