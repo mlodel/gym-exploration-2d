@@ -8,6 +8,7 @@ from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
+from gym_collision_avoidance.envs.Obstacle import Obstacle
 
 class AngularMapSensor(Sensor):
     def __init__(self):
@@ -52,7 +53,7 @@ class AngularMapSensor(Sensor):
         self.ego_agent = agents[agent_index]
 
         # Take the heading of the agent into account
-        self.heading = self.ego_agent.heading_global_frame/2
+        self.heading = self.ego_agent.heading_global_frame
 
         # Initialize angular map
         Angular_Map = self.max_range * np.ones([self.no_of_slices])  # vector of 72
@@ -81,40 +82,77 @@ class AngularMapSensor(Sensor):
         return angular_map
 
     def angular_map_from_batch_grid(self, Angular_Map, top_down_map):
-        ## Get data from occupancy grid
+        '''
+        This function creates an angular map from the cornerpoints of the obstacles.
+        1) It first finds the nearest obstacles
+        2) It then only looks at the obstacles that are closer than a certain threshold
+        3) Then it computes the three closest corner points
+        4) Then it computes 2 lines from those closest corner points
+        5) Then it iterates along these lines to obtain the angular map
+        '''
         ego_agent_pos = self.ego_agent.pos_global_frame
 
-        # Get map indices of ego agent
-        ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
+        # Obstacles
+        self.obst = Obstacle(top_down_map.obstacles)
+        #near_list = self.obst.get_list_of_nearest_obstacles(self.ego_agent, m=2)
 
-        # Get all indices where an obstacle is
-        idx = np.where(top_down_map.map == True)
-
+        # TODO fix the orientation
         # Orientation
-        if self.heading < 0:
-            self.orientation = self.heading + np.pi
-        else:
+        if self.heading >= 0:
             self.orientation = self.heading - np.pi
+        else:
+            self.orientation = self.heading + np.pi
 
-        # Get euclidean distance
-        for i in range(len(idx[0])):
-            ind_x = idx[0][i]
-            ind_y = idx[1][i]
-            ind = np.array([ind_x, ind_y])
-            rel_coords = ind - ego_agent_pos_idx
+        # Get obstacle contour indices
+        obstacles_in_range = self.obst.get_obstacles_in_range(self.ego_agent, (self.max_range+1))
 
-            # Convert to polar coordinates
-            l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
-            l2norm = l2norm * 0.1
+        if len(obstacles_in_range) == 0:
+            # If there is no obstacle in the sensor range, immediately return the angular map
+            return Angular_Map
+        else:
+            for obst_coor in obstacles_in_range:
+                # Get cornerpoints of obstacles that are close to the agent
+                corners_imp = self.obst.get_important_corners(self.ego_agent, obst_coor)
 
-            # We start counting from positive x-axis (+self.orientation) and clockwise
-            phi = math.atan2(rel_coords[0], rel_coords[1]) + self.orientation
-            rad_idx = int(phi / self.radial_resolution)
-            if rad_idx < 0:
-                rad_idx = rad_idx + self.no_of_slices
-            Angular_Map[rad_idx] = min(Angular_Map[rad_idx], l2norm)
+                # Create two lines from the 3 most important coordinates
+                for i in range(len(corners_imp)-1):
+                    if i+1 > len(corners_imp):
+                        j = 0
+                    else:
+                        j = i+1
+                    if corners_imp[i][0] == corners_imp[j][0]:
+                        # Line is vertical
+                        start = corners_imp[i][1]
+                        end = corners_imp[j][1]
+                        constant = corners_imp[i][0]
+                        line_horizontal = False
 
+                    else:
+                        # Line is horizontal
+                        start = corners_imp[i][0]
+                        end = corners_imp[j][0]
+                        constant = corners_imp[i][1]
+                        line_horizontal = True
+
+                    line = np.linspace(start, end, (int(abs(start - end)) * 8) + 1)
+                    # Iterate over the line
+                    for idx in line:
+                        if line_horizontal:
+                            rel_coords = np.array([idx, constant]) - ego_agent_pos
+                        else:
+                            rel_coords = np.array([constant, idx]) - ego_agent_pos
+                        l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
+
+                        # We start counting from positive x-axis (+self.orientation) and clockwise
+                        phi = math.atan2(rel_coords[1], rel_coords[0]) - self.orientation
+                        rad_idx = int(phi / self.radial_resolution)
+                        if rad_idx < 0:
+                            rad_idx = rad_idx + self.no_of_slices
+                        Angular_Map[rad_idx] = min(Angular_Map[rad_idx], l2norm)
+
+        # Plot for debugging
         if self.plot is True:
+            ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
             self.plot_top_down_map(top_down_map, ego_agent_pos_idx)
 
         return Angular_Map
@@ -160,8 +198,8 @@ class AngularMapSensor(Sensor):
     def plot_Angular_map_vector(self, ax, Angular_Map, max_range=6):
         number_elements = Angular_Map.shape[0]
         if self.Occupancygrid:
-            Angular_Map = Angular_Map[::-1]
-            min_angle = self.orientation# reverse the entire array
+            #Angular_Map = Angular_Map[::-1]
+            min_angle = self.orientation # reverse the entire array
         cmap = pl.get_cmap('gnuplot')
 
 
