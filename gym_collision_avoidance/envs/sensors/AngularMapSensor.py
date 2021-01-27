@@ -8,7 +8,7 @@ from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
-from gym_collision_avoidance.envs.Obstacle import Obstacle
+#from gym_collision_avoidance.envs.Obstacle import Obstacle
 
 class AngularMapSensor(Sensor):
     def __init__(self):

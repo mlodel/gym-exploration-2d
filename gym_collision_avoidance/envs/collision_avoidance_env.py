@@ -23,6 +23,7 @@ from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
+from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
@@ -324,7 +325,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                                    + ")")
         else:
             if self.total_number_of_steps < 110000:
-                self.scenario = ["agent_with_crossing"]
+                self.scenario = ["train_agents_swap_circle"]
             else:
                 self.scenario = ["test_agent_with_obstacle"]
             '''
@@ -343,7 +344,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
                 scenario_index = np.random.randint(0,len(self.scenario))
                 self.scenario = self.scenario[scenario_index]
-            '''
+            
+
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 2e6:
@@ -354,11 +356,11 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.number_of_agents = 8
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 10
+            '''
 
             scenario_index = 0 #np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
-
 
         if self.episode_number == 1:
             self.policies=[]
