@@ -21,10 +21,10 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = False
+        self.plot = True
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
-        self.Laserscan = False
+        self.Laserscan = True
         self.Occupancygrid = True
 
         # For laserscan
@@ -93,8 +93,8 @@ class AngularMapSensor(Sensor):
         ego_agent_pos = self.ego_agent.pos_global_frame
 
         # Obstacles
-        # TODO fix this
-        #self.obst = StaticObstacleManager
+        # TODO make this only compute the nearest obstacles only once
+        self.static_obstacle_manager = StaticObstacleManager()
 
         # Orientation
         if self.heading >= 0:
@@ -103,43 +103,69 @@ class AngularMapSensor(Sensor):
             self.orientation = self.heading + np.pi
 
         # Get obstacle contour indices
-        obstacles_in_range = StaticObstacleManager.get_obstacles_in_range(self.ego_agent, (self.max_range+1))
+        obs = top_down_map.obstacles
+        obstacles_in_range = self.static_obstacle_manager.get_obstacles_in_range(self.ego_agent, (self.max_range+1), obs)
 
         if len(obstacles_in_range) == 0:
             # If there is no obstacle in the sensor range, immediately return the angular map
             return Angular_Map
         else:
+
             for obst_coor in obstacles_in_range:
+                lines = []
                 # Get cornerpoints of obstacles that are close to the agent
-                corners_imp = StaticObstacleManager.get_important_corners(self.ego_agent, obst_coor)
-
+                corners_imp = self.static_obstacle_manager.get_important_corners(self.ego_agent, obst_coor)
+                corner1 = corners_imp[0]
+                corner2 = corners_imp[1]
+                corner3 = corners_imp[2]
+                if corner1[0] == corner2[0]:
+                    # Line is vertical
+                    start = corner1[1]
+                    end = corner2[1]
+                    constant_vert = corner1[0]
+                elif corner1[0] == corner3[0]:
+                    # Line is vertical
+                    start = corner1[1]
+                    end = corner3[1]
+                    constant_vert = corner1[0]
+                elif corner2[0] == corner3[0]:
+                    # Line is vertical
+                    start = corner2[1]
+                    end = corner3[1]
+                    constant_vert = corner2[0]
+                else:
+                    print('ERROR: The obstacles are not defined correctly')
+                    return
+                line_vert = np.linspace(start, end, (int(abs(start - end)) * 8) + 1)
+                lines.append(line_vert)
+                if corner1[1] == corner2[1]:
+                    # Line is horizontal
+                    start = corner1[0]
+                    end = corner2[0]
+                    constant_hor = corner1[1]
+                elif corner1[1] == corner3[1]:
+                    # Line is horizontal
+                    start = corner1[0]
+                    end = corner3[0]
+                    constant_hor = corner1[1]
+                elif corner2[1] == corner3[1]:
+                    # Line is horizontal
+                    start = corner2[0]
+                    end = corner3[0]
+                    constant_hor = corner2[1]
+                else:
+                    print('ERROR: The obstacles are not defined correctly')
+                    return
+                line_hor = np.linspace(start, end, (int(abs(start - end)) * 8) + 1)
+                lines.append(line_hor)
                 # Create two lines from the 3 most important coordinates
-                for i in range(len(corners_imp)-1):
-                    if i+1 > len(corners_imp):
-                        j = 0
-                    else:
-                        j = i+1
-                    if corners_imp[i][0] == corners_imp[j][0]:
-                        # Line is vertical
-                        start = corners_imp[i][1]
-                        end = corners_imp[j][1]
-                        constant = corners_imp[i][0]
-                        line_horizontal = False
-
-                    else:
-                        # Line is horizontal
-                        start = corners_imp[i][0]
-                        end = corners_imp[j][0]
-                        constant = corners_imp[i][1]
-                        line_horizontal = True
-
-                    line = np.linspace(start, end, (int(abs(start - end)) * 8) + 1)
+                for i in range(len(lines)):
                     # Iterate over the line
-                    for idx in line:
-                        if line_horizontal:
-                            rel_coords = np.array([idx, constant]) - ego_agent_pos
+                    for idx in lines[i]:
+                        if i == 0:
+                            rel_coords = np.array([constant_vert, idx]) - ego_agent_pos
                         else:
-                            rel_coords = np.array([constant, idx]) - ego_agent_pos
+                            rel_coords = np.array([idx, constant_hor]) - ego_agent_pos
                         l2norm = np.linalg.norm(rel_coords)  # Distance between ego agent and obstacle point
 
                         # We start counting from positive x-axis (+self.orientation)
