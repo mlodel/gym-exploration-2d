@@ -8,7 +8,7 @@ from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
-#from gym_collision_avoidance.envs.Obstacle import Obstacle
+from mpc_rl_collision_avoidance.policies.StaticObstacleManager import StaticObstacleManager
 
 class AngularMapSensor(Sensor):
     def __init__(self):
@@ -93,7 +93,8 @@ class AngularMapSensor(Sensor):
         ego_agent_pos = self.ego_agent.pos_global_frame
 
         # Obstacles
-        self.obst = Obstacle(top_down_map.obstacles)
+        # TODO fix this
+        #self.obst = StaticObstacleManager
 
         # Orientation
         if self.heading >= 0:
@@ -102,7 +103,7 @@ class AngularMapSensor(Sensor):
             self.orientation = self.heading + np.pi
 
         # Get obstacle contour indices
-        obstacles_in_range = self.obst.get_obstacles_in_range(self.ego_agent, (self.max_range+1))
+        obstacles_in_range = StaticObstacleManager.get_obstacles_in_range(self.ego_agent, (self.max_range+1))
 
         if len(obstacles_in_range) == 0:
             # If there is no obstacle in the sensor range, immediately return the angular map
@@ -110,7 +111,7 @@ class AngularMapSensor(Sensor):
         else:
             for obst_coor in obstacles_in_range:
                 # Get cornerpoints of obstacles that are close to the agent
-                corners_imp = self.obst.get_important_corners(self.ego_agent, obst_coor)
+                corners_imp = StaticObstacleManager.get_important_corners(self.ego_agent, obst_coor)
 
                 # Create two lines from the 3 most important coordinates
                 for i in range(len(corners_imp)-1):

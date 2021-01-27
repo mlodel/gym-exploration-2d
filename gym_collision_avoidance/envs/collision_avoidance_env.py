@@ -324,11 +324,12 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
+            '''
             if self.total_number_of_steps < 110000:
-                self.scenario = ["train_agents_swap_circle"]
+                self.scenario = ["test_agent_with_obstacle"]
             else:
                 self.scenario = ["test_agent_with_obstacle"]
-            '''
+            
             #TODO fix this 
             if self.total_number_of_steps < 110000:
                 self.scenario = ["train_agents_swap_circle"]
@@ -344,7 +345,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
                 scenario_index = np.random.randint(0,len(self.scenario))
                 self.scenario = self.scenario[scenario_index]
-            
+            '''
 
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
@@ -356,9 +357,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.number_of_agents = 8
             elif self.total_number_of_steps < 7e6:
                 self.number_of_agents = 10
-            '''
 
-            scenario_index = 0 #np.random.randint(0,len(self.scenario))
+            scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
 
