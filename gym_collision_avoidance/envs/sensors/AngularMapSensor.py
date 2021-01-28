@@ -65,6 +65,7 @@ class AngularMapSensor(Sensor):
         ## Occupancy grid
         if self.Occupancygrid:
             angular_map = self.angular_map_from_batch_grid(Angular_Map, top_down_map)
+            self.static_obstacles_manager.angular_map = angular_map
 
         ## Laserscan
         if self.Laserscan:

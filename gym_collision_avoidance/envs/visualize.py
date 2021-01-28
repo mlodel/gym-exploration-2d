@@ -10,8 +10,9 @@ import glob
 import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
-
+import pypoman
 from matplotlib.lines import Line2D
+import math
 matplotlib.rcParams.update({'font.size': 24})
 
 plt_colors = []
@@ -109,15 +110,16 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
     plt.clf()
 
     ax = fig.add_subplot(1, 1, 1)
+    ax2 = plt.axes([0.8,0.2,0.2,0.2])
 
     # if env_map is not None:
     #     ax.imshow(env_map.static_map, extent=[-env_map.x_width/2., env_map.x_width/2., -env_map.y_width/2., env_map.y_width/2.], cmap=plt.cm.binary)
 
     if perturbed_obs is None:
         # Normal case of plotting
-        max_time = draw_agents(agents, obstacles, circles_along_traj, ax)
+        max_time = draw_agents(agents, obstacles, circles_along_traj, ax, ax2)
     else:
-        max_time = draw_agents(agents, obstacles, circles_along_traj, ax, last_index=-2)
+        max_time = draw_agents(agents, obstacles, circles_along_traj, ax, ax2, last_index=-2)
         plot_perturbed_observation(agents, ax, perturbed_obs)
 
     # Label the axes
@@ -220,8 +222,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         plt.pause(0.0001)
 
 
-def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
-
+def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
     max_time = max([max(agent.global_state_history[:,0]) for agent in agents] + [1e-4])
     max_time_alpha_scalar = 1.2
     #plt.title(agents[0].policy.policy_name)
@@ -333,6 +334,29 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                     obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
+
+                    # Plot angular map
+                    angular_map = agent.sensors[1].static_obstacles_manager.angular_map
+                    ax2.clear()
+                    plot_Angular_map_vector(ax2, angular_map,agent, max_range=6.0)
+                    ax2.plot(30, 30, color='r', marker='o', markersize=4)
+                    ax2.scatter(0, 0, s=100, c='red', marker='o')
+                    aanliggend = 1 * math.cos(agent.heading_global_frame)
+                    overstaand = 1 * math.sin(agent.heading_global_frame)
+                    ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5,head_length=0.5)  # agent poiting direction
+                    ax2.set_xlim([-6 - 1, 6 + 1])
+                    ax2.set_ylim([-6 - 1, 6 + 1])
+
+                    workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
+                    workspace_constr_b = np.array([10,10,10,10])
+
+                    for constr in agent.policy.linear_constraints:
+                        workspace_constr_a = np.concatenate((workspace_constr_a,np.expand_dims(constr[0],axis=0)))
+                        workspace_constr_b = np.concatenate((workspace_constr_b,np.array([constr[1]])))
+
+                    vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
+                    ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
+
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1
                 alpha = 1 - \
@@ -376,6 +400,27 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                 #         color=plt_color)
 
         return max_time
+
+
+def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):
+    number_elements = Angular_Map.shape[0]
+    cmap = plt.get_cmap('gnuplot')
+    if ag.heading_global_frame < 0:
+        min_angle = (2*np.pi)+ag.heading_global_frame
+    else:
+        min_angle = ag.heading_global_frame
+
+    for ii in range(number_elements):
+        angle_start = (min_angle + ii * (2*np.pi/72)) * 180 / np.pi
+        angle_end = (min_angle + (ii + 1) * (2*np.pi/72)) * 180 / np.pi
+
+        distance_cone = plt.matplotlib.patches.Wedge((0.0, 0.0),
+                                                    Angular_Map[ii],
+                                                    angle_start, angle_end,
+                                                    facecolor=cmap(Angular_Map[ii] / max_range),
+                                                    alpha=0.5)
+
+        ax2.add_artist(distance_cone)
 
 def plot_perturbed_observation(agents, ax, perturbed_info):
     # This is hard-coded for 2 agent scenarios

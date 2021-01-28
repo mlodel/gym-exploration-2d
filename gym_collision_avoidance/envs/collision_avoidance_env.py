@@ -33,6 +33,7 @@ from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMP
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCRLPolicy import FirstOrderMPCRLPolicy
 from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
@@ -81,9 +82,10 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = tc.go_to_goal
 
         #self.ego_policy = "SecondOrderMPCRLPolicy"
-        self.ego_policy = "MPCStaticObsPolicy"
-        #self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
-        self.ego_agent_dynamics = "FirstOrderDynamics"
+
+        self.ego_policy = "MPCRLStaticObsPolicy"
+        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        #self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "RVOPolicy"
         self.other_agents_dynamics = "UnicycleDynamics"
@@ -324,29 +326,6 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            '''
-            if self.total_number_of_steps < 110000:
-                self.scenario = ["test_agent_with_obstacle"]
-            else:
-                self.scenario = ["test_agent_with_obstacle"]
-            
-            #TODO fix this 
-            if self.total_number_of_steps < 110000:
-                self.scenario = ["train_agents_swap_circle"]
-            elif self.total_number_of_steps < (1e6 + 10000):
-                self.scenario = ["train_stage_1"]
-            elif self.total_number_of_steps < (1e6 + 90000):
-                self.scenario = ["train_stage_2"]
-            elif self.total_number_of_steps < (13e6 + 10000):
-                self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
-                scenario_index = np.random.randint(0,len(self.scenario))
-                self.scenario = self.scenario[scenario_index]
-            elif self.total_number_of_steps >= (13e6 + 10000):
-                self.scenario = ["agent_with_crossing", "agent_with_door", "agent_with_corridor", "train_stage_2"]
-                scenario_index = np.random.randint(0,len(self.scenario))
-                self.scenario = self.scenario[scenario_index]
-            '''
-
             if self.total_number_of_steps < 1e6:
                 self.number_of_agents = 2
             elif self.total_number_of_steps < 2e6:
