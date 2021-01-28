@@ -10,7 +10,7 @@ import glob
 import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
-
+import pypoman
 from matplotlib.lines import Line2D
 matplotlib.rcParams.update({'font.size': 24})
 
@@ -333,6 +333,16 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, last_index=-1):
                     obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
+
+                    workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
+                    workspace_constr_b = np.array([10,10,10,10])
+
+                    for constr in agent.policy.linear_constraints:
+                        workspace_constr_a = np.concatenate((workspace_constr_a,np.expand_dims(constr[0],axis=0)))
+                        workspace_constr_b = np.concatenate((workspace_constr_b,np.array([constr[1]])))
+
+                    vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
+                    ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1
                 alpha = 1 - \

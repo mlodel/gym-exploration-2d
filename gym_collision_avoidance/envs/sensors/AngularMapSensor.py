@@ -21,7 +21,7 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = True
+        self.plot = False
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
         self.Laserscan = True
