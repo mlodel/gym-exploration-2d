@@ -21,10 +21,11 @@ class AngularMapSensor(Sensor):
         self.angle_max = np.pi
         self.angle_min = -np.pi
         self.name = 'angular_map'
-        self.plot = True
+        self.plot = False
+        self.static_obstacles_manager = StaticObstacleManager()
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
-        self.Laserscan = True
+        self.Laserscan = False
         self.Occupancygrid = True
 
         # For laserscan
@@ -92,29 +93,24 @@ class AngularMapSensor(Sensor):
         '''
         ego_agent_pos = self.ego_agent.pos_global_frame
 
-        # Obstacles
-        # TODO make this only compute the nearest obstacles only once
-        self.static_obstacle_manager = StaticObstacleManager()
-
         # Orientation
         if self.heading >= 0:
-            self.orientation = self.heading - np.pi
+            self.orientation = self.heading
         else:
-            self.orientation = self.heading + np.pi
+            self.orientation = (2*np.pi)+self.heading
 
-        # Get obstacle contour indices
-        obs = top_down_map.obstacles
-        obstacles_in_range = self.static_obstacle_manager.get_obstacles_in_range(self.ego_agent, (self.max_range+1), obs)
+        # Obstacles
+        self.static_obstacles_manager.get_list_of_nearest_obstacles(self.ego_agent, (self.max_range + 1))
+        obs_in_range = self.static_obstacles_manager.obstacles_in_range
 
-        if len(obstacles_in_range) == 0:
+        if len(obs_in_range) == 0:
             # If there is no obstacle in the sensor range, immediately return the angular map
             return Angular_Map
         else:
-
-            for obst_coor in obstacles_in_range:
+            for obst_coor in obs_in_range:
                 lines = []
                 # Get cornerpoints of obstacles that are close to the agent
-                corners_imp = self.static_obstacle_manager.get_important_corners(self.ego_agent, obst_coor)
+                corners_imp = self.static_obstacles_manager.get_important_corners(self.ego_agent, obst_coor)
                 corner1 = corners_imp[0]
                 corner2 = corners_imp[1]
                 corner3 = corners_imp[2]
@@ -170,9 +166,13 @@ class AngularMapSensor(Sensor):
 
                         # We start counting from positive x-axis (+self.orientation)
                         phi = math.atan2(rel_coords[1], rel_coords[0]) - self.orientation
+                        if phi < 0:
+                            phi = (2*np.pi) + phi
+                            if phi < 0:
+                                phi = (2*np.pi) + phi
+                        # Compute the index of the vector in the angular map aligned with orientation of ego_agent
                         rad_idx = int(phi / self.radial_resolution)
-                        if rad_idx < 0:
-                            rad_idx = rad_idx + self.no_of_slices
+
                         Angular_Map[rad_idx] = min(Angular_Map[rad_idx], l2norm)
 
         # Plot for debugging

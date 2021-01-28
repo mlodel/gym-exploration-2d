@@ -81,7 +81,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.scenario = tc.go_to_goal
 
         #self.ego_policy = "SecondOrderMPCRLPolicy"
-        self.ego_policy = "FirstOrderMPCRLPolicy"
+        self.ego_policy = "MPCStaticObsPolicy"
         #self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         self.ego_agent_dynamics = "FirstOrderDynamics"
 

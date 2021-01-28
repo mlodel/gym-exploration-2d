@@ -2262,7 +2262,8 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
                         [OtherAgentsStatesSensor], 1))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+        #agents[0].policy.static_obstacles_manager.obstacle = obstacle
+        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2890,6 +2891,9 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], 2*ag_id))
+    if "MPCStaticObsPolicy" == str(agents[0].policy):
+        #agents[0].policy.static_obstacles_manager.obstacle = obstacle
+        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 

@@ -14,7 +14,6 @@ class Map():
         # Load the image file corresponding to the static map, and resize according to desired specs
         self.dims = (int(self.x_width/self.grid_cell_size),int(self.y_width/self.grid_cell_size))
         self.origin_coords = np.array([(self.x_width / 2.) / self.grid_cell_size, (self.y_width / 2.) / self.grid_cell_size])
-        self.obstacles = map_filename
         if map_filename is None:
             self.static_map = np.zeros(self.dims, dtype=bool)
         else:
