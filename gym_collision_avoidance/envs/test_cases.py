@@ -2256,7 +2256,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,AngularMapSensor], 0))
+                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))

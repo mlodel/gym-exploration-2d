@@ -7,6 +7,7 @@ import pylab as pl
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
+from mpc_rl_collision_avoidance.policies.StaticObstacleManager import StaticObstacleManager
 
 class OccupancyGridSensor(Sensor):
     def __init__(self):
@@ -16,6 +17,7 @@ class OccupancyGridSensor(Sensor):
         self.grid_cell_size = Config.SUBMAP_RESOLUTION
         self.plot = False
         self.name = 'local_grid'
+        self.static_obstacles_manager = StaticObstacleManager()
 
     def sense(self, agents, agent_index, top_down_map):
 
@@ -70,7 +72,9 @@ class OccupancyGridSensor(Sensor):
         # Get position of ego agent
         ego_agent = agents[agent_index]
         ego_agent_pos = ego_agent.pos_global_frame
-        ego_agent_heading = ego_agent.heading_global_frame/4
+        ego_agent_heading = ego_agent.heading_global_frame
+
+        self.static_obstacles_manager.get_list_of_nearest_obstacles(ego_agent)
 
         # Get map indices of ego agent
         ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
@@ -93,6 +97,8 @@ class OccupancyGridSensor(Sensor):
         if self.plot:
             self.plot_top_down_map(top_down_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading)
             self.plot_batch_grid(batch_grid)
+
+        self.static_obstacles_manager.occupancy_grid = batch_grid
 
         return batch_grid
 
