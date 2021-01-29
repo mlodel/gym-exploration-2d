@@ -10,11 +10,11 @@ class LaserScanSensor(Sensor):
         Sensor.__init__(self)
         self.name = 'laserscan'
         self.num_beams = Config.LASERSCAN_LENGTH
-        self.range_resolution = 0.1
+        self.range_resolution = 2*np.pi/Config.NUM_OF_SLICES
         self.max_range = 6 # meters
         self.min_range = 0 # meters
-        self.min_angle = -np.pi/2
-        self.max_angle = np.pi/2
+        self.min_angle = -np.pi
+        self.max_angle = np.pi
 
         self.angles = np.linspace(self.min_angle, self.max_angle, self.num_beams)
         self.ranges = np.arange(self.min_range, self.max_range, self.range_resolution)
@@ -55,7 +55,7 @@ class LaserScanSensor(Sensor):
             plt.figure('lidar')
             plt.imshow(lidar_map)
             plt.pause(0.01)
-        return ranges
+        return 1-ranges/Config.MAX_RANGE
 
     def sense_old(self, agents, agent_index, top_down_map):
         host_agent = agents[agent_index]

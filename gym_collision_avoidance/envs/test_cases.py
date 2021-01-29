@@ -2256,13 +2256,14 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,AngularMapSensor], 0))
+                        [OtherAgentsStatesSensor,LaserScanSensor], 0))#AngularMapSensor
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+    if "Static" in str(agents[0].policy):
+        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2309,7 +2310,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     positions_list.append(np.array([goal_x_1, goal_y_1]))
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    n_agents = number_of_agents-1 #random.randint(0,np.maximum(number_of_agents-1,0))
+    n_agents = random.randint(0,np.maximum(int((number_of_agents-2)/2),0))
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -2329,21 +2330,23 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
-    for ag_id in range(n_agents+1):
+
+    for ag_id in range(n_agents+2):
         if ag_id == 0:
-            agents.append(Agent(positions_list[ag_id + 1][0], positions_list[ag_id + 1][1],
+            agents.append(Agent(positions_list[ag_id - 1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
+                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
 
         else:
-            agents.append(Agent(positions_list[ag_id+1][0], positions_list[ag_id + 1][1],
+            agents.append(Agent(positions_list[ag_id-1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
 
-    if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+    if "Static" in str(agents[0].policy):
+        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 

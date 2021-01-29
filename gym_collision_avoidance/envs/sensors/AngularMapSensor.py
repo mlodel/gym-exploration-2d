@@ -81,7 +81,7 @@ class AngularMapSensor(Sensor):
                 ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
                 self.plot_top_down_map(top_down_map, ego_agent_pos_idx)
 
-        return angular_map
+        return 1-angular_map/Config.MAX_RANGE
 
     def angular_map_from_batch_grid(self, Angular_Map, top_down_map):
         '''

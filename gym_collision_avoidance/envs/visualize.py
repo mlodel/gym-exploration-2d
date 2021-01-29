@@ -331,12 +331,13 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
                 if "Static" in str(type(agent.policy)):
-                    obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
+                    #obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
+                    obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
 
                     # Plot angular map
-                    angular_map = agent.sensors[1].static_obstacles_manager.angular_map
+                    angular_map = (1-agent.sensor_data['laserscan'])*Config.MAX_RANGE
                     ax2.clear()
                     plot_Angular_map_vector(ax2, angular_map,agent, max_range=6.0)
                     ax2.plot(30, 30, color='r', marker='o', markersize=4)
@@ -405,14 +406,12 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):
     number_elements = Angular_Map.shape[0]
     cmap = plt.get_cmap('gnuplot')
-    if ag.heading_global_frame < 0:
-        min_angle = (2*np.pi)+ag.heading_global_frame
-    else:
-        min_angle = ag.heading_global_frame
+
+    min_angle = ag.heading_global_frame -np.pi
 
     for ii in range(number_elements):
-        angle_start = (min_angle + ii * (2*np.pi/72)) * 180 / np.pi
-        angle_end = (min_angle + (ii + 1) * (2*np.pi/72)) * 180 / np.pi
+        angle_start = (min_angle + ii * (2*np.pi/Config.NUM_OF_SLICES)) * 180 / np.pi
+        angle_end = (min_angle + (ii + 1) * (2*np.pi/Config.NUM_OF_SLICES)) * 180 / np.pi
 
         distance_cone = plt.matplotlib.patches.Wedge((0.0, 0.0),
                                                     Angular_Map[ii],

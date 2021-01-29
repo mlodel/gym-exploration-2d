@@ -75,11 +75,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
-        #self.scenario = ["agent_with_corridor"]#["agent_with_multiple_obstacles", "agent_with_corridor"]
-        #self.scenario = ["agent_with_obstacle"]
-        #self.scenario = ["train_agents_swap_circle"]
-        #self.scenario = "tc.corridor_scenario(0)"
-        #self.scenario = tc.go_to_goal
 
         #self.ego_policy = "SecondOrderMPCRLPolicy"
 
@@ -136,7 +131,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.static_map_filename = None
         self.map = None
 
-        self.episode_step_number = None
+        self.episode_step_number = 0
         self.episode_number = 0
         self.total_number_of_steps = 0
 
@@ -214,6 +209,9 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Check which agents' games are finished (at goal/collided/out of time)
         which_agents_done, game_over = self._check_which_agents_done()
+
+        if game_over and self.prediction_model :
+            self.prediction_model.data_handler.addEpisodeData(self.agents)
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
