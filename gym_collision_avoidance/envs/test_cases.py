@@ -2241,11 +2241,11 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
     obstacle = []
     #Square
     obstacle_1 = [(2,2), (0,2), (0,0), (2,0)]
-    #obstacle_2 = [(-1,-1), (-2,-1), (-2,-2),(-1,-2)]
+    obstacle_2 = [(-1,-1), (-2,-1), (-2,-2),(-1,-2)]
 
     #Triangle
     #obstacle_1 = [(0, 2), (-3, -2), (3, -2)]
-    obstacle.append(obstacle_1)
+    obstacle.append(obstacle_2)
 
     distance = np.random.uniform(6.0, 8.0)
     angle = np.random.uniform(-np.pi, np.pi)
@@ -2256,7 +2256,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,LaserScanSensor], 0))#AngularMapSensor
+                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
@@ -2336,7 +2336,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[ag_id - 1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                                [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
 
         else:
             agents.append(Agent(positions_list[ag_id-1][0], positions_list[ag_id - 1][1],
@@ -2451,7 +2451,7 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2561,7 +2561,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
                                 [OtherAgentsStatesSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2628,7 +2628,7 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents
                               [OtherAgentsStatesSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2711,7 +2711,7 @@ def agent_with_multiple_obstacles(number_of_agents=1, ego_agent_policy=MPCPolicy
                                 [OtherAgentsStatesSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2775,7 +2775,7 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
                                 [OtherAgentsStatesSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2833,7 +2833,7 @@ def agent_with_corridor_2(number_of_agents=5, ego_agent_policy=MPCPolicy, other_
                               [OtherAgentsStatesSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
 
     return agents, obstacle
@@ -2850,9 +2850,9 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
     obstacle = []
     obstacle_1 = [(10,10), (2, 10), (2, 2), (10, 2)]
     obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
-    obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
+    #obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
     obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
-    obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4])
+    obstacle.extend([obstacle_1, obstacle_2, obstacle_4])
 
     positions_list_1 = []
     Long = np.random.uniform(7.0, 10.0)
@@ -2894,15 +2894,15 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,AngularMapSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCStaticObsPolicy" == str(agents[0].policy):
-        agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 

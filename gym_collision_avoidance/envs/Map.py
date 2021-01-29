@@ -3,6 +3,8 @@ import numpy as np
 import imageio
 import scipy.misc
 import matplotlib.pyplot as plt
+from PIL import Image
+import time
 
 class Map():
     def __init__(self, x_width, y_width, grid_cell_size, map_filename=None):
@@ -30,8 +32,10 @@ class Map():
             ## This is the version of Sant:
             # map_filename contains obstacles as defined in test_cases
             self.static_map = self.get_occupancy_grid(map_filename)
+
             # Convert to bool
             self.static_map = self.static_map.astype(bool)
+
         self.map = copy(self.static_map)
 
         #self.origin_coords = np.array([(self.x_width/2.)/self.grid_cell_size, (self.y_width/2.)/self.grid_cell_size])
@@ -112,7 +116,17 @@ class Map():
         occupancy_grid = np.zeros(shape=self.dims) #dimension (300,300), dtype float64
 
         # For every obstacle, change grid value to 1
-        for i in range(len(obstacles)):
+        for obs in obstacles:
+            # Initialize variables
+            start_idx, _ = self.world_coordinates_to_map_indices(obs[1])
+            end_idx, _ = self.world_coordinates_to_map_indices(obs[3])
+
+            for ii in range(start_idx[0],(end_idx[0]+1),1):
+                for jj in range(start_idx[1],(end_idx[1]+1),1):
+                    occupancy_grid[ii, jj] = 1
+
+            '''
+            This can maybe be used if the obstacles are not square/rectangle or if they are crocket. 
             # Initialize variables
             start_idx_x = np.inf
             start_idx_y = np.inf
@@ -133,9 +147,29 @@ class Map():
             y = list(range(start_idx_y, end_idx_y+1))
             for ii in x:
                 for jj in y:
-                    occupancy_grid[ii, jj] = 1
+                    occupancy_grid[ii, jj] = 1'''
 
         return occupancy_grid
+
+    def get_occupancy_grid2(self, obstacles):
+        #If I ever want to use this (but this is much slower):
+        # self.static_map = Image.open('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png').convert('L')
+        # self.static_map = self.static_map.resize(self.dims)
+        # self.static_map.save('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/resizedWORLDMAP.png')
+        # MAP = np.array(self.static_map.getdata()).reshape((self.static_map.size[1], self.static_map.size[0]))
+        # self.static_map = np.where(MAP < 255, True, False)
+        fig = plt.figure()
+        plt.clf()
+        plt.xlim([-15, 15])
+        plt.ylim([-15, 15])
+        ax = fig.add_subplot(1, 1, 1)
+        for obs in obstacles:
+            ax.add_patch(plt.Polygon(obs, fill=True))
+        plt.axis('off')
+        #check = fig.savefig('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png', bbox_inches='tight')
+        plt.close()
+
+        #print("hoi")
 
 
 

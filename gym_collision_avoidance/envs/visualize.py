@@ -2,6 +2,8 @@ import numpy as np
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
+                                  AnnotationBbox)
 import os
 import matplotlib.patches as ptch
 from matplotlib.patches import Polygon
@@ -331,22 +333,32 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
                 if "Static" in str(type(agent.policy)):
-                    #obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
-                    obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
+                    obstacles = np.array(agent.sensors[1].static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
 
                     # Plot angular map
                     angular_map = (1-agent.sensor_data['laserscan'])*Config.MAX_RANGE
-                    ax2.clear()
-                    plot_Angular_map_vector(ax2, angular_map,agent, max_range=6.0)
-                    ax2.plot(30, 30, color='r', marker='o', markersize=4)
-                    ax2.scatter(0, 0, s=100, c='red', marker='o')
-                    aanliggend = 1 * math.cos(agent.heading_global_frame)
-                    overstaand = 1 * math.sin(agent.heading_global_frame)
-                    ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5,head_length=0.5)  # agent poiting direction
-                    ax2.set_xlim([-6 - 1, 6 + 1])
-                    ax2.set_ylim([-6 - 1, 6 + 1])
+                    occupancy_grid = agent.policy.static_obstacles_manager.occupancy_grid
+                    if angular_map is not None:
+                        ax2.clear()
+                        plot_Angular_map_vector(ax2, angular_map,agent, max_range=6.0)
+                        ax2.plot(30, 30, color='r', marker='o', markersize=4)
+                        ax2.scatter(0, 0, s=100, c='red', marker='o')
+                        aanliggend = 1 * math.cos(agent.heading_global_frame)
+                        overstaand = 1 * math.sin(agent.heading_global_frame)
+                        ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5,head_length=0.5)  # agent poiting direction
+                        ax2.set_xlim([-6 - 1, 6 + 1])
+                        ax2.set_ylim([-6 - 1, 6 + 1])
+                    if occupancy_grid is not None:
+                        ax2.clear()
+                        ax2.imshow(occupancy_grid, extent=[-10,10,-10,10])
+                        ax2.scatter(0, 0, s=100, c='red', marker='o')
+                        ax2.axis('off')
+                        aanliggend = 1 * math.cos(agent.heading_global_frame)
+                        overstaand = 1 * math.sin(agent.heading_global_frame)
+                        ax2.arrow(0,0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
+                                 fc='yellow')  # agent poiting direction
 
                     workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
                     workspace_constr_b = np.array([10,10,10,10])

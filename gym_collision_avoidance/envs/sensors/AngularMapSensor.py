@@ -25,16 +25,16 @@ class AngularMapSensor(Sensor):
         self.static_obstacles_manager = StaticObstacleManager()
 
         # Either calculation from laserscan data or occupancy grid data can be chosen. Both give the same results
-        self.Laserscan = False
-        self.Occupancygrid = True
+        self.Laserscan = True
+        self.Occupancygrid = False
 
         # For laserscan
         if self.Laserscan:
             self.num_beams = Config.LASERSCAN_LENGTH
             self.range_resolution = 0.1
             self.min_range = 0  # meters
-            self.min_angle = -np.pi
-            self.max_angle = np.pi
+            self.min_angle = 0
+            self.max_angle = 2*np.pi
 
             self.angles = np.linspace(self.min_angle, self.max_angle, self.num_beams)
             self.ranges = np.arange(self.min_range, self.max_range, self.range_resolution)
@@ -72,6 +72,8 @@ class AngularMapSensor(Sensor):
             sensor = LaserScanSensor
             ranges = sensor.sense(self, agents, agent_index, top_down_map)
             angular_map = self.angular_map_from_laser_scan(Angular_Map, ranges)
+            self.static_obstacles_manager.get_list_of_nearest_obstacles(self.ego_agent, (self.max_range + 1))
+            self.static_obstacles_manager.angular_map = angular_map
 
         if self.plot:
             self.plot_angular_grid(angular_map)
