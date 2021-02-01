@@ -1657,15 +1657,15 @@ def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPoli
     #n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
-        in_collision = False
-        while not in_collision:
+        in_collision = True
+        while in_collision:
             x0_agent_1 = np.random.uniform(-8.0, -6.0) * random.choice(side)
             y0_agent_1 = np.random.uniform(-4.0, 4.0)
             goal_x_1 = -x0_agent_1
             goal_y_1 = y0_agent_1
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+            in_collision = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
@@ -2256,7 +2256,7 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_age
 
     agents.append(Agent(x0_agent_1, y0_agent_1, goal_x_1, goal_y_1, radius, pref_speed, None, ego_agent_policy,
                         ego_agent_dynamics,
-                        [OtherAgentsStatesSensor,OccupancyGridSensor], 0))
+                        [OtherAgentsStatesSensor,LaserScanSensor], 0))
     agents.append(Agent(goal_x_1, goal_y_1, x0_agent_1, y0_agent_1, radius, pref_speed, None, other_agents_policy,
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
@@ -2336,7 +2336,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[ag_id - 1][0], positions_list[ag_id - 1][1],
                                 positions_list[ag_id][0], positions_list[ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
+                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
 
         else:
             agents.append(Agent(positions_list[ag_id-1][0], positions_list[ag_id - 1][1],
@@ -2620,12 +2620,12 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,AngularMapSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
-                              [OtherAgentsStatesSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
@@ -2747,8 +2747,8 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
         n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
-        in_collision = False
-        while not in_collision:
+        in_pose_valid_ = False
+        while not in_pose_valid_:
             too_close = True
             while too_close:
                 x0_agent_1 = np.random.uniform(-2.5, 2.5)
@@ -2758,7 +2758,7 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
                 too_close = np.linalg.norm(np.array([x0_agent_1,y0_agent_1])-np.array([goal_x_1,goal_y_1])) < 10.0
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
-            in_collision = is_pose_valid(goal, positions_list) or is_pose_valid(initial_pose, positions_list)
+            in_pose_valid_ = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
@@ -2767,12 +2767,12 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
+                              [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id))
+                                [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle

@@ -135,6 +135,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.episode_number = 0
         self.total_number_of_steps = 0
 
+        self.n_collisions = np.zeros([100])
+        self.n_timeouts = np.zeros([100])
+
         self.plot_save_dir = None
         self.plot_policy_name = None
 
@@ -210,8 +213,14 @@ class CollisionAvoidanceEnv(gym.Env):
         # Check which agents' games are finished (at goal/collided/out of time)
         which_agents_done, game_over = self._check_which_agents_done()
 
-        if game_over and self.prediction_model :
+        if game_over and (str(self.prediction_model)!='CVModel') :
+            self.n_collisions = np.roll(self.n_collisions,1)
+            self.n_collisions[0] = self.agents[0].in_collision
+            self.n_timeouts = np.roll(self.n_timeouts,1)
+            self.n_timeouts[0] = self.agents[0].ran_out_of_time
             self.prediction_model.data_handler.addEpisodeData(self.agents)
+            if (self.episode_number >= 100) and (self.episode_number%100==0):
+                self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):

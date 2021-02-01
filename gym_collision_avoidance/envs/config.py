@@ -45,7 +45,7 @@ class Config:
     CURRICULUM_LEARNING = False
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
-    PLOT_PREDICTIONS = False
+    PLOT_PREDICTIONS = True
 
     #MPC
     FORCES_N = 15
