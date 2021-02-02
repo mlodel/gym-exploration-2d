@@ -2743,7 +2743,7 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(2,np.maximum(number_of_agents-1,2))
-    if not seed:
+    if seed:
         n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
@@ -2769,10 +2769,11 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
                               None, ego_agent_policy, ego_agent_dynamics,
                               [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
+            cooperation_coef = np.random.uniform(0.0, 1.0)
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
+                                [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id,cooperation_coef))
 
     if "MPCStaticObsPolicy" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle

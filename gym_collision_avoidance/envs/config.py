@@ -49,7 +49,7 @@ class Config:
 
     #MPC
     FORCES_N = 15
-    FORCES_DT = 0.1
+    FORCES_DT = 0.2
     REPEAT_STEPS = 2
 
     LASERSCAN_LENGTH = 16 # num range readings in one scan
