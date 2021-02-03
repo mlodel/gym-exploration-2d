@@ -2284,8 +2284,8 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     # Size of square
     size_square = np.random.uniform(1, 4)
     # Upper x,y value square
-    x_v_up = np.random.uniform(-4,4)
-    y_v_up = np.random.uniform(-4,4)
+    x_v_up = np.random.uniform(-3,3)
+    y_v_up = np.random.uniform(-3,3)
     # Lower x,y value of square
     x_v_low = x_v_up - size_square
     y_v_low = y_v_up - size_square
@@ -2340,7 +2340,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id))
+                                [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
 
     if "Static" in str(agents[0].policy):
         #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
@@ -2432,7 +2432,7 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
             goal=np.array([goal_x_1,goal_y_1])
             initial_pose= np.array([x0_agent_1, y0_agent_1])
 
-            in_collision = not( is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list))
+            in_collision = not(is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list))
 
         positions_list.append(np.array([goal_x_1, goal_y_1]))
         positions_list.append(np.array([x0_agent_1, y0_agent_1]))
@@ -2456,8 +2456,8 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
 def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     This is stage 2 of the training scenario.
-    Square/wall shaped obstacles: [2,15]
-    Random agents: [2-10]
+    Square/wall shaped obstacles: [2,10]
+    Random agents: [2-6]
     Goal distance: [16,20]m
     '''
 
@@ -2597,8 +2597,8 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents
 
     n_agents = random.randint(1, np.maximum(number_of_agents-1,1))
 
-    if not seed:
-        n_agents = number_of_agents - 1
+    #if not seed:
+    #    n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
         in_collision = False
@@ -2741,8 +2741,8 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
     positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(1,np.maximum(number_of_agents-1,1))
-    if not seed:
-        n_agents = number_of_agents - 1
+    #if not seed:
+    #    n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
         in_pose_valid_ = False
@@ -2904,8 +2904,9 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
 
     return agents, obstacle
 
-def agent_with_hallway(number_of_agents=6, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
-    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+
+def agent_with_hallway(number_of_agents=6, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics,agents_sensors=[], seed=None, obstacle=None):
+    pref_speed = 1.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
     if seed:
@@ -2930,8 +2931,8 @@ def agent_with_hallway(number_of_agents=6, ego_agent_policy=MPCPolicy, other_age
     positions_list_1.append(np.array([x0_agent_1, y0_agent_1]))
 
     n_agents = random.randint(1,np.maximum(number_of_agents-1,1))
-    if not seed:
-        n_agents = number_of_agents - 1
+    #if not seed:
+    #    n_agents = number_of_agents - 1
 
     for ag_id in range(n_agents):
         in_collision = False
