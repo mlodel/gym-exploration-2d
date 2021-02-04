@@ -25,8 +25,8 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 100# for tensorboard visualization
-    DT             = 0.1 # seconds between simulation time steps
+    PLOT_EVERY_N_EPISODES = 50# for tensorboard visualization
+    DT             = 0.3 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
@@ -49,7 +49,7 @@ class Config:
 
     #MPC
     FORCES_N = 15
-    FORCES_DT = 0.2
+    FORCES_DT = 0.3
     REPEAT_STEPS = 2
 
     LASERSCAN_LENGTH = 16 # num range readings in one scan
@@ -62,7 +62,7 @@ class Config:
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 3.0
+    RVO_TIME_HORIZON = 2.0
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 

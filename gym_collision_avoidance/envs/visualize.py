@@ -190,7 +190,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         plt.xlim([-10.0,10.0])
         plt.ylim([-10.0,10.0])
 
-    if in_evaluate_mode and save:
+    if save: # in_evaluate_mode and
         fig_name = base_fig_name.format(
             policy=plot_policy_name,
             num_agents = len(agents),

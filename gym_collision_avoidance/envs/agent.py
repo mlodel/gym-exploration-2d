@@ -149,7 +149,7 @@ class Agent(object):
             self._update_state_history()
             if not self.is_at_goal:
                 self.t += dt
-            self.step_num += 1
+            #self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return
