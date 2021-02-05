@@ -2343,7 +2343,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
 
-    if "Static" in str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
         #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
