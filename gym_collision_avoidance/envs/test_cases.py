@@ -2335,14 +2335,14 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
 
-    if "Static" in str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
         #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
@@ -2442,13 +2442,14 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2551,14 +2552,15 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, ego_agent_policy, ego_agent_dynamics,
-                                [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2618,14 +2620,15 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,LaserScanSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2765,14 +2768,15 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor, LaserScanSensor], ag_id))
+                              [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2823,14 +2827,15 @@ def agent_with_corridor_2(number_of_agents=5, ego_agent_policy=MPCPolicy, other_
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor, AngularMapSensor], ag_id))
+                              [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
                               positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
 
@@ -2892,14 +2897,15 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_ag
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,LaserScanSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2953,14 +2959,15 @@ def agent_with_hallway(number_of_agents=6, ego_agent_policy=MPCPolicy, other_age
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, ego_agent_policy, ego_agent_dynamics,
-                              [OtherAgentsStatesSensor,LaserScanSensor], ag_id))
+                              [OtherAgentsStatesSensor,OccupancyGridSensor], ag_id))
         else:
             agents.append(Agent(positions_list_1[2*ag_id+1][0], positions_list_1[2*ag_id+1][1],
                               positions_list_1[2*ag_id][0], positions_list_1[2*ag_id][1], radius, pref_speed,
                               None, other_agents_policy, other_agents_dynamics,
                               [OtherAgentsStatesSensor], ag_id))
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if hasattr(agents[0].policy, 'static_obstacles_manager'):
+        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
