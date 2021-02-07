@@ -26,7 +26,7 @@ class Config:
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
     PLOT_EVERY_N_EPISODES = 50# for tensorboard visualization
-    DT             = 0.3 # seconds between simulation time steps
+    DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
@@ -57,12 +57,12 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 4.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.0 # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON  = np.inf
     # SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 2.0
+    RVO_TIME_HORIZON = 4.0
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
@@ -81,8 +81,8 @@ class Config:
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
     # STATIC MAP
-    MAP_WIDTH = 30 # Meters
-    MAP_HEIGHT = 30 # Meters
+    MAP_WIDTH = 50 # Meters
+    MAP_HEIGHT = 50 # Meters
 
     SCENARIOS_FOR_TRAINING = ["agent_with_obstacle", "test_agent_with_obstacle"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 

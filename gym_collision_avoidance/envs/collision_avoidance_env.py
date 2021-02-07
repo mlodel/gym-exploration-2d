@@ -187,7 +187,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
-        if self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 and self.episode_step_number % self.animation_period_steps == 0:
+        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number % self.animation_period_steps == 0:
             plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
@@ -203,13 +203,15 @@ class CollisionAvoidanceEnv(gym.Env):
         which_agents_done, game_over = self._check_which_agents_done()
 
         if game_over and (str(self.prediction_model)!='CVModel') :
-            self.n_collisions = np.roll(self.n_collisions,1)
-            self.n_collisions[0] = self.agents[0].in_collision
-            self.n_timeouts = np.roll(self.n_timeouts,1)
-            self.n_timeouts[0] = self.agents[0].ran_out_of_time
-            self.prediction_model.data_handler.addEpisodeData(self.agents)
-            #if (self.episode_number >= 100) and (self.episode_number%100==0):
-            #    self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
+            if not Config.PERFORMANCE_TEST:
+                self.n_collisions = np.roll(self.n_collisions,1)
+                self.n_collisions[0] = self.agents[0].in_collision
+                self.n_timeouts = np.roll(self.n_timeouts,1)
+                self.n_timeouts[0] = self.agents[0].ran_out_of_time
+                #if self.agents[0].in_collision or self.episode_number<200:
+                self.prediction_model.data_handler.addEpisodeData(self.agents)
+                if (self.episode_number >= 100) and (self.episode_number%100==0):
+                    self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
@@ -219,7 +221,7 @@ class CollisionAvoidanceEnv(gym.Env):
             {'which_agents_done': which_agents_done_dict}
 
     def reset(self):
-        if self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 :
+        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                          plot_save_dir=self.plot_save_dir,
@@ -231,7 +233,7 @@ class CollisionAvoidanceEnv(gym.Env):
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
-          
+
         self.episode_number += 1
         self.begin_episode = True
         self.episode_step_number = 0
