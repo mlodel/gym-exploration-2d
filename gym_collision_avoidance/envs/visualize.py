@@ -6,7 +6,7 @@ from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
                                   AnnotationBbox)
 import os
 import matplotlib.patches as ptch
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Ellipse
 from matplotlib.collections import LineCollection
 import glob
 import imageio
@@ -294,11 +294,14 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
                         if Config.PLOT_PREDICTIONS:
                             for ind in range(agent.policy.FORCES_N):
-                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
-                                c = rgba2rgb(other_plt_color + [float(alpha)])
-                                ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
-                                                        radius=agent.radius, fc=c, ec=other_plt_color,
-                                                        fill=True))
+                                n_mixtures = agent.policy.all_predicted_trajectory.shape[1]
+                                for mix_id in range(n_mixtures):
+                                    alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                    c = rgba2rgb(other_plt_color + [float(alpha)])
+                                    ax.add_patch(Ellipse(agent.policy.all_predicted_trajectory[id,mix_id,ind,:2],
+                                                            width=2*(agent.radius+agent.policy.all_predicted_trajectory[id,mix_id,ind,2]),
+                                                            height=2*(agent.radius+agent.policy.all_predicted_trajectory[id,mix_id,ind,3]),fc=c, ec=other_plt_color,
+                                                            fill=True))
                             if id == 0:
                                 for ind in range(agent.policy.FORCES_N):
                                     alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
