@@ -2835,7 +2835,7 @@ def only_two_agents_with_obstacle(number_of_agents=4, ego_agent_policy=RVOPolicy
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
     agents[0].policy.static_obstacles_manager.obstacle = obstacle
-    agents[1].policy.static_obstacles_manager.obstacle = obstacle
+    #agents[1].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
