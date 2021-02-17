@@ -8,7 +8,6 @@ pytz
 imageio==2.4.1
 gym
 moviepy
-baselines
 stable_baselines
 optuna
 sklearn
