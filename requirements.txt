@@ -11,3 +11,6 @@ moviepy
 stable_baselines
 optuna
 sklearn
+quadprog
+tdqm
+requests
