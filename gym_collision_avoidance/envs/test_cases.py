@@ -3053,7 +3053,7 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
     agents.append(Agent(ini_positions_list[0][0], ini_positions_list[0][1],
                        goal_positions_list[0][0], goal_positions_list[0][1], radius, pref_speed,
                        None, ego_agent_policy, ego_agent_dynamics,
-                       [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
+                       [LaserScanSensor], 0))
 
 
 
