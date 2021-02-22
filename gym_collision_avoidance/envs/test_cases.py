@@ -126,10 +126,10 @@ def is_pose_valid(new_pose, position_list,distance=1.5):
             return False
     return True
 
-def is_pose_valid_with_obstacles(new_pose, obstacles):
+def is_pose_valid_with_obstacles(new_pose, obstacles, marge=1):
     if len(obstacles) == 0:
         return True
-    marge = 1 # This is the distance that needs to be between the agent and the obstacle.
+
     for corners in obstacles:
         l1 = np.add(corners[1], [-marge, marge])  # left upper corner
         r1 = np.add(corners[3], [marge, -marge])  # right lower corner
@@ -141,7 +141,7 @@ def is_pose_valid_with_obstacles(new_pose, obstacles):
             return False
     return True
 
-def is_shape_valid(new_corners, obstacle):
+def is_shape_valid(new_corners, obstacle, marge=1.5):
     '''
     Checks if shapes overlap
     If one of the 2 'if' conditions is true, the shapes DO NOT overlap
@@ -155,7 +155,7 @@ def is_shape_valid(new_corners, obstacle):
         r1 = corners[3] # right lower corner
         l2 = new_corners[1] # left upper corner
         r2 = new_corners[3] # left lower corner
-        if l1[0] >= r2[0] or l2[0] >= r1[0] or l1[1] <= r2[1] or l2[1] <= r1[1]:
+        if (l1[0] - marge) >= r2[0] or (l2[0]-marge) >= r1[0] or (l1[1] + marge) <= r2[1] or (l2[1] + marge) <= r1[1]:
             value = 1
         else:
             value = 0
@@ -2282,7 +2282,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     obstacle = []
 
     # Size of square
-    size_square = np.random.uniform(1, 4)
+    size_square = np.random.uniform(1, 3)
     # Upper x,y value square
     x_v_up = np.random.uniform(-3,3)
     y_v_up = np.random.uniform(-3,3)
@@ -2294,7 +2294,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
 
     in_collision = False
     while not in_collision:
-        distance = np.random.uniform(6.0, 8.0)
+        distance = np.random.uniform(2.0, 5.0)
         angle = np.random.uniform(-np.pi, np.pi)
         x0_agent_1 = distance * np.cos(angle)
         y0_agent_1 = distance * np.sin(angle)
@@ -2314,7 +2314,7 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     for ag_id in range(n_agents):
         in_collision = False
         while not in_collision:
-            distance = np.random.uniform(6.0, 8.0)
+            distance = np.random.uniform(2.0, 5.0)
             angle = np.random.uniform(-np.pi, np.pi)
             x0_agent_1 = distance * np.cos(angle)
             y0_agent_1 = distance * np.sin(angle)
@@ -2340,13 +2340,117 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
             agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
                                 positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
                                 None, other_agents_policy, other_agents_dynamics,
-                                [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
+                                [OtherAgentsStatesSensor], ag_id))
 
     if hasattr(agents[0].policy, 'static_obstacles_manager'):
-        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
+
+def compute_random_obstacles(min_n_of_obstacles,max_n_of_obstacles, min_range, max_range):
+    ## Define obstacles
+    obstacle = []
+    # Number of obstacles
+    n_obstacles = random.randint(min_n_of_obstacles, max_n_of_obstacles)
+
+    for i in range(n_obstacles):
+        shape = np.random.choice(['square', 'rectangle'])
+        if shape == 'square':
+            overlap = False
+            count_s = 0
+            while not overlap:
+                # Size of square
+                if count_s > 5:
+                    size_square = 1
+                    if count_s > 50:
+                        size_square = 0.5
+                else:
+                    size_square = np.random.uniform(1, 3)
+                # Upper x,y value square
+                x_v_up = np.random.uniform(min_range, max_range)
+                y_v_up = np.random.uniform(min_range, max_range)
+                # Lower x,y value of square
+                x_v_low = x_v_up - size_square
+                y_v_low = y_v_up - size_square
+                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
+                overlap = is_shape_valid(obstacle_corners, obstacle)
+                count_s += 1
+            obstacle.append(obstacle_corners)
+        else:
+            overlap = False
+            count_r = 0
+            while not overlap:
+                # Rectangle
+                if count_r > 5:
+                    size_rec_x = 1
+                    size_rec_y = 2
+                    if count_r > 50:
+                        size_rec_x = 0.5
+                        size_rec_y = 1
+                else:
+                    size_rec_x = np.random.uniform(1, 3)
+                    if size_rec_x > 2:
+                        size_rec_y = np.random.uniform(1, 2)
+                    else:
+                        size_rec_y = np.random.uniform(3, 4)
+                # Upper x,y value square
+                x_v_up = np.random.uniform(min_range, max_range)
+                y_v_up = np.random.uniform(min_range, max_range)
+                # Lower x,y value of square
+                x_v_low = x_v_up - size_rec_x
+                y_v_low = y_v_up - size_rec_y
+                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
+                overlap = is_shape_valid(obstacle_corners, obstacle)
+                count_r += 1
+            obstacle.append(obstacle_corners)
+
+    return obstacle
+
+def compute_first_agent(min_obs,max_obs,obstacle,min_dist,max_dist,min_range,max_range):
+    positions_list = []
+    ## Define Agents
+    in_collision = True
+    count_stuck = 0
+    while in_collision:
+        if count_stuck > 50:
+            obstacle = compute_random_obstacles(min_obs,max_obs, min_range,max_range)
+            count_stuck = 0
+        distance = np.random.uniform(min_dist, max_dist)
+        angle = np.random.uniform(-np.pi, np.pi)
+        x0_agent_1 = distance * np.cos(angle)
+        y0_agent_1 = distance * np.sin(angle)
+        goal_x_1 = -x0_agent_1
+        goal_y_1 = -y0_agent_1
+        goal = np.array([goal_x_1, goal_y_1])
+        initial_pose = np.array([x0_agent_1, y0_agent_1])
+        in_collision = not (is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal,
+                                                                                                               obstacle))
+        count_stuck += 1
+    positions_list.append(np.array([goal_x_1, goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    return positions_list
+
+def compute_other_agents(n_agents,obstacle, positions_list,min_dist, max_dist):
+    for ag_id in range(n_agents):
+        in_collision = True
+        count_stuck = 0
+        while in_collision:
+            if count_stuck > 50:
+                positions_list = []
+                break
+            distance = np.random.uniform(min_dist, max_dist)
+            angle = np.random.uniform(-np.pi, np.pi)
+            x0_agent_1 = distance * np.cos(angle)
+            y0_agent_1 = distance * np.sin(angle)
+            goal_x_1 = -x0_agent_1
+            goal_y_1 = -y0_agent_1
+            goal=np.array([goal_x_1,goal_y_1])
+            initial_pose= np.array([x0_agent_1, y0_agent_1])
+            in_collision = not(is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list))
+            count_stuck += 1
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    return positions_list
 
 def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
@@ -2359,83 +2463,27 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5 #np.random.uniform(0.4, 0.6)
     agents = []
-    positions_list = []
+    n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))  # no. of other agents is randomly chosen
 
-    ## Define obstacles
-    obstacle = []
-    # Number of obstacles
-    n_obstacles = random.randint(0,4)
+    min_obs = 0
+    max_obs = 3
+    ready = False
 
-    for i in range(n_obstacles):
-        shape = np.random.choice(['square', 'rectangle'])
+    #Minimum and maximum distance of agent
+    min_dist = 2.0
+    max_dist = 5.0
 
-        if shape == 'square':
-            overlap = False
-            # Size of square
-            size_square = np.random.uniform(1, 3)
-            while not overlap:
-                # Upper x,y value square
-                x_v_up = np.random.uniform(-4,6)
-                y_v_up = np.random.uniform(-4,6)
-                # Lower x,y value of square
-                x_v_low = x_v_up - size_square
-                y_v_low = y_v_up - size_square
-                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
-                overlap = is_shape_valid(obstacle_corners, obstacle)
-            obstacle.append(obstacle_corners)
-        else:
-            overlap = False
-            # Rectangle
-            size_rec_x = np.random.uniform(1, 4)
-            if size_rec_x > 2:
-                size_rec_y = np.random.uniform(1, 2)
-            else:
-                size_rec_y = np.random.uniform(3, 4)
-            # Upper x,y value square
-            while not overlap:
-                x_v_up = np.random.uniform(-4, 6)
-                y_v_up = np.random.uniform(-4, 6)
-                # Lower x,y value of square
-                x_v_low = x_v_up - size_rec_x
-                y_v_low = y_v_up - size_rec_y
-                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
-                overlap = is_shape_valid(obstacle_corners, obstacle)
-            obstacle.append(obstacle_corners)
+    #Minimum and maximum distance of obstacles
+    min_range = -4.0
+    max_range = 6.0
 
-    ## Define Agents
-    in_collision = True
-    while in_collision:
-        distance = np.random.uniform(6.0, 8.0)
-        angle = np.random.uniform(-np.pi, np.pi)
-        x0_agent_1 = distance * np.cos(angle)
-        y0_agent_1 = distance * np.sin(angle)
-        goal_x_1 = -x0_agent_1
-        goal_y_1 = -y0_agent_1
-        goal = np.array([goal_x_1, goal_y_1])
-        initial_pose = np.array([x0_agent_1, y0_agent_1])
-        in_collision = not(is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle))
+    while not ready:
+        obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
+        positions_list = compute_first_agent(min_obs,max_obs,obstacle, min_dist,max_dist, min_range,max_range)
+        positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist,max_dist)
+        if len(positions_list) == (number_of_agents*2):
+            ready = True
 
-    positions_list.append(np.array([goal_x_1, goal_y_1]))
-    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
-
-    n_agents = random.randint(1, np.maximum(number_of_agents-1, 1)) # no. of other agents is randomly chosen
-
-    for ag_id in range(n_agents):
-        in_collision = True
-        while in_collision:
-            distance = np.random.uniform(6.0, 8.0)
-            angle = np.random.uniform(-np.pi, np.pi)
-            x0_agent_1 = distance * np.cos(angle)
-            y0_agent_1 = distance * np.sin(angle)
-            goal_x_1 = -x0_agent_1
-            goal_y_1 = -y0_agent_1
-            goal=np.array([goal_x_1,goal_y_1])
-            initial_pose= np.array([x0_agent_1, y0_agent_1])
-
-            in_collision = not(is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list))
-
-        positions_list.append(np.array([goal_x_1, goal_y_1]))
-        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
 
     for ag_id in range(n_agents+1):
         if ag_id == 0:
@@ -2467,85 +2515,26 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
     agents = []
     positions_list = []
 
-    ## Define obstacles
-    obstacle = []
-    # Number of obstacles
-    n_obstacles = random.randint(2,10)
+    n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))
 
-    for i in range(n_obstacles):
-        shape = np.random.choice(['square', 'rectangle'])
+    min_obs = 1
+    max_obs = 5
+    ready = False
 
-        if shape == 'square':
-            overlap = False
-            # Size of square
-            size_square = np.random.uniform(1, 2)
-            while not overlap:
-                # Upper x,y value square
-                x_v_up = np.random.uniform(-8,10)
-                y_v_up = np.random.uniform(-8,10)
-                # Lower x,y value of square
-                x_v_low = x_v_up - size_square
-                y_v_low = y_v_up - size_square
-                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
-                overlap = is_shape_valid(obstacle_corners, obstacle)
-            obstacle.append(obstacle_corners)
-        else:
-            overlap = False
-            # Rectangle
-            size_rec_x = np.random.uniform(1, 4)
-            if size_rec_x > 2:
-                size_rec_y = np.random.uniform(1, 2)
-            else:
-                size_rec_y = np.random.uniform(3, 4)
-            # Upper x,y value square
-            while not overlap:
-                x_v_up = np.random.uniform(-8, 10)
-                y_v_up = np.random.uniform(-8, 10)
-                # Lower x,y value of square
-                x_v_low = x_v_up - size_rec_x
-                y_v_low = y_v_up - size_rec_y
-                obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
-                overlap = is_shape_valid(obstacle_corners, obstacle)
-            obstacle.append(obstacle_corners)
+    # Minimum and maximum distance of agent
+    min_dist = 3.0
+    max_dist = 7.0
 
-    # Define First Agent
-    in_collision = False
-    while not in_collision:
-        distance = np.random.uniform(8.0, 10.0)
-        angle = np.random.uniform(-np.pi, np.pi)
-        x0_agent_1 = distance * np.cos(angle)
-        y0_agent_1 = distance * np.sin(angle)
-        goal_x_1 = -x0_agent_1
-        goal_y_1 = -y0_agent_1
-        goal = np.array([goal_x_1, goal_y_1])
-        initial_pose = np.array([x0_agent_1, y0_agent_1])
-        if is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal, obstacle):
-            in_collision = True
-        else:
-            in_collision = False
-    positions_list.append(np.array([goal_x_1, goal_y_1]))
-    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    # Minimum and maximum distance of obstacles
+    min_range = -5.0
+    max_range = 6.0
 
-    n_agents = random.randint(1, np.maximum(number_of_agents-1, 1))
-
-    # Define other agents
-    for ag_id in range(n_agents):
-        in_collision = False
-        while not in_collision:
-            distance = np.random.uniform(8.0, 10.0)
-            angle = np.random.uniform(-np.pi, np.pi)
-            x0_agent_1 = distance * np.cos(angle)
-            y0_agent_1 = distance * np.sin(angle)
-            goal_x_1 = -x0_agent_1
-            goal_y_1 = -y0_agent_1
-            goal=np.array([goal_x_1,goal_y_1])
-            initial_pose= np.array([x0_agent_1, y0_agent_1])
-            if is_pose_valid_with_obstacles(initial_pose, obstacle) and is_pose_valid_with_obstacles(goal,obstacle) and is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list):
-                in_collision = True
-            else:
-                in_collision = False
-        positions_list.append(np.array([goal_x_1, goal_y_1]))
-        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+    while not ready:
+        obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
+        positions_list = compute_first_agent(min_obs, max_obs, obstacle, min_dist, max_dist, min_range, max_range)
+        positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist, max_dist)
+        if len(positions_list) == (number_of_agents * 2):
+            ready = True
 
     for ag_id in range(n_agents+1):
         if ag_id == 0:
@@ -2559,8 +2548,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id))
 
-    if hasattr(agents[0].policy, 'static_obstacles_manager'):
-        # agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle

@@ -333,26 +333,26 @@ class CollisionAvoidanceEnv(gym.Env):
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
                                                    + ")")
         else:
-            if self.total_number_of_steps < 200000:
+            if self.total_number_of_steps < 300000:
                 # Supervised learning step
                 scenario_index = 0
                 self.number_of_agents = 2  # Maximum no. of agents
             # RL steps:
-            elif self.total_number_of_steps < 1e6:
+            elif self.total_number_of_steps < 15e5:
                 scenario_index = 0
-                self.number_of_agents = 4
+                self.number_of_agents = 2
             elif self.total_number_of_steps < 3e6:
                 scenario_index = 1
-                self.number_of_agents = 4
+                self.number_of_agents = 2
             elif self.total_number_of_steps < 5e6:
                 scenario_index = 2
-                self.number_of_agents = 6
-            elif self.total_number_of_steps < 7e6:
-                scenario_index = np.random.randint(2,len(self.scenario))
-                self.number_of_agents = 6
-            elif self.total_number_of_steps >= 7e6:
-                scenario_index = np.random.randint(2, len(self.scenario))
-                self.number_of_agents = 8
+                self.number_of_agents = 2
+            #elif self.total_number_of_steps < 7e6:
+                #scenario_index = np.random.randint(2,len(self.scenario))
+                #self.number_of_agents = 6
+            elif self.total_number_of_steps >= 5e6:
+                scenario_index = 2
+                self.number_of_agents = 4
 
             #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
