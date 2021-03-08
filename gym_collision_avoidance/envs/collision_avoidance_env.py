@@ -332,8 +332,13 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.agents, self.obstacles = eval("tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy  + ", other_agents_policy=" + self.other_agents_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics
-                                                   + ")")
+                                                 + ")")
         else:
+            scenario_index = 0
+            self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
+                self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy +
+                                               ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
+            """ 
             if self.total_number_of_steps < 200000:
                 # Supervised learning step
                 scenario_index = 0
@@ -358,7 +363,7 @@ class CollisionAvoidanceEnv(gym.Env):
             #scenario_index = np.random.randint(0,len(self.scenario))
             self.agents, self.obstacles = eval("tc."+self.scenario[scenario_index]+"(number_of_agents="+str(self.number_of_agents)+", ego_agent_policy=" + self.ego_policy +
                                ", ego_agent_dynamics=" + self.ego_agent_dynamics +", other_agents_dynamics=" + self.other_agents_dynamics +", other_agents_policy=" + self.other_agents_policy+ ")")
-
+            """
         if self.episode_number == 1:
             self.policies=[]
             ga3c_params = {
