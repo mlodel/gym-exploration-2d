@@ -36,7 +36,10 @@ from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsP
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 
+
 from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
+
+from mpc_rl_collision_avoidance.policies.SafeMPCPolicy import SafeMPCPolicy
 
 from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
@@ -591,6 +594,7 @@ class CollisionAvoidanceEnv(gym.Env):
         return collision_with_agent, collision_with_wall, entered_norm_zone, dist_btwn_nearest_agent
 
     def check_action_for_collisions(self,action,ego_agent,other_agents):
+        agent_inds = list(range(len(self.agents)))
         # NOTE: This method doesn't compute social zones!!!!!
         collision_with_agent = [False for _ in other_agents]
         collision_with_wall = [False for _ in other_agents]
