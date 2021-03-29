@@ -40,6 +40,8 @@ from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 
 from mpc_rl_collision_avoidance.policies.SafeMPCPolicy import SafeMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeMPCRLNNPolicy import SafeMPCRLNNPolicy
+
 
 from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
