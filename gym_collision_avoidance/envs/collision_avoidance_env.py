@@ -25,7 +25,7 @@ from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
-from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
+from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
@@ -41,6 +41,7 @@ from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMP
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -188,18 +189,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # Take observation
         next_observations = self._get_obs()
 
-        if (Config.EVALUATE_MODE and Config.ANIMATE_EPISODES and self.episode_step_number % self.animation_period_steps == 0):
-            plot_episode(self.agents, self.obstacles, False, self.map, self.test_case_index,
-                circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
-                plot_save_dir=self.plot_save_dir,
-                plot_policy_name=self.plot_policy_name,
-                save_for_animation=True,
-                limits=self.plt_limits,
-                fig_size=self.plt_fig_size,
-                perturbed_obs=self.perturbed_obs,
-                show=False,
-                save=True)
-        if Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_number > 2 and self.episode_step_number % self.animation_period_steps == 0:
+        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number % self.animation_period_steps == 0:
             plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
                 circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                 plot_save_dir=self.plot_save_dir,
@@ -215,13 +205,15 @@ class CollisionAvoidanceEnv(gym.Env):
         which_agents_done, game_over = self._check_which_agents_done()
 
         if game_over and (str(self.prediction_model)!='CVModel') :
-            self.n_collisions = np.roll(self.n_collisions,1)
-            self.n_collisions[0] = self.agents[0].in_collision
-            self.n_timeouts = np.roll(self.n_timeouts,1)
-            self.n_timeouts[0] = self.agents[0].ran_out_of_time
-            self.prediction_model.data_handler.addEpisodeData(self.agents)
-            if (self.episode_number >= 100) and (self.episode_number%10==0):
-                self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
+            if not Config.PERFORMANCE_TEST:
+                self.n_collisions = np.roll(self.n_collisions,1)
+                self.n_collisions[0] = self.agents[0].in_collision
+                self.n_timeouts = np.roll(self.n_timeouts,1)
+                self.n_timeouts[0] = self.agents[0].ran_out_of_time
+                #if self.agents[0].in_collision or self.episode_number<200:
+                self.prediction_model.data_handler.addEpisodeData(self.agents)
+                if (self.episode_number >= 100) and (self.episode_number%100==0) and (len(self.prediction_model.data_handler.trajectory_set)>=100):
+                    self.prediction_model.train_step(self.episode_number,np.mean(self.n_collisions),np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
@@ -231,15 +223,19 @@ class CollisionAvoidanceEnv(gym.Env):
             {'which_agents_done': which_agents_done_dict}
 
     def reset(self):
-        if Config.ANIMATE_EPISODES and Config.EVALUATE_MODE and self.episode_step_number is not None and self.episode_step_number > 0 and self.plot_episodes and self.test_case_index >= 0:
-            plot_episode(self.agents, self.obstacles, self.evaluate, self.map, self.test_case_index, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
-            if Config.ANIMATE_EPISODES:
-                animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, test_case_index=self.test_case_index, agents=self.agents)
-        elif Config.TRAIN_MODE and self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 and Config.ANIMATE_EPISODES and self.episode_step_number > 0 and self.episode_number > 0:
-            plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number, self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ, plot_save_dir=self.plot_save_dir, plot_policy_name=self.plot_policy_name, limits=self.plt_limits, fig_size=self.plt_fig_size, show=Config.SHOW_EPISODE_PLOTS, save=Config.SAVE_EPISODE_PLOTS)
+        if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
+            plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
+                         self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
+                         plot_save_dir=self.plot_save_dir,
+                         plot_policy_name=self.plot_policy_name,
+                         limits=self.plt_limits,
+                         fig_size=self.plt_fig_size,
+                         show=Config.SHOW_EPISODE_PLOTS,
+                         save=Config.SAVE_EPISODE_PLOTS)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
+
         self.episode_number += 1
         self.begin_episode = True
         self.episode_step_number = 0
@@ -258,11 +254,11 @@ class CollisionAvoidanceEnv(gym.Env):
         return
 
     def _prediction_step(self):
-        if self.episode_step_number > 1:
+        if self.episode_number >= 100:
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
+            self.predicted_trajectory = np.zeros((len(self.agents),1, Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
                     self.predicted_trajectory[ag_id, t,:2] = agent.pos_global_frame + agent.vel_global_frame * Config.FORCES_DT
@@ -310,19 +306,21 @@ class CollisionAvoidanceEnv(gym.Env):
     def _init_prediction_model(self):
         if self.prediction_model:
             if self.episode_number > 1:
-                self.prediction_model.reset_states(len(self.agents))
+               self.prediction_model.reset_states(len(self.agents))
             else:
-                self.prediction_model.load_model(len(self.agents))
+               self.prediction_model.load_model(len(self.agents))
             self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
-        else:
-            self.plot_policy_name = self.agents[0].policy.str + '_CV'
 
+        else:
+           self.plot_policy_name = self.agents[0].policy.str + '_CV'
+        #self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
         self._prediction_step()
 
     def _init_agents(self):
+        if self.agents is not None:
+            self.prev_episode_agents = copy.deepcopy(self.agents)
+
         if self.evaluate:
-            if self.agents is not None:
-                self.prev_episode_agents = copy.deepcopy(self.agents)
             self.prev_scenario_index = self.scenario_index
             self.scenario_index = np.random.randint(0, len(self.scenario))
             if Config.ANIMATE_EPISODES or Config.PERFORMANCE_TEST:

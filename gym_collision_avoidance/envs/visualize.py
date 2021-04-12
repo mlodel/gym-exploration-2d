@@ -6,13 +6,13 @@ from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
                                   AnnotationBbox)
 import os
 import matplotlib.patches as ptch
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Ellipse
 from matplotlib.collections import LineCollection
 import glob
 import imageio
 from gym_collision_avoidance.envs.config import Config
 import moviepy.editor as mp
-#import pypoman
+import pypoman
 from matplotlib.lines import Line2D
 import math
 matplotlib.rcParams.update({'font.size': 24})
@@ -190,7 +190,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         plt.xlim([-10.0,10.0])
         plt.ylim([-10.0,10.0])
 
-    if in_evaluate_mode and save:
+    if save: # in_evaluate_mode and
         fig_name = base_fig_name.format(
             policy=plot_policy_name,
             num_agents = len(agents),
@@ -294,11 +294,14 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
                         if Config.PLOT_PREDICTIONS:
                             for ind in range(agent.policy.FORCES_N):
-                                alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
-                                c = rgba2rgb(other_plt_color + [float(alpha)])
-                                ax.add_patch(plt.Circle(agent.policy.all_predicted_trajectory[id,ind,:2]+agent.policy.all_predicted_trajectory[id,ind,2:4],
-                                                        radius=agent.radius, fc=c, ec=other_plt_color,
-                                                        fill=True))
+                                n_mixtures = agent.policy.all_predicted_trajectory.shape[1]
+                                for mix_id in range(n_mixtures):
+                                    alpha = 1 - ind*agent.policy.dt/agent.policy.FORCES_N
+                                    c = rgba2rgb(other_plt_color + [float(alpha)])
+                                    ax.add_patch(Ellipse(agent.policy.all_predicted_trajectory[id,mix_id,ind,:2],
+                                                            width=2*(agent.radius+agent.policy.all_predicted_trajectory[id,mix_id,ind,2]),
+                                                            height=2*(agent.radius+agent.policy.all_predicted_trajectory[id,mix_id,ind,3]),fc=c, ec=other_plt_color,
+                                                            fill=True))
                             if id == 0:
                                 for ind in range(agent.policy.FORCES_N):
                                     alpha = 1 - ind * agent.policy.dt / agent.policy.FORCES_N
@@ -332,7 +335,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                             agent.global_state_history[ind, 2]+y_text_offset,
                             '%.1f' % agent.global_state_history[ind, 0], color=c)
                 """
-                if "Static" in str(type(agent.policy)):
+                if hasattr(agent.policy, 'static_obstacles_manager'):
                     obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
                     for obs in obstacles:
                         ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1],fill=False))
@@ -359,9 +362,9 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         overstaand = 1 * math.sin(agent.heading_global_frame)
                         ax2.arrow(0,0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
                                  fc='yellow')  # agent poiting direction
-                    '''
+
                     workspace_constr_a = np.array([[1,0],[0,1],[-1,0],[0,-1]])
-                    workspace_constr_b = np.array([10,10,10,10])
+                    workspace_constr_b = np.array([20,20,20,20])
 
                     for constr in agent.policy.linear_constraints:
                         workspace_constr_a = np.concatenate((workspace_constr_a,np.expand_dims(constr[0],axis=0)))
@@ -369,7 +372,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
 
                     vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
                     ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True,alpha=0.5))
-                    '''
+                    ''''''
                 # Also display circle at agent position at end of trajectory
                 ind = agent.step_num-1
                 alpha = 1 - \
