@@ -1197,7 +1197,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
         n_agents = random.randint(2, np.maximum(number_of_agents, 2))
 
     positions_list = []
-    other_agents_policy = [RVOPolicy, NonCooperativePolicy]
+    #other_agents_policy = [RVOPolicy, NonCooperativePolicy]
 
     """
     ga3c_params =  {
@@ -1238,12 +1238,99 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
 
     for ag_id in range(int(n_agents/2)):
         #policy = random.choice(other_agents_policy) #RVOPolicy #
-        if np.random.uniform(0,1)>0.8:
-            policy = NonCooperativePolicy
-        else:
-            policy = RVOPolicy
+        #if np.random.uniform(0,1)>0.8:
+        #    policy = NonCooperativePolicy
+        #else:
+        #    policy = RVOPolicy
         cooperation_coef = 0.5
         #cooperation_coef = np.random.uniform(0.0, 1.0)
+        if ag_id == 0:
+            if 'GA3CCADRLPolicy' in str(ego_agent_policy):
+                agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
+                                    positions_list[ag_id + 1][0], positions_list[ag_id + 1][1], radius, pref_speed,
+                                    None, ego_agent_policy, UnicycleDynamicsMaxAcc,
+                                    [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
+                agents[0].policy.initialize_network(**ga3c_params)
+            else:
+                agents.append(Agent(positions_list[0][0], positions_list[0][1],
+                                    positions_list[1][0], positions_list[1][1], radius, pref_speed,
+                                    None, ego_agent_policy, ego_agent_dynamics,
+                                    [OtherAgentsStatesSensor, OccupancyGridSensor], 0))
+        else:
+            agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, other_agents_policy, other_agents_dynamics,
+                      [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
+        #cooperation_coef = np.random.uniform(0.0, 1.0)
+        #policy = random.choice(other_agents_policy)  # RVOPolicy #
+        #if np.random.uniform(0,1)>0.8:
+        #    policy = NonCooperativePolicy
+        #else:
+        #    policy = RVOPolicy
+
+        agents.append(
+            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
+                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,other_agents_policy , other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+
+    return agents, obstacle
+
+def train_agents_swap_circle_ewc(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+    print("train_agents_swap_circle_ewc")
+    pref_speed = 1.0#np.random.uniform(1.0, 0.5)
+    radius = 0.5# np.random.uniform(0.5, 0.5)
+    agents = []
+    obstacle = []
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    n_agents = random.randint(2, np.maximum(number_of_agents, 2))
+
+    positions_list = []
+    other_agents_policy = [RVOPolicy, NonCooperativePolicy]
+    """
+    ga3c_params =  {
+         'policy': GA3CCADRLPolicy,
+         'checkpt_dir': 'IROS18',
+         'checkpt_name': 'network_01900000'
+         }
+    """
+    ga3c_params =  {
+         'policy': GA3CCADRLPolicy,
+         'checkpt_dir': 'ICRA21',
+         'checkpt_name': 'network_01990000'
+         }
+
+    distance = np.random.uniform(4.0, 8.0)
+    angle = np.random.uniform(-np.pi, np.pi)
+    x0_agent_1 = distance * np.cos(angle)
+    y0_agent_1 = distance * np.sin(angle)
+    goal_x_1 = -x0_agent_1
+    goal_y_1 = -y0_agent_1
+    positions_list.append(np.array([goal_x_1,goal_y_1]))
+    positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    for ag_id in range(int(n_agents/2)-1):
+        is_valid = False
+        while not is_valid:
+            distance = np.random.uniform(4.0, 8.0)
+            angle = np.random.uniform(-np.pi, np.pi)
+            x0_agent_1 = distance*np.cos(angle)
+            y0_agent_1 = distance*np.sin(angle)
+            goal_x_1 = -x0_agent_1
+            goal_y_1 = -y0_agent_1
+            goal=np.array([goal_x_1,goal_y_1])
+            initial_pose= np.array([x0_agent_1, y0_agent_1])
+            is_valid = is_pose_valid(goal, positions_list) and is_pose_valid(initial_pose, positions_list)
+        positions_list.append(np.array([goal_x_1, goal_y_1]))
+        positions_list.append(np.array([x0_agent_1, y0_agent_1]))
+
+    for ag_id in range(int(n_agents/2)):
+        cooperation_coef = np.random.uniform(0.0, 1.0)
+        if np.random.uniform(0,1)>0.8:
+            other_agents_policy = NonCooperativePolicy
+        else:
+            other_agents_policy = RVOPolicy
         if ag_id == 0:
             if 'GA3CCADRLPolicy' in str(ego_agent_policy):
                 agents.append(Agent(positions_list[ag_id][0], positions_list[ag_id][1],
@@ -1258,19 +1345,18 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,othe
                                     [OtherAgentsStatesSensor], 0))
         else:
             agents.append(Agent(positions_list[2*ag_id][0], positions_list[2*ag_id][1],
-                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, policy, other_agents_dynamics,
+                                positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1], radius, pref_speed, None, other_agents_policy, other_agents_dynamics,
                       [OtherAgentsStatesSensor], 2*ag_id,cooperation_coef))
-        #cooperation_coef = np.random.uniform(0.0, 1.0)
-        #policy = random.choice(other_agents_policy)  # RVOPolicy #
+        cooperation_coef = np.random.uniform(0.0, 1.0)
         if np.random.uniform(0,1)>0.8:
-            policy = NonCooperativePolicy
+            other_agents_policy = NonCooperativePolicy
         else:
-            policy = RVOPolicy
-
+            other_agents_policy = RVOPolicy
         agents.append(
-            Agent(positions_list[2*ag_id+1][0], positions_list[2*ag_id+1][1],
-                  positions_list[2*ag_id][0], positions_list[2*ag_id][1], radius, pref_speed, None,policy , other_agents_dynamics,
-                  [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
+            Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                  positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed, None, other_agents_policy,
+                  other_agents_dynamics,
+                  [OtherAgentsStatesSensor], 2 * ag_id + 1, cooperation_coef))
 
     return agents, obstacle
 
@@ -2272,7 +2358,9 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,othe
     The number_of_agents include the ego_agent. So for number_of_agents = 4, there is 1 ego_agent and 3 other_agents
     The position of the obstacle is random.
     '''
-
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5 #np.random.uniform(0.4, 0.6)
     agents = []
@@ -2459,14 +2547,16 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
     Random agents: [0-4]
     Goal distance: [8,12]m
     '''
-
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5 #np.random.uniform(0.4, 0.6)
     agents = []
     n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))  # no. of other agents is randomly chosen
 
-    min_obs = 0
-    max_obs = 3
+    min_obs = 4#1
+    max_obs = 4#3
     ready = False
 
     #Minimum and maximum distance of agent
@@ -2481,7 +2571,7 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_po
         obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
         positions_list = compute_first_agent(min_obs,max_obs,obstacle, min_dist,max_dist, min_range,max_range)
         positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist,max_dist)
-        if len(positions_list) == (number_of_agents*2):
+        if len(positions_list) == ((n_agents+1)*2):
             ready = True
 
 
@@ -2515,6 +2605,61 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
     agents = []
     positions_list = []
 
+    if seed:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))
+
+    min_obs = 6#1
+    max_obs = 6#5
+    ready = False
+
+    # Minimum and maximum distance of agent
+    min_dist = 4.0#2.0
+    max_dist = 8.0#6.0
+
+    # Minimum and maximum distance of obstacles
+    min_range = -5.0
+    max_range = 6.0
+
+    while not ready:
+        obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
+        positions_list = compute_first_agent(min_obs, max_obs, obstacle, min_dist, max_dist, min_range, max_range)
+        positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist, max_dist)
+        if len(positions_list) == ((n_agents+1) * 2):
+            ready = True
+
+    for ag_id in range(n_agents+1):
+        if ag_id == 0:
+            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+                                None, ego_agent_policy, ego_agent_dynamics,
+                                [OtherAgentsStatesSensor, OccupancyGridSensor], ag_id))
+        else:
+            agents.append(Agent(positions_list[2 * ag_id + 1][0], positions_list[2 * ag_id + 1][1],
+                                positions_list[2 * ag_id][0], positions_list[2 * ag_id][1], radius, pref_speed,
+                                None, other_agents_policy, other_agents_dynamics,
+                                [OtherAgentsStatesSensor], ag_id))
+
+    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+
+    return agents, obstacle
+
+def train_stage_3(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+    '''
+    This is stage 2 of the training scenario.
+    Square/wall shaped obstacles: [2,10]
+    Random agents: [2-6]
+    Goal distance: [16,20]m
+    '''
+
+    pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
+    radius = 0.5 #np.random.uniform(0.4, 0.6)
+    agents = []
+    positions_list = []
+
     n_agents = random.randint(1, np.maximum(number_of_agents - 1, 1))
 
     min_obs = 1
@@ -2533,7 +2678,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_p
         obstacle = compute_random_obstacles(min_obs, max_obs, min_range, max_range)
         positions_list = compute_first_agent(min_obs, max_obs, obstacle, min_dist, max_dist, min_range, max_range)
         positions_list = compute_other_agents(n_agents, obstacle, positions_list, min_dist, max_dist)
-        if len(positions_list) == (number_of_agents * 2):
+        if len(positions_list) == ((n_agents+1) * 2):
             ready = True
 
     for ag_id in range(n_agents+1):

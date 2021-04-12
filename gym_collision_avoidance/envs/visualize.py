@@ -145,7 +145,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
                    markerfacecolor=plt_colors[1], markersize=15)
         elif "GA3CCADRLPolicy" in str(type(agent.policy)):
             leg = Line2D([0], [0], marker='o', color='w', label='GA3C'+ str(agent.id),
-                   markerfacecolor=plt_colors[8], markersize=15)
+                   markerfacecolor=plt_colors[3], markersize=15)
         else:
             leg = Line2D([0], [0], marker='o', color='w', label='Non cooperative',
                                           markerfacecolor=plt_colors[8], markersize=15)
@@ -242,7 +242,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
             elif "MPC" in str(type(agent.policy)):
                 plt_color = plt_colors[1]
             elif "GA3CCADRLPolicy" in str(type(agent.policy)):
-                plt_color = plt_colors[1]
+                plt_color = plt_colors[3]
             else:
                 plt_color = plt_colors[7]
 
@@ -288,7 +288,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2, last_index=-1):
                         elif "MPC" in str(type(other_agent.policy)):
                             other_plt_color = plt_colors[1]
                         elif "GA3CCADRLPolicy" in str(type(other_agent.policy)):
-                            other_plt_color = plt_colors[1]
+                            other_plt_color = plt_colors[3]
                         else:
                             other_plt_color = plt_colors[10]
 
