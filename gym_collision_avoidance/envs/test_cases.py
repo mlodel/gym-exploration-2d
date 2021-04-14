@@ -3024,18 +3024,18 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
-    obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
-    obstacle.extend([obstacle_1, obstacle_2])
+    #obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
+    #obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
+    #obstacle.extend([obstacle_1, obstacle_2])
 
     # Size of square
     size_square = np.random.uniform(2, 4)
     # Upper x,y value square
-    x_v_up = 2#np.random.uniform(-4,4)
-    y_v_up = 2#np.random.uniform(-4,4)
+    x_v_up = np.random.uniform(-2,2)
+    y_v_up = np.random.uniform(-2,2)
     # Lower x,y value of square
-    x_v_low = x_v_up - size_square
-    y_v_low = y_v_up - size_square
+    x_v_low = x_v_up - np.random.uniform(2, 4)
+    y_v_low = y_v_up - np.random.uniform(2, 4)
     obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
     obstacle.append(obstacle_corners)
 
@@ -3043,10 +3043,10 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
     goal_positions_list = []
 
     sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
-    y0_agent_1 = np.random.uniform(-4, 4)
+    x0_agent_1 = random.choice((-1,1))*np.random.uniform(-6.0, 6.0)
+    y0_agent_1 = random.choice((-1,1))*np.random.uniform(-6, 6)
     goal_x_1 = -x0_agent_1
-    goal_y_1 = y0_agent_1
+    goal_y_1 = -y0_agent_1
     ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
