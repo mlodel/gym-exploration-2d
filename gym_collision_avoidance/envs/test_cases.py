@@ -36,6 +36,7 @@ from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 #from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
@@ -3053,14 +3054,20 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
     agents.append(Agent(ini_positions_list[0][0], ini_positions_list[0][1],
                        goal_positions_list[0][0], goal_positions_list[0][1], radius, pref_speed,
                        None, ego_agent_policy, ego_agent_dynamics,
-                       [LaserScanSensor], 0))
+                       [OtherAgentsStatesSensor], 0))
 
-
+    # Addin other RVO Agent
+    agents.append(Agent(goal_positions_list[0][0], goal_positions_list[0][1],
+                       ini_positions_list[0][0], ini_positions_list[0][1], radius, pref_speed,
+                       None, other_agents_policy, ego_agent_dynamics,
+                       [OtherAgentsStatesSensor], 0))
 
     agents[0].end_condition = ec._corridor_check_if_at_goal
 
-    agents[0].policy.static_obstacles_manager.obstacle = obstacle
-
+    try:
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    except:
+        "Obstacle Manager is missing"
 
     return agents, obstacle
 

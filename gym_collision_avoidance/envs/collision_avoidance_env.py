@@ -35,8 +35,7 @@ from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMP
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-
-
+from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 
 from mpc_rl_collision_avoidance.policies.SafeMPCPolicy import SafeMPCPolicy
@@ -88,7 +87,7 @@ class CollisionAvoidanceEnv(gym.Env):
         #self.ego_policy = "SecondOrderMPCRLPolicy"
 
         self.ego_policy = "MPCRLStaticObsPolicy"
-        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        self.ego_agent_dynamics = "UnicycleDynamics"
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "RVOPolicy"
@@ -378,7 +377,7 @@ class CollisionAvoidanceEnv(gym.Env):
             }
             for ag in self.agents:
                 if "GA3C" in str(ag.policy):
-                    self.policies.append(GA3CCADRLPolicy())
+                    self.policies.append(eval(str(ag.policy)+"()"))
                     self.policies[-1].initialize_network(**ga3c_params)
                     ag.policy = self.policies[-1]
         else:
