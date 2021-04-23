@@ -25,13 +25,13 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 10 # for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 100 # for tensorboard visualization
     DT             = 0.1 # seconds between simulation time steps
     REWARD_AT_GOAL = 3.0 # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = -10.0 # reward given when agent collides with another agent
     REWARD_TIMEOUT = -10.0 # reward given for not reaching the goal
     REWARD_INFEASIBLE = 0.0
-    REWARD_COLLISION_WITH_WALL = -0.25 # reward given when agent collides with wall
+    REWARD_COLLISION_WITH_WALL = -10.0 # reward given when agent collides with wall
     REWARD_GETTING_CLOSE   = 0.0 # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE   = 0.0 # reward when agent enters another agent's social zone
     REWARD_TIME_STEP   = -0.01 # default reward given if none of the others apply (encourage speed)
@@ -42,14 +42,14 @@ class Config:
     COLLISION_DIST = 0.5 # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2 # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = False
+    CURRICULUM_LEARNING = True
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
 
     #MPC
-    FORCES_N = 15
-    FORCES_DT = 0.3
+    FORCES_N = 20
+    FORCES_DT = 0.1
     REPEAT_STEPS = 2
 
     LASERSCAN_LENGTH = 16 # num range readings in one scan
@@ -62,7 +62,7 @@ class Config:
     SENSING_HORIZON  = np.inf
     #SENSING_HORIZON  = 3.0
 
-    RVO_TIME_HORIZON = 5.0
+    RVO_TIME_HORIZON = 4.0
     RVO_COLLAB_COEFF = 0.5
     RVO_ANTI_COLLAB_T = 1.0
 
@@ -84,15 +84,15 @@ class Config:
     MAP_WIDTH = 50 # Meters
     MAP_HEIGHT = 50 # Meters
 
-    SCENARIOS_FOR_TRAINING = ["single_agent_in_a_corridor_with_obstacle"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["train_agents_swap_circle_ewc"] #"agent_with_corridor", "agent_with_door", "agent_with_crossing", "agent_with_hallway"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
-    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid'] #occupancy grid
-    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
+    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
+    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'local_grid'] #occupancy grid
+    #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'laserscan'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
