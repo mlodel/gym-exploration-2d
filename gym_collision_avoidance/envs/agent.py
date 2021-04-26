@@ -87,7 +87,7 @@ class Agent(object):
         self.past_global_velocities = np.zeros((self.num_actions_to_store,2))
         self.past_global_velocities = self.vel_global_frame * np.ones((self.num_actions_to_store,2))
 
-        self.other_agent_states = np.zeros((9,))
+        self.other_agent_states = np.zeros((10,))
 
         self.dynamics_model.update_ego_frame()
         # self._update_state_history()

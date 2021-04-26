@@ -19,16 +19,13 @@ class Map():
         if map_filename is None:
             self.static_map = np.zeros(self.dims, dtype=bool)
         else:
-            '''
-            ## This is the version of Michael everett: 
-            self.static_map = imageio.imread(map_filename)
-            print(self.static_map)
-            print(self.static_map.shape)
-            if self.static_map.shape != self.dims:
-                # print("Resizing map from: {} to {}".format(self.static_map.shape, dims))
-                self.static_map = scipy.misc.imresize(self.static_map, self.dims, interp='nearest')
-            self.static_map = np.invert(self.static_map).astype(bool)
-            '''
+            # self.static_map = imageio.imread(map_filename)
+            # if self.static_map.shape != dims:
+            #     # print("Resizing map from: {} to {}".format(self.static_map.shape, dims))
+            #     self.static_map = np.array(PIL.Image.fromarray(self.static_map).resize(dims, PIL.Image.NEAREST).convert("L"))
+            #     # self.static_map = scipy.misc.imresize(self.static_map, dims, interp='nearest')
+            # self.static_map = np.invert(self.static_map).astype(bool)
+            
             ## This is the version of Sant:
             # map_filename contains obstacles as defined in test_cases
             self.static_map = self.get_occupancy_grid(map_filename)

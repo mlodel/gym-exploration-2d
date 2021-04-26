@@ -22,25 +22,31 @@ from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+from gym_collision_avoidance.envs.policies.ig_greedy import ig_greedy
+
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
-from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
-from mpc_rl_collision_avoidance.policies.SecondOrderMPCRLPolicy import SecondOrderMPCRLPolicy
-from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
-from mpc_rl_collision_avoidance.policies.FirstOrderMPCRLPolicy import FirstOrderMPCRLPolicy
-from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
-from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
-from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
-from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
-from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
-from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
-from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
+# from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+# from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
+# from mpc_rl_collision_avoidance.policies.SecondOrderMPCRLPolicy import SecondOrderMPCRLPolicy
+# from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
+# from mpc_rl_collision_avoidance.policies.FirstOrderMPCRLPolicy import FirstOrderMPCRLPolicy
+# from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
+# from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
+# from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
+# from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+# from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
+# from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
+# from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
+# from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+# from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+# from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
+
+from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+from gym_collision_avoidance.envs.information_models.targetMap import targetMap
+
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -79,7 +85,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         #self.ego_policy = "SecondOrderMPCRLPolicy"
 
-        self.ego_policy = "MPCRLStaticObsPolicy"
+        self.ego_policy = "RVOPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         #self.ego_agent_dynamics = "FirstOrderDynamics"
 
@@ -197,13 +203,14 @@ class CollisionAvoidanceEnv(gym.Env):
                 limits=self.plt_limits,
                 fig_size=self.plt_fig_size,
                 perturbed_obs=self.perturbed_obs,
-                show=False,
-                save=True)
+                show=Config.SHOW_EPISODE_PLOTS,
+                save=True,
+                targetMap=self.agents[0].policy.targetMap)
 
         # Check which agents' games are finished (at goal/collided/out of time)
         which_agents_done, game_over = self._check_which_agents_done()
 
-        if game_over and (str(self.prediction_model)!='CVModel') :
+        if game_over and (str(self.prediction_model)!='CVModel') and self.prediction_model is not None:
             if not Config.PERFORMANCE_TEST:
                 self.n_collisions = np.roll(self.n_collisions,1)
                 self.n_collisions[0] = self.agents[0].in_collision
@@ -222,6 +229,11 @@ class CollisionAvoidanceEnv(gym.Env):
             {'which_agents_done': which_agents_done_dict}
 
     def reset(self):
+        if self.agents:
+            agent0_targetmap = self.agents[0].policy.targetMap
+        else:
+            agent0_targetmap = None
+
         if (self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
@@ -230,7 +242,8 @@ class CollisionAvoidanceEnv(gym.Env):
                          limits=self.plt_limits,
                          fig_size=self.plt_fig_size,
                          show=Config.SHOW_EPISODE_PLOTS,
-                         save=Config.SAVE_EPISODE_PLOTS)
+                         save=Config.SAVE_EPISODE_PLOTS,
+                         targetMap=agent0_targetmap)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
@@ -241,6 +254,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self._init_agents()
         #self._init_prediction_model()
         self._init_static_map()
+
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -294,7 +308,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
 
     def update_top_down_map(self):
-        print("Not adding agents to map")
+        print("Time Step: " + str(self.episode_step_number*self.dt_nominal))
         #self.map.add_agents_to_map(self.agents)
         #plt.imshow(self.map.map)
         #plt.pause(0.1)
@@ -555,16 +569,19 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, j in agent_pairs:
             agent = self.agents[i]
             other_agent = self.agents[j]
-            dist_btwn = np.linalg.norm(
-                agent.pos_global_frame - other_agent.pos_global_frame)
-            combined_radius = agent.radius + other_agent.radius
-            dist_btwn_nearest_agent[i] = min(dist_btwn_nearest_agent[i], dist_btwn - combined_radius)
-            if dist_btwn <= combined_radius:
-                # Collision with another agent!
-                collision_with_agent[i] = True
-                collision_with_agent[j] = True
-                if i == 0 and collision_with_agent[i]:
-                    print("Ego-agent collided")
+            if "Static" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
+                continue
+            else:
+                dist_btwn = np.linalg.norm(
+                    agent.pos_global_frame - other_agent.pos_global_frame)
+                combined_radius = agent.radius + other_agent.radius
+                dist_btwn_nearest_agent[i] = min(dist_btwn_nearest_agent[i], dist_btwn - combined_radius)
+                if dist_btwn <= combined_radius:
+                    # Collision with another agent!
+                    collision_with_agent[i] = True
+                    collision_with_agent[j] = True
+                    if i == 0 and collision_with_agent[i]:
+                        print("Ego-agent collided")
         if self.obstacles:
             for i in agent_inds:
                 agent = self.agents[i]
@@ -592,14 +609,17 @@ class CollisionAvoidanceEnv(gym.Env):
         agent_front_zones = []
         i = 0
         for other_agent in other_agents:
-            dist_btwn = np.linalg.norm(
-                ego_agent.pos_global_frame + action - other_agent.pos_global_frame)
-            combined_radius = ego_agent.radius + other_agent.radius
-            dist_btwn_nearest_agent[i] = min(dist_btwn_nearest_agent[i], dist_btwn - combined_radius)
-            if dist_btwn <= combined_radius:
-                # Collision with another agent!
-                collision_with_agent[i] = True
-            i += 1
+            if "Static" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
+                continue
+            else:
+                dist_btwn = np.linalg.norm(
+                    ego_agent.pos_global_frame + action - other_agent.pos_global_frame)
+                combined_radius = ego_agent.radius + other_agent.radius
+                dist_btwn_nearest_agent[i] = min(dist_btwn_nearest_agent[i], dist_btwn - combined_radius)
+                if dist_btwn <= combined_radius:
+                    # Collision with another agent!
+                    collision_with_agent[i] = True
+                i += 1
         #TODO: Static Collision Avoidance check
         if self.obstacles:
             for i in agent_inds:

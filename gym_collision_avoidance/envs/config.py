@@ -8,8 +8,8 @@ class Config:
     ACTION_SPACE_TYPE   = continuous
 
     ANIMATE_EPISODES    = True
-    SHOW_EPISODE_PLOTS = True
-    SAVE_EPISODE_PLOTS = False
+    SHOW_EPISODE_PLOTS = False
+    SAVE_EPISODE_PLOTS = True
     TRAIN_MODE           = False # Enable to see the trained agent in action (for testing)
     PLAY_MODE           = False # Enable to see the trained agent in action (for testing)
     EVALUATE_MODE       = False # Enable to see the trained agent in action (for testing)
@@ -46,6 +46,7 @@ class Config:
     HOMOGENEOUS_TESTING = False
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
+    COLLISION_AV_W_STATIC_AGENT = False
 
     #MPC
     FORCES_N = 15
@@ -70,10 +71,13 @@ class Config:
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
-    PLOT_CIRCLES_ALONG_TRAJ = True
-    ANIMATION_PERIOD_STEPS = 4 # plot every n-th DT step (if animate mode on)
-    PLT_LIMITS = None
-    PLT_FIG_SIZE = (10, 8)
+    PLOT_CIRCLES_ALONG_TRAJ = False
+    ANIMATION_PERIOD_STEPS = 1 # plot every n-th DT step (if animate mode on)
+    PLT_LIMITS = ((-15, 15), (-15, 15))
+    PLT_FIG_SIZE = (12, 8)
+    PLT_SHOW_LEGEND = False
+    PLT_SUBPLT_TRAJ = False
+    PLT_SUBPLT_TARGMAP = True
 
     # Gridmap parameters
     SUBMAP_WIDTH = 60 # Pixels
@@ -81,17 +85,17 @@ class Config:
     SUBMAP_RESOLUTION = 0.1 # Pixel / meter
 
     # STATIC MAP
-    MAP_WIDTH = 50 # Meters
-    MAP_HEIGHT = 50 # Meters
+    MAP_WIDTH = 30 # Meters
+    MAP_HEIGHT = 30 # Meters
 
-    SCENARIOS_FOR_TRAINING = ["single_agent_in_a_corridor_with_obstacle"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["IG_agent_crossing"]#["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states','local_grid'] #occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'pref_speed', 'other_agents_states','local_grid'] #occupancy grid
     #STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
@@ -130,6 +134,22 @@ class Config:
             'std': np.array([3.14], dtype=np.float32),
             'mean': np.array([0.], dtype=np.float32)
         },
+        'heading_global_frame': {
+            'dtype': np.float32,
+            'size': 1,
+            'bounds': [-np.pi, np.pi],
+            'attr': 'get_agent_data("heading_global_frame")',
+            'std': np.array([3.14], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+        },
+        'pos_global_frame': {
+            'dtype': np.float32,
+            'size': 2,
+            'bounds': [-np.inf, np.inf],
+            'attr': 'get_agent_data("pos_global_frame")',
+            'std': np.array([1.0], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+        },
         'pref_speed': {
             'dtype': np.float32,
             'size': 1,
@@ -156,7 +176,7 @@ class Config:
             },
         'other_agents_states': {
             'dtype': np.float32,
-            'size': (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT,9),
+            'size': (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT,10),
             'bounds': [-np.inf, np.inf],
             'attr': 'get_sensor_data("other_agents_states")',
             'std': np.tile(np.array([5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0, 5.0, 1.0], dtype=np.float32), (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1)),

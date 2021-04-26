@@ -6,7 +6,7 @@ class StaticPolicy(Policy):
         Policy.__init__(self, str="Static")
         pass
 
-    def find_next_action(self, obs, agents, i):
+    def find_next_action(self, obs, agents, i, obstacles):
         # Static Agents do not move.
         action = np.array([0.0, 0.0])
         return action
