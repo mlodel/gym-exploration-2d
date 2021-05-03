@@ -4,6 +4,10 @@ import networkx as nx
 from copy import copy
 from math import log
 import numpy as np
+import multiprocessing
+from functools import partial
+
+
 
 from copy import deepcopy
 
@@ -224,7 +228,47 @@ class Tree:
             self.graph.add_edge(start_node, len(self.graph))
         return True
 
-    def grow(self, nsims=1, gamma=0.9):
+    def _simulate(self, start_node, state, send_end=None, sema=None):
+        if sema is not None:
+            sema.acquire()
+
+        temp_state = self.graph.nodes[start_node]["state"]
+        state[self.id] = temp_state
+
+        d = self.graph.nodes[start_node]["stage"]
+        while d < self.horizon:  # also breaks at no available options
+            d += 1
+
+            # Get the available actions
+            options = self.sim_available_actions(
+                self.data,
+                state[self.id],
+                self.id
+            )
+
+            # If no actions possible, simulation complete
+            if len(options) == 0:
+                break
+
+            # "randomly" choose 1 - function provided by user
+            # state[self.id] = temp_state
+            sim_action = self.sim_selection_func(self.data, options, temp_state)
+
+            # add that to the actions of the current robot
+            temp_state = self.sim_state_store(self.data, temp_state, sim_action, self.id)
+
+            state[self.id] = temp_state
+
+        # calculate the reward at the end of simulation
+        rew = self.reward(self.data, state, self.id)
+        if send_end is not None:
+            send_end.send({"reward": rew, "temp_state": temp_state})
+        else:
+            return {"reward": rew, "temp_state": temp_state}
+        if sema is not None:
+            sema.release()
+
+    def grow(self, nsims=10, gamma=0.9, parallelize=False):
         """
         Grow Tree by one node
         gamma between 0.5 and 1
@@ -251,36 +295,29 @@ class Tree:
         avg_reward = 0
         best_reward = float("-Inf")
         best_rollout = None
+        # Parallization
+
+        if parallelize:
+            processes = []
+            pipe_list = []
+            mp_context = multiprocessing.get_context("fork")
+            sema = multiprocessing.Semaphore(12)
+            for i in range(nsims):
+                recv_end, send_end = mp_context.Pipe(False)
+                p = mp_context.Process(target=self._simulate,
+                                            args=(start_node, state, send_end, sema))
+                processes.append(p)
+                pipe_list.append(recv_end)
+                p.start()
+
         for i in range(nsims):
-            temp_state = self.graph.nodes[start_node]["state"]
-            state[self.id] = temp_state
-
-            d = self.graph.nodes[start_node]["stage"]
-            while d < self.horizon:  # also breaks at no available options
-                d += 1
-
-                # Get the available actions
-                options = self.sim_available_actions(
-                    self.data,
-                    state[self.id],
-                    self.id
-                )
-
-                # If no actions possible, simulation complete
-                if len(options) == 0:
-                    break
-
-                # "randomly" choose 1 - function provided by user
-                # state[self.id] = temp_state
-                sim_action = self.sim_selection_func(self.data, options, temp_state)
-
-                # add that to the actions of the current robot
-                temp_state = self.sim_state_store(self.data, temp_state, sim_action, self.id)
-
-                state[self.id] = temp_state
-
-            # calculate the reward at the end of simulation
-            rew = self.reward(self.data, state, self.id)
+            if parallelize:
+                recvd = pipe_list[i].recv()
+                processes[i].join()
+            else:
+                recvd = self._simulate(start_node, state)
+            rew = recvd["reward"]
+            temp_state = recvd["temp_state"]
             avg_reward += rew
 
             # new_return = 0
@@ -319,6 +356,8 @@ class Tree:
         self._update_distribution()
 
         return avg_reward
+
+
 
     def send_comms(self):
         return self.my_act_dist

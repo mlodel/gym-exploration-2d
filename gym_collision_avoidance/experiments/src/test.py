@@ -1,12 +1,17 @@
 import os
 import numpy as np
 import gym
+
 gym.logger.set_level(40)
 from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.config import Config
 
 import cProfile
 import pstats
+
+import tensorflow as tf
+if type(tf.contrib) != type(tf): tf.contrib._warning = None
+
 
 def main():
     '''
@@ -28,7 +33,7 @@ def main():
 
     # In case you want to save plots, choose the directory
     env.set_plot_save_dir(
-        os.path.dirname(os.path.realpath(__file__)) + '/../../experiments/results/test2/')
+        os.path.dirname(os.path.realpath(__file__)) + '/../../experiments/results/test3/')
 
     # env.set_static_map(mapPath)
 
@@ -37,14 +42,11 @@ def main():
     # [agent.policy.initialize_network() for agent in agents if hasattr(agent.policy, 'initialize_network')]
     # env.set_agents(agents)
 
+    obs = env.reset()  # Get agents' initial observations
 
-    obs = env.reset() # Get agents' initial observations
-
-    # A = env.map
-    env.agents[0].policy.init_maps(env.agents[0], env.map, (Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
-                                   map_res=Config.SUBMAP_RESOLUTION, detect_range=5.0)
-    env.agents[1].policy.init_maps(env.agents[1], env.map, (Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
-                                   map_res=Config.SUBMAP_RESOLUTION, detect_range=5.0)
+    for i in range(3):
+        env.agents[i].policy.init_maps(env.agents[i], env.map, (Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
+                                       map_res=Config.SUBMAP_RESOLUTION, detect_range=5.0)
 
     # Repeatedly send actions to the environment based on agents' observations
     num_steps = 100
@@ -69,11 +71,11 @@ def main():
 
     return True
 
+
 if __name__ == '__main__':
     # profiler = cProfile.Profile()
     # profiler.enable()
     main()
-    # print("Experiment over.")
     # profiler.disable()
     # stats = pstats.Stats(profiler)
-    # stats.dump_stats('stats3.prof')
+    # stats.dump_stats('stats6.prof')

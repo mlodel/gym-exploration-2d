@@ -10,6 +10,8 @@ import numpy as np
 import itertools
 import copy
 import os
+import time
+import multiprocessing
 import matplotlib.pyplot as plt
 
 from gym_collision_avoidance.envs.config import Config
@@ -285,6 +287,10 @@ class CollisionAvoidanceEnv(gym.Env):
         num_actions_per_agent = 2  # speed, delta heading angle
         all_actions = np.zeros((len(self.agents), num_actions_per_agent), dtype=np.float32)
 
+        processes = []
+        pipe_list = []
+        parallel_agents = []
+        mp_context = multiprocessing.get_context("spawn")
         # Agents set their action (either from external or w/ find_next_action)
         for agent_index, agent in enumerate(self.agents):
             if agent.is_done:
@@ -295,7 +301,24 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
+                if hasattr(agent.policy, "parallize"):
+                    recv_end, send_end = mp_context.Pipe(False)
+                    p = mp_context.Process(target=agent.policy.parallel_next_action, args=(dict_obs, self.agents, agent_index, self.obstacles, send_end))
+                    p.daemon = False
+                    processes.append(p)
+                    pipe_list.append(recv_end)
+                    parallel_agents.append(agent_index)
+                    p.start()
+                else:
+                    all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
+
+        for i in range(len(processes)):
+
+            recvd = pipe_list[i].recv()
+            pipe_list[i].close()
+            processes[i].join()
+            self.agents[parallel_agents[i]].policy = recvd["policy_obj"]
+            all_actions[parallel_agents[i], :] = recvd["action"]
 
         # After all agents have selected actions, run one dynamics update
         for i, agent in enumerate(self.agents):

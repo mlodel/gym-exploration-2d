@@ -83,47 +83,47 @@ class targetMap():
         
         return visibleCells
 
-    def update(self, pose, obs, frame='global'):
-        c, s = np.cos(pose[2]), np.sin(pose[2])
-        R_plus = np.array(((c, -s), (s, c)))
-        R_minus= np.array(((c, s), (-s, c)))
+    def update(self, poses, observations, frame='global'):
 
-        n_detected = len(obs)
-        detections = []
-        for target in obs:
-            if frame == 'global':
-                ego_pose = np.dot(R_minus,(target - pose[0:2]))
-            elif frame == 'ego':
-                ego_pose = target
-            else:
-                raise Exception("Unsupported Frame for Target Map Update")
-            # range = np.linalg.norm(ego_pose)
-            # angle = np.arctan2(ego_pose[1], ego_pose[0])
-            # detections.append(np.array([range, angle]))
-            detections.append(ego_pose)
+        # Update for all agents observations
+        for pose, obs in zip(poses, observations):
+            c, s = np.cos(pose[2]), np.sin(pose[2])
+            # R_plus = np.array(((c, -s), (s, c)))
+            R_minus= np.array(((c, s), (-s, c)))
 
-        visibleCells = self.getVisibleCells(pose)
-        for i,j in visibleCells:
-            if n_detected > 0:
-                cellPos = self.getPoseFromCell((i,j))
-                r = np.dot(R_minus, np.asarray(cellPos - pose[0:2]))
-                # dphi = np.arctan2(r[1], r[0])
+            n_detected = len(obs)
+            detections = []
+            for target in obs:
+                if frame == 'global':
+                    ego_pose = np.dot(R_minus,(target - pose[0:2]))
+                elif frame == 'ego':
+                    ego_pose = target
+                else:
+                    raise Exception("Unsupported Frame for Target Map Update")
+                detections.append(ego_pose)
 
-                in_current_cell = False
-                for r_target in detections:
-                    r_diff = r_target - r
-                    r_diff_norm = np.sqrt(r_diff[0]**2 + r_diff[1]**2)
-                    if r_diff_norm < (np.sqrt(0.5)*self.cellSize + self.tolerance):
-                        in_current_cell = True
-                        break
+            visibleCells = self.getVisibleCells(pose)
+            for i,j in visibleCells:
+                if n_detected > 0:
+                    cellPos = self.getPoseFromCell((i,j))
+                    r = np.dot(R_minus, np.asarray(cellPos - pose[0:2]))
+                    # dphi = np.arctan2(r[1], r[0])
 
-                if in_current_cell:
-                    rSens = self.rOcc
+                    in_current_cell = False
+                    for r_target in detections:
+                        r_diff = r_target - r
+                        r_diff_norm = np.sqrt(r_diff[0]**2 + r_diff[1]**2)
+                        if r_diff_norm < (np.sqrt(0.5)*self.cellSize + self.tolerance):
+                            in_current_cell = True
+                            break
+
+                    if in_current_cell:
+                        rSens = self.rOcc
+                    else:
+                        rSens = self.rEmp
                 else:
                     rSens = self.rEmp
-            else:
-                rSens = self.rEmp
-            self.map[j,i] *= rSens
+                self.map[j,i] *= rSens
 
     def get_reward_from_cells(self, cells):
         cell_mi = []

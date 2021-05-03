@@ -7,6 +7,7 @@ from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
 from gym_collision_avoidance.envs.policies.pydecmcts.DecMCTS import Tree
 
+import os
 
 class MCTS_state:
     def __init__(self, act_seq, pose_seq, visib_cells, obsvd_cells, cum_reward):
@@ -34,6 +35,8 @@ class ig_mcts(Policy):
         self.best_paths = None
         self.obsvd_targets = None
 
+        self.parallize = True
+
     def init_maps(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1):
 
         self.ego_agent = ego_agent
@@ -55,15 +58,20 @@ class ig_mcts(Policy):
         dmcts_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != agent_id]
 
         targets = []
+        poses = []
         # Find Targets in Range and FOV (Detector Emulation)
         self.obsvd_targets = self.find_targets_in_obs(obs)
         targets.append(self.obsvd_targets)
+        poses.append(global_pose)
         # Get observations of other agens
         for j in dmcts_agents:
-            targets.append(agents[j].policy.obsvd_targets)
+            other_agent_targets = agents[j].policy.obsvd_targets if agents[j].policy.obsvd_targets is not None else []
+            targets.append(other_agent_targets)
+            other_agent_pose = np.append(agents[j].pos_global_frame, agents[j].heading_global_frame)
+            poses.append(other_agent_pose)
 
         # Update Target Map
-        self.targetMap.update(global_pose, self.obsvd_targets, frame='global')
+        self.targetMap.update(poses, targets, frame='global')
 
         comm_n = 5
         data = {"current_pose": global_pose}
@@ -77,17 +85,28 @@ class ig_mcts(Policy):
         else:
             self.tree.prune_tree()
 
-        for i in range(100):
-            self.tree.grow()
-            #collect communications
-            for j in range(len(dmcts_agents)):
-                self.tree.receive_comms(agents[j].policy.tree.send_comms(), j)
+        # collect communications
+        for j in range(len(dmcts_agents)):
+            if agents[j].policy.best_paths is not None:
+                self.tree.receive_comms(agents[j].policy.best_paths, j)
+
+        for i in range(10):
+            self.tree.grow(nsims=1, gamma=1, parallelize=False)
+            # #collect communications
+            # for j in range(len(dmcts_agents)):
+            #     self.tree.receive_comms(agents[j].policy.tree.send_comms(), j)
 
         self.best_paths = self.tree.send_comms()
 
         action = self.best_paths.X[0].action_seq[0]
 
         return action
+
+    def parallel_next_action(self, obs, agents, agent_id, obstacle, send_end):
+        action = self.find_next_action(obs, agents, agent_id, obstacle)
+        print("This is the id of the agent", agent_id, "child process", os.getpid())
+        send_end.send({"policy_obj": self, "action": action})
+        send_end.close()
 
     def find_targets_in_obs(self, obs):
         global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
@@ -118,10 +137,13 @@ class ig_mcts(Policy):
         next_pose = pose + np.append(vel, dphi) * self.DT
         # Check if Next Pose is within map
         in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
-        # Check if Next Pose is Obstacle
-        edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
-        if edf_next_pose > self.ego_agent.radius + 0.1 and in_map:
-            return next_pose
+        if in_map:
+            # Check if Next Pose is Obstacle
+            edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
+            if edf_next_pose > self.ego_agent.radius + 0.1:
+                return next_pose
+            else:
+                return None
         else:
             return None
 
@@ -175,9 +197,12 @@ class ig_mcts(Policy):
         return state
 
     def mcts_reward(self, data, states, id):
-        obsvd_cells = set()
+        other_agents_obsvd_cells = set()
         for key in states:
-            obsvd_cells.update(states[key].obsvd_cells)
+            if key == id:
+                continue
+            other_agents_obsvd_cells.update(states[key].obsvd_cells)
+        obsvd_cells = states[id].obsvd_cells.difference(other_agents_obsvd_cells)
         return self.targetMap.get_reward_from_cells(obsvd_cells)
 
     @staticmethod

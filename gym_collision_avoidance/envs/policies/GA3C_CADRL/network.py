@@ -2,6 +2,9 @@ import numpy as np
 import tensorflow as tf
 import time
 
+if type(tf.contrib) != type(tf): tf.contrib._warning = None
+
+
 class Actions():
     # Define 11 choices of actions to be:
     # [v_pref,      [-pi/6, -pi/12, 0, pi/12, pi/6]]
