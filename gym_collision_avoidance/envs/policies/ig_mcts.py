@@ -35,9 +35,17 @@ class ig_mcts(Policy):
         self.best_paths = None
         self.obsvd_targets = None
 
-        self.parallize = True
+        self.parallize = False
 
-    def init_maps(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1):
+        self.Ntree = 100
+        self.Nsims = 10
+        self.parallelize_sims = False
+        self.mcts_cp = 1.
+        self.mcts_horizon = 10
+
+    def set_param(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1,
+                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10,
+                  parallelize_agents=False):
 
         self.ego_agent = ego_agent
 
@@ -50,6 +58,13 @@ class ig_mcts(Policy):
         self.targetMap = targetMap(self.edfMap, map_size, map_res * 5,
                                    sensFOV=self.detect_fov * np.pi / 180, sensRange=self.detect_range, rOcc=1.5,
                                    rEmp=0.66)
+        self.Nsims = Nsims
+        self.Ntree = Ntree
+        self.parallelize_sims = parallelize_sims
+        self.mcts_cp = mcts_cp
+        self.mcts_horizon = mcts_horizon
+
+        self.parallize = parallelize_agents
 
     def find_next_action(self, obs, agents, agent_id, obstacle):
 
@@ -81,7 +96,7 @@ class ig_mcts(Policy):
         if self.tree is None:
             self.tree = Tree(data, self.mcts_reward, self.mcts_avail_actions, self.mcts_state_storer,
                              self.mcts_sim_selection_func, self.mcts_avail_actions, self.mcts_sim_state_storer, comm_n,
-                             robot_id=agent_id, horizon=10, c_p=0.5)
+                             robot_id=agent_id, horizon=self.mcts_horizon, c_p=self.mcts_cp)
         else:
             self.tree.prune_tree()
 
@@ -90,8 +105,8 @@ class ig_mcts(Policy):
             if agents[j].policy.best_paths is not None:
                 self.tree.receive_comms(agents[j].policy.best_paths, j)
 
-        for i in range(10):
-            self.tree.grow(nsims=1, gamma=1, parallelize=False)
+        for i in range(self.Ntree):
+            self.tree.grow(nsims=self.Nsims, gamma=1, parallelize=self.parallelize_sims)
             # #collect communications
             # for j in range(len(dmcts_agents)):
             #     self.tree.receive_comms(agents[j].policy.tree.send_comms(), j)

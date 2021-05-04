@@ -301,7 +301,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
             else:
                 dict_obs = self.observation[agent_index]
-                if hasattr(agent.policy, "parallize"):
+                parallelize = agent.policy.parallize if hasattr(agent.policy, "parallize") else False
+                if parallelize:
                     recv_end, send_end = mp_context.Pipe(False)
                     p = mp_context.Process(target=agent.policy.parallel_next_action, args=(dict_obs, self.agents, agent_index, self.obstacles, send_end))
                     p.daemon = False
