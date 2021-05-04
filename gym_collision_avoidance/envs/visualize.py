@@ -6,7 +6,7 @@ from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
                                   AnnotationBbox)
 import os
 import matplotlib.patches as ptch
-from matplotlib.patches import Polygon, Ellipse
+from matplotlib.patches import Polygon, Ellipse, Wedge
 from matplotlib.collections import LineCollection
 import glob
 import imageio
@@ -248,6 +248,10 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
 
     for i, agent in reversed(list(enumerate(agents))):
 
+        if "ig_" in str(type(agent.policy)):
+            draw_agent_ig(agent, i, ax)
+            continue
+
         # Plot line through agent trajectory
         if "RVO" in str(type(agent.policy)):
             plt_color = plt_colors[2]
@@ -440,6 +444,36 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
             #         color=plt_color)
 
     return max_time
+
+
+def draw_agent_ig(agent, i, ax):
+    plt_color = plt_colors[i+1]
+    # colors = np.zeros((agent.global_state_history.shape[0], 4))
+    # colors[:, :3] = plt_color
+    # colors[:, 3] = np.linspace(0.2, 1., agent.global_state_history.shape[0])
+    # colors = rgba2rgb(colors)
+
+    ax.plot(agent.global_state_history[:agent.step_num-2, 1],
+               agent.global_state_history[:agent.step_num-2, 2],
+               color=plt_color)
+
+    plan = agent.policy.best_paths.X[0].pose_seq
+    fov = 60.0
+    for j in range(len(plan)):
+        if j==0:
+            continue
+        pose = plan[j]
+        alpha = 1.0 - 0.2*j
+        c = rgba2rgb(plt_color + [float(alpha)])
+        heading = pose[2]*180.0/np.pi
+        ax.add_patch(Wedge(center=pose[0:2], r=.75, theta1=(heading-fov/2), theta2=(heading+fov/2),  fc=c, ec=c,
+                             fill=True))
+    # currentPose = agent.global_state_history[agent.step_num-1, (1,2,10)]
+    currentPose = plan[0]
+    heading = currentPose[2] * 180.0 / np.pi
+    ax.add_patch(Wedge(center=currentPose[0:2], r=1., theta1=(heading - fov / 2),
+                       theta2=(heading + fov / 2),  fc=plt_color, ec=plt_color, fill=True))
+
 
 
 def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):

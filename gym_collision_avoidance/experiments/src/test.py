@@ -47,11 +47,11 @@ def main():
     for i in range(3):
         env.agents[i].policy.set_param(ego_agent=env.agents[i], occ_map=env.map, map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
                                        map_res=Config.SUBMAP_RESOLUTION, detect_range=5.0,
-                                       Ntree=500, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=3,
-                                       parallelize_agents=True, dt=0.5)
+                                       Ntree=50, Nsims=1, parallelize_sims=False, mcts_cp=1., mcts_horizon=3,
+                                       parallelize_agents=True, dt=0.2)
 
     # Repeatedly send actions to the environment based on agents' observations
-    num_steps = 100
+    num_steps = 10
     for i in range(num_steps):
 
         # Query the external agents' policies

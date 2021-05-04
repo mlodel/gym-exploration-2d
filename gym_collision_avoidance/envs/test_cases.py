@@ -3233,8 +3233,8 @@ def IG_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolicy,
     #                     [OtherAgentsStatesSensor, LaserScanSensor], 3))
 
     # target agents
-    # agents.append(Agent(6,12,0,0,0.2,pref_speed,0,StaticPolicy,FirstOrderDynamics, [], 4))
-    # agents.append(Agent(1.5,0,0,0,0.2,pref_speed,0,StaticPolicy,FirstOrderDynamics, [], 5))
+    agents.append(Agent(6,12,0,0,0.2,pref_speed,0,StaticPolicy,FirstOrderDynamics, [], 3))
+    agents.append(Agent(1.5,0,0,0,0.2,pref_speed,0,StaticPolicy,FirstOrderDynamics, [], 4))
 
     return agents, obstacle
 
