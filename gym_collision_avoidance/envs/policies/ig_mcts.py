@@ -43,9 +43,10 @@ class ig_mcts(Policy):
         self.parallelize_sims = False
         self.mcts_cp = 1.
         self.mcts_horizon = 10
+        self.mcts_gamma = 1
 
     def set_param(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1, xdt=1,
-                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10,
+                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10, mcts_gamma=1,
                   parallelize_agents=False):
 
         self.ego_agent = ego_agent
@@ -65,28 +66,24 @@ class ig_mcts(Policy):
         self.parallelize_sims = parallelize_sims
         self.mcts_cp = mcts_cp
         self.mcts_horizon = mcts_horizon
+        self.mcts_gamma = mcts_gamma
 
         self.parallize = parallelize_agents
 
-    def find_next_action(self, obs, agents, agent_id, obstacle):
+    def find_next_action(self, obs, agents, agent_id, obstacle, new_step=True):
 
         global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
 
         dmcts_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != agent_id]
 
-        self.update_belief(dmcts_agents, global_pose, agents)
-
         comm_n = 5
         data = {"current_pose": global_pose}
 
-        self.tree = None
-
-        if self.tree is None:
+        if new_step:
+            self.update_belief(dmcts_agents, global_pose, agents, obs)
             self.tree = Tree(data, self.mcts_reward, self.mcts_avail_actions, self.mcts_state_storer,
                              self.mcts_sim_selection_func, self.mcts_avail_actions, self.mcts_sim_state_storer, comm_n,
                              robot_id=agent_id, horizon=self.mcts_horizon, c_p=self.mcts_cp)
-        else:
-            self.tree.prune_tree()
 
         # collect communications
         for j in range(len(dmcts_agents)):
@@ -94,7 +91,7 @@ class ig_mcts(Policy):
                 self.tree.receive_comms(agents[j].policy.best_paths, j)
 
         for i in range(self.Ntree):
-            self.tree.grow(nsims=self.Nsims, gamma=1, parallelize=self.parallelize_sims)
+            self.tree.grow(nsims=self.Nsims, gamma=self.mcts_gamma, parallelize=self.parallelize_sims)
             # #collect communications
             # for j in range(len(dmcts_agents)):
             #     self.tree.receive_comms(agents[j].policy.tree.send_comms(), j)
@@ -105,13 +102,13 @@ class ig_mcts(Policy):
 
         return action
 
-    def parallel_next_action(self, obs, agents, agent_id, obstacle, send_end):
-        action = self.find_next_action(obs, agents, agent_id, obstacle)
+    def parallel_next_action(self, obs, agents, agent_id, obstacle, send_end, new_step=True):
+        action = self.find_next_action(obs, agents, agent_id, obstacle, new_step)
         print("This is the id of the agent", agent_id, "child process", os.getpid())
         send_end.send({"policy_obj": self, "action": action})
         send_end.close()
 
-    def update_belief(self, dmcts_agents, global_pose, agents):
+    def update_belief(self, dmcts_agents, global_pose, agents, obs):
         targets = []
         poses = []
         # Find Targets in Range and FOV (Detector Emulation)

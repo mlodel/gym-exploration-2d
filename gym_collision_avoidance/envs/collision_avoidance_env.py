@@ -291,6 +291,8 @@ class CollisionAvoidanceEnv(gym.Env):
         pipe_list = []
         parallel_agents = []
         mp_context = multiprocessing.get_context("spawn")
+
+        dmcts_agents = []
         # Agents set their action (either from external or w/ find_next_action)
         for agent_index, agent in enumerate(self.agents):
             if agent.is_done:
@@ -299,12 +301,15 @@ class CollisionAvoidanceEnv(gym.Env):
                 all_actions[agent_index, :] = agent.policy.convert_to_action(actions[agent_index])
             elif agent.policy.is_still_learning:
                 all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index,self.agents, actions)
+            elif "ig_mcts" in str(agent.policy):
+                dmcts_agents.append(agent_index)
             else:
                 dict_obs = self.observation[agent_index]
                 parallelize = agent.policy.parallize if hasattr(agent.policy, "parallize") else False
                 if parallelize:
                     recv_end, send_end = mp_context.Pipe(False)
-                    p = mp_context.Process(target=agent.policy.parallel_next_action, args=(dict_obs, self.agents, agent_index, self.obstacles, send_end))
+                    p = mp_context.Process(target=agent.policy.parallel_next_action, args=(dict_obs, self.agents,
+                                                                               agent_index, self.obstacles, send_end))
                     p.daemon = False
                     processes.append(p)
                     pipe_list.append(recv_end)
@@ -314,12 +319,15 @@ class CollisionAvoidanceEnv(gym.Env):
                     all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
 
         for i in range(len(processes)):
-
             recvd = pipe_list[i].recv()
             pipe_list[i].close()
             processes[i].join()
             self.agents[parallel_agents[i]].policy = recvd["policy_obj"]
             all_actions[parallel_agents[i], :] = recvd["action"]
+
+        dmcts_actions = self._take_action_dmcts(dmcts_agents)
+        for agent_index in dmcts_agents:
+            all_actions [agent_index, :] = dmcts_actions[agent_index]
 
         # After all agents have selected actions, run one dynamics update
         for i, agent in enumerate(self.agents):
@@ -330,6 +338,43 @@ class CollisionAvoidanceEnv(gym.Env):
             if str(agent.policy) == 'MultiAgentMPCPolicy':
                 agent.policy.update_predicted_trajectory()
 
+    def _take_action_dmcts(self, dmcts_agents):
+
+        actions = {}
+        new_step = True
+        for i in range(5):
+            processes = []
+            pipe_list = []
+            parallel_agents = []
+            mp_context = multiprocessing.get_context("spawn")
+
+            for agent_index in dmcts_agents:
+                agent = self.agents[agent_index]
+                dict_obs = self.observation[agent_index]
+                parallelize = agent.policy.parallize if hasattr(agent.policy, "parallize") else False
+                if parallelize:
+                    recv_end, send_end = mp_context.Pipe(False)
+                    p = mp_context.Process(target=agent.policy.parallel_next_action,
+                                           args=(dict_obs, self.agents, agent_index, self.obstacles,
+                                                 send_end, new_step))
+                    p.daemon = False
+                    processes.append(p)
+                    pipe_list.append(recv_end)
+                    parallel_agents.append(agent_index)
+                    p.start()
+                else:
+                    actions[agent_index] = agent.policy.find_next_action(dict_obs, self.agents, agent_index,
+                                                                                self.obstacles, new_step)
+            new_step = False
+
+            for i in range(len(processes)):
+                recvd = pipe_list[i].recv()
+                pipe_list[i].close()
+                processes[i].join()
+                self.agents[parallel_agents[i]].policy = recvd["policy_obj"]
+                actions[parallel_agents[i]] = recvd["action"]
+
+        return actions
 
     def update_top_down_map(self):
         print("Time Step: " + str(self.episode_step_number*self.dt_nominal))
