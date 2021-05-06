@@ -28,6 +28,7 @@ class ig_mcts(Policy):
         self.detect_fov = None
         self.detect_range = None
         self.DT = None
+        self.xDT = None
 
         self.ego_agent = None
 
@@ -43,7 +44,7 @@ class ig_mcts(Policy):
         self.mcts_cp = 1.
         self.mcts_horizon = 10
 
-    def set_param(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1,
+    def set_param(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1, xdt=1,
                   Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10,
                   parallelize_agents=False):
 
@@ -52,6 +53,7 @@ class ig_mcts(Policy):
         self.detect_range = detect_range
         self.detect_fov = detect_fov
         self.DT = dt
+        self.xDT = xdt
 
         # Init EDF and Target Map
         self.edfMap = edfMap(occ_map, map_res, map_size)
@@ -72,21 +74,7 @@ class ig_mcts(Policy):
 
         dmcts_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != agent_id]
 
-        targets = []
-        poses = []
-        # Find Targets in Range and FOV (Detector Emulation)
-        self.obsvd_targets = self.find_targets_in_obs(obs)
-        targets.append(self.obsvd_targets)
-        poses.append(global_pose)
-        # Get observations of other agens
-        for j in dmcts_agents:
-            other_agent_targets = agents[j].policy.obsvd_targets if agents[j].policy.obsvd_targets is not None else []
-            targets.append(other_agent_targets)
-            other_agent_pose = np.append(agents[j].pos_global_frame, agents[j].heading_global_frame)
-            poses.append(other_agent_pose)
-
-        # Update Target Map
-        self.targetMap.update(poses, targets, frame='global')
+        self.update_belief(dmcts_agents, global_pose, agents)
 
         comm_n = 5
         data = {"current_pose": global_pose}
@@ -123,6 +111,23 @@ class ig_mcts(Policy):
         send_end.send({"policy_obj": self, "action": action})
         send_end.close()
 
+    def update_belief(self, dmcts_agents, global_pose, agents):
+        targets = []
+        poses = []
+        # Find Targets in Range and FOV (Detector Emulation)
+        self.obsvd_targets = self.find_targets_in_obs(obs)
+        targets.append(self.obsvd_targets)
+        poses.append(global_pose)
+        # Get observations of other agens
+        for j in dmcts_agents:
+            other_agent_targets = agents[j].policy.obsvd_targets if agents[j].policy.obsvd_targets is not None else []
+            targets.append(other_agent_targets)
+            other_agent_pose = np.append(agents[j].pos_global_frame, agents[j].heading_global_frame)
+            poses.append(other_agent_pose)
+
+        # Update Target Map
+        self.targetMap.update(poses, targets, frame='global')
+
     def find_targets_in_obs(self, obs):
         global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
 
@@ -149,18 +154,23 @@ class ig_mcts(Policy):
         vel = np.dot(R, np.array([action[0], 0.0]))
         # First Order Dynamics for Next Pose
         dphi = action[1]
-        next_pose = pose + np.append(vel, dphi) * self.DT
-        # Check if Next Pose is within map
-        in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
-        if in_map:
-            # Check if Next Pose is Obstacle
-            edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
-            if edf_next_pose > self.ego_agent.radius + 0.1:
-                return next_pose
+        u = np.append(vel, dphi)
+        next_pose = pose
+        for i in range(self.xDT):
+            next_pose = next_pose + u * self.DT
+            # Check if Next Pose is within map
+            in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
+            if in_map:
+                # Check if Next Pose is Obstacle
+                edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
+                if edf_next_pose > self.ego_agent.radius + 0.1:
+                    continue
+                else:
+                    return None
             else:
                 return None
-        else:
-            return None
+
+        return next_pose
 
     def mcts_state_storer(self, data, parent_state, action, robot_id, root_pose=None):
         # If first call create State object
