@@ -104,7 +104,7 @@ class ig_mcts(Policy):
 
     def parallel_next_action(self, obs, agents, agent_id, obstacle, send_end, new_step=True):
         action = self.find_next_action(obs, agents, agent_id, obstacle, new_step)
-        print("This is the id of the agent", agent_id, "child process", os.getpid())
+        # print("This is the id of the agent", agent_id, "child process", os.getpid())
         send_end.send({"policy_obj": self, "action": action})
         send_end.close()
 
@@ -145,15 +145,18 @@ class ig_mcts(Policy):
         return targets
 
     def get_next_pose(self, pose, action):
-        # Get velocity vector in world frame
-        c, s = np.cos(pose[2]), np.sin(pose[2])
-        R = np.array(((c, -s), (s, c)))
-        vel = np.dot(R, np.array([action[0], 0.0]))
-        # First Order Dynamics for Next Pose
-        dphi = action[1]
-        u = np.append(vel, dphi)
+
         next_pose = pose
         for i in range(self.xDT):
+
+            # Get velocity vector in world frame
+            c, s = np.cos(next_pose[2]), np.sin(next_pose[2])
+            R = np.array(((c, -s), (s, c)))
+            vel = np.dot(R, np.array([action[0], 0.0]))
+            # First Order Dynamics for Next Pose
+            dphi = action[1]
+            u = np.append(vel, dphi)
+
             next_pose = next_pose + u * self.DT
             # Check if Next Pose is within map
             in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
@@ -234,7 +237,7 @@ class ig_mcts(Policy):
     @staticmethod
     def mcts_avail_actions(data, state, robot_id):
         vel_list = [0.0, 2.0, 4.0]
-        dphi_list = [-np.pi, 0, np.pi]
+        dphi_list = [-0.5*np.pi, 0, 0.5*np.pi]
 
         action_list = [np.array([vel, dphi]) for vel in vel_list for dphi in dphi_list]
         return action_list
