@@ -11,4 +11,4 @@ print_header "Running example python script"
 
 # Experiment
 cd $DIR
-python src/example.py
+python src/test.py

@@ -35,10 +35,15 @@ class ig_mcts(Policy):
         self.tree = None
         self.best_paths = None
         self.obsvd_targets = None
+        self.global_pose = None
+
+        self.team_obsv_cells = None
+        self.team_reward = None
 
         self.parallize = False
 
         self.Ntree = 100
+        self.Ncycles = 5
         self.Nsims = 10
         self.parallelize_sims = False
         self.mcts_cp = 1.
@@ -46,7 +51,7 @@ class ig_mcts(Policy):
         self.mcts_gamma = 1
 
     def set_param(self, ego_agent, occ_map, map_size, map_res, detect_fov, detect_range, dt=0.1, xdt=1,
-                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10, mcts_gamma=1,
+                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10, mcts_gamma=1, Ncycles=5,
                   parallelize_agents=False):
 
         self.ego_agent = ego_agent
@@ -63,6 +68,7 @@ class ig_mcts(Policy):
                                    rEmp=0.66)
         self.Nsims = Nsims
         self.Ntree = Ntree
+        self.Ncycles = Ncycles
         self.parallelize_sims = parallelize_sims
         self.mcts_cp = mcts_cp
         self.mcts_horizon = mcts_horizon
@@ -72,15 +78,14 @@ class ig_mcts(Policy):
 
     def find_next_action(self, obs, agents, agent_id, obstacle, new_step=True):
 
-        global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
+        self.global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
 
         dmcts_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != agent_id]
 
         comm_n = 5
-        data = {"current_pose": global_pose}
-
+        data = {"current_pose": self.global_pose}
         if new_step:
-            self.update_belief(dmcts_agents, global_pose, agents, obs)
+            self.update_belief(dmcts_agents, self.global_pose, agents, obs)
             self.tree = Tree(data, self.mcts_reward, self.mcts_avail_actions, self.mcts_state_storer,
                              self.mcts_sim_selection_func, self.mcts_avail_actions, self.mcts_sim_state_storer, comm_n,
                              robot_id=agent_id, horizon=self.mcts_horizon, c_p=self.mcts_cp)
@@ -99,6 +104,7 @@ class ig_mcts(Policy):
         self.best_paths = self.tree.send_comms()
 
         action = self.best_paths.X[0].action_seq[0]
+
 
         return action
 
@@ -123,7 +129,8 @@ class ig_mcts(Policy):
             poses.append(other_agent_pose)
 
         # Update Target Map
-        self.targetMap.update(poses, targets, frame='global')
+        self.team_obsv_cells = self.targetMap.update(poses, targets, frame='global')
+        self.team_reward = self.targetMap.get_reward_from_cells(self.team_obsv_cells)
 
     def find_targets_in_obs(self, obs):
         global_pose = np.append(obs['pos_global_frame'], obs['heading_global_frame'])
@@ -158,17 +165,20 @@ class ig_mcts(Policy):
             u = np.append(vel, dphi)
 
             next_pose = next_pose + u * self.DT
-            # Check if Next Pose is within map
-            in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
-            if in_map:
-                # Check if Next Pose is Obstacle
-                edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
-                if edf_next_pose > self.ego_agent.radius + 0.1:
-                    continue
+            if action[0] == 0.0:
+                continue
+            else:
+                # Check if Next Pose is within map
+                in_map = (self.targetMap.mapSize / 2 > next_pose[0:2]).all() and (next_pose[0:2] > -self.targetMap.mapSize / 2).all()
+                if in_map:
+                    # Check if Next Pose is Obstacle
+                    edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
+                    if edf_next_pose > self.ego_agent.radius + 0.1:
+                        continue
+                    else:
+                        return None
                 else:
                     return None
-            else:
-                return None
 
         return next_pose
 

@@ -173,6 +173,9 @@ class Tree:
         X = [self.graph.nodes[n]["best_rollout"] for n in top_n_nodes if "best_rollout" in self.graph.nodes[n]]
         q = [self.graph.nodes[n]["mu"] ** 2 for n in top_n_nodes if "best_rollout" in self.graph.nodes[n]]
 
+        if len(q) == 0:
+            a=1
+
         self.my_act_dist = ActionDistribution(X, q)
         return True
 
@@ -224,8 +227,7 @@ class Tree:
                                     state=new_state,
                                     stage=stage + 1
                                     )
-
-            self.graph.add_edge(start_node, len(self.graph))
+                self.graph.add_edge(start_node, len(self.graph))
         return True
 
     def _simulate(self, start_node, state, send_end=None, sema=None):

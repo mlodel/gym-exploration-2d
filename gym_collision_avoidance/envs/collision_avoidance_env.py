@@ -177,6 +177,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # - info_dict: metadata (more details) that help in training, for example
         ###############################
 
+
         if dt is None:
             dt = self.dt_nominal
 
@@ -342,7 +343,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         actions = {}
         new_step = True
-        for i in range(5):
+        n_cycles = self.agents[dmcts_agents[0]].policy.Ncycles
+        for i in range(n_cycles):
             processes = []
             pipe_list = []
             parallel_agents = []

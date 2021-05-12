@@ -84,7 +84,7 @@ class targetMap():
         return visibleCells
 
     def update(self, poses, observations, frame='global'):
-
+        obsvdCells = set()
         # Update for all agents observations
         for pose, obs in zip(poses, observations):
             c, s = np.cos(pose[2]), np.sin(pose[2])
@@ -124,6 +124,8 @@ class targetMap():
                 else:
                     rSens = self.rEmp
                 self.map[j,i] *= rSens
+            obsvdCells.update(visibleCells)
+        return obsvdCells
 
     def get_reward_from_cells(self, cells):
         cell_mi = []

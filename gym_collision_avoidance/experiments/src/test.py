@@ -9,31 +9,53 @@ from gym_collision_avoidance.envs.config import Config
 import cProfile
 import pstats
 
+import multiprocessing
+
 import tensorflow as tf
+
+import csv
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+
+
 if type(tf.contrib) != type(tf): tf.contrib._warning = None
 
+sims = [
+        # {"Ntree": 30, "mcts_cp": 0.5},
+        # {"Ntree": 30, "mcts_cp": 1.},
+        # {"Ntree": 30, "mcts_cp": 2.},
+        # {"Ntree": 60, "mcts_cp": 0.5},
+        # {"Ntree": 60, "mcts_cp": 1.},
+        # {"Ntree": 60, "mcts_cp": 2.},
+        {"Ntree": 30, "mcts_cp": 1., "Ncycles": 5},
+        {"Ntree": 30, "mcts_cp": 2., "Ncycles": 5},
+        {"Ntree": 30, "mcts_cp": 1., "Ncycles": 10},
+        {"Ntree": 30, "mcts_cp": 2., "Ncycles": 10},
+        {"Ntree": 30, "mcts_cp": 1., "Ncycles": 15},
+        {"Ntree": 30, "mcts_cp": 2., "Ncycles": 15},
+]
 
-def main():
-    '''
-    Minimum working example:
-    2 agents: 1 running external policy, 1 running GA3C-CADRL
-    '''
 
-    # Create single tf session for all experiments
-    # import tensorflow as tf
-    # tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    # tf.Session().__enter__()
+def main(sim):
+    Ntree = sim["Ntree"]
+    Ncycles = sim["Ncycles"]
+    mcts_cp = sim["mcts_cp"]
+    Nsims = 10
+
+    name = "Ntree" + str(Ntree) + "__" + "Ncycles" + str(Ncycles) + "__" + "mcts_cp" + str(mcts_cp) + "__" + "Nsims" \
+           + str(Nsims) + "__" + "horizon" + str(4) + "__xdt" + str(5) + "_"
 
     # Instantiate the environment
     env = gym.make("CollisionAvoidance-v0")
 
     # Path to Map
-    mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"
+    # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
 
     # In case you want to save plots, choose the directory
     env.set_plot_save_dir(
-        os.path.dirname(os.path.realpath(__file__)) + '/../../experiments/results/test3/')
+        os.path.dirname(os.path.realpath(__file__)) + '/../../experiments/results/' + name + '/')
 
     # env.set_static_map(mapPath)
 
@@ -44,40 +66,68 @@ def main():
 
     obs = env.reset()  # Get agents' initial observations
 
-    for i in range(3):
-        env.agents[i].policy.set_param(ego_agent=env.agents[i], occ_map=env.map, map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
+    dmcts_agents = [0,1,2]
+
+    cum_reward = [0.0]
+
+    for i in dmcts_agents:
+        env.agents[i].policy.set_param(ego_agent=env.agents[i], occ_map=env.map,
+                                       map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT), detect_fov=60.0,
                                        map_res=Config.SUBMAP_RESOLUTION, detect_range=5.0,
-                                       Ntree=50, Nsims=1, parallelize_sims=False, mcts_cp=1., mcts_horizon=3,
-                                       parallelize_agents=True, dt=0.1, xdt=5, mcts_gamma=0.9)
+                                       Ntree=Ntree, Nsims=Nsims, parallelize_sims=False, mcts_cp=mcts_cp, mcts_horizon=4,
+                                       parallelize_agents=False, dt=0.1, xdt=5, mcts_gamma=0.95, Ncycles=Ncycles)
+
+    profiler = cProfile.Profile()
+    profiler.enable()
 
     # Repeatedly send actions to the environment based on agents' observations
-    num_steps = 10
+    num_steps = 300
     for i in range(num_steps):
-
-        # Query the external agents' policies
-        # e.g., actions[0] = external_policy(dict_obs[0])
         actions = {}
-        # actions[0] = np.array([0., 0.0])
-
-        # Internal agents (running a pre-learned policy defined in envs/policies)
-        # will automatically query their policy during env.step
-        # ==> no need to supply actions for internal agents here
-
         # Run a simulation step (check for collisions, move sim agents)
         obs, rewards, game_over, which_agents_done = env.step(actions)
+
+        cum_reward.append( env.agents[0].policy.team_reward + cum_reward[-1] )
 
         if game_over:
             print("All agents finished!")
             break
     env.reset()
 
-    return True
+    with open(
+        os.path.dirname(os.path.realpath(__file__)) + '/../results/' + name + '/rewards.csv', 'w+', newline='') as myfile:
+        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        wr.writerow(cum_reward)
+
+    profiler.disable()
+    stats = pstats.Stats(profiler)
+    stats.dump_stats(os.path.dirname(os.path.realpath(__file__)) + '/../results/' + name + '/stats.prof')
+
+    return cum_reward, name
 
 
 if __name__ == '__main__':
-    profiler = cProfile.Profile()
-    profiler.enable()
-    main()
-    profiler.disable()
-    stats = pstats.Stats(profiler)
-    stats.dump_stats('../results/test3/stats.prof')
+    mp_context = multiprocessing.get_context("spawn")
+    pool = mp_context.Pool(processes=6)
+    results = pool.map(main, sims)
+    # results = []
+    # for i in range(len(sims)):
+    #     results.append(main(sims[i]))
+
+    fig = plt.figure()
+    plt.rc('font', size=10)
+    fig.set_size_inches(10, 5)
+    ax = fig.add_subplot(111)
+    for rewards,name in results:
+        ax.plot(rewards, label=name)
+    ax.set_xlabel('timesteps')
+    ax.set_ylabel('cum. rewards [bits]')
+
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.legend()
+    fig.tight_layout()
+
+    dateObj = datetime.now()
+    timestamp = dateObj.strftime("%Y%m%d_%H%M%S")
+    fig.savefig(os.path.dirname(os.path.realpath(__file__)) + '/../results/__compare/' + timestamp + ".png")
