@@ -282,11 +282,6 @@ class CollisionAvoidanceEnv(gym.Env):
         num_actions_per_agent = 2  # speed, delta heading angle
         all_actions = np.zeros((len(self.agents), num_actions_per_agent), dtype=np.float32)
 
-        processes = []
-        pipe_list = []
-        parallel_agents = []
-        mp_context = multiprocessing.get_context("spawn")
-
         dmcts_agents = []
         # Agents set their action (either from external or w/ find_next_action)
         for agent_index, agent in enumerate(self.agents):
@@ -300,25 +295,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 dmcts_agents.append(agent_index)
             else:
                 dict_obs = self.observation[agent_index]
-                parallelize = agent.policy.parallize if hasattr(agent.policy, "parallize") else False
-                if parallelize:
-                    recv_end, send_end = mp_context.Pipe(False)
-                    p = mp_context.Process(target=agent.policy.parallel_next_action, args=(dict_obs, self.agents,
-                                                                               agent_index, self.obstacles, send_end))
-                    p.daemon = False
-                    processes.append(p)
-                    pipe_list.append(recv_end)
-                    parallel_agents.append(agent_index)
-                    p.start()
-                else:
-                    all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
-
-        for i in range(len(processes)):
-            recvd = pipe_list[i].recv()
-            pipe_list[i].close()
-            processes[i].join()
-            self.agents[parallel_agents[i]].policy = recvd["policy_obj"]
-            all_actions[parallel_agents[i], :] = recvd["action"]
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles) #obstacle is added by Sant
 
         dmcts_actions = self._take_action_dmcts(dmcts_agents)
         for agent_index in dmcts_agents:
@@ -553,6 +530,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 # if gets close to goal
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
+
+                if hasattr(agent.policy, "targetMap"):
+                    ig_reward = agent.policy.targetMap.get_reward_from_pose(np.append(agent.pos_global_frame,
+                                                                                      agent.heading_global_frame))
+                    rewards[i] += ig_reward
 
         rewards = np.clip(rewards, self.min_possible_reward,
                           self.max_possible_reward)/(self.max_possible_reward - self.min_possible_reward)
