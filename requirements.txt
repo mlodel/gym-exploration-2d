@@ -19,3 +19,4 @@ pypoman
 imutils
 pytorch-lightning
 pykalman
+networkx
