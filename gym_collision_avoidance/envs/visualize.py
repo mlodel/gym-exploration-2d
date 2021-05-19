@@ -49,29 +49,27 @@ def get_plot_save_dir(plot_save_dir, plot_policy_name, agents=None):
     base_fig_name = "{test_case}_{policy}_{num_agents}agents{step}.{extension}"
     return plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir
 
-
 def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_case_index=0, agents=None):
-    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(
-        plot_save_dir, plot_policy_name, agents)
+    plot_save_dir, plot_policy_name, base_fig_name, collision_plot_dir, deadlock_plot_dir = get_plot_save_dir(plot_save_dir, plot_policy_name, agents)
 
     if not os.path.exists(plot_save_dir):
         os.makedirs(plot_save_dir)
 
     # Load all images of the current episode (each animation)
     fig_name = base_fig_name.format(
-        policy=plot_policy_name,
-        num_agents=num_agents,
-        test_case=str(test_case_index).zfill(3),
-        step="_*",
-        extension='png')
+            policy=plot_policy_name,
+            num_agents = num_agents,
+            test_case = str(test_case_index).zfill(3),
+            step="_*",
+            extension='png')
     last_fig_name = base_fig_name.format(
-        policy=plot_policy_name,
-        num_agents=num_agents,
-        test_case=str(test_case_index).zfill(3),
-        step="",
-        extension='png')
-    all_filenames = plot_save_dir + fig_name
-    last_filename = plot_save_dir + last_fig_name
+            policy=plot_policy_name,
+            num_agents = num_agents,
+            test_case = str(test_case_index).zfill(3),
+            step="",
+            extension='png')
+    all_filenames = plot_save_dir+fig_name
+    last_filename = plot_save_dir+last_fig_name
 
     # Dump all those images into a gif (sorted by timestep)
     filenames = glob.glob(all_filenames)
@@ -85,20 +83,19 @@ def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_
 
     # Save the gif in a new animations sub-folder
     animation_filename = base_fig_name.format(
-        policy=plot_policy_name,
-        num_agents=num_agents,
-        test_case=str(test_case_index).zfill(3),
-        step="",
-        extension='gif')
-    animation_save_dir = plot_save_dir + "animations/"
+            policy=plot_policy_name,
+            num_agents = num_agents,
+            test_case = str(test_case_index).zfill(3),
+            step="",
+            extension='gif')
+    animation_save_dir = plot_save_dir+"animations/"
     os.makedirs(animation_save_dir, exist_ok=True)
-    animation_filename = animation_save_dir + animation_filename
+    animation_filename = animation_save_dir+animation_filename
     imageio.mimsave(animation_filename, images)
 
     # convert .gif to .mp4
-    # clip = mp.VideoFileClip(animation_filename)
-    # clip.write_videofile(animation_filename[:-4]+".mp4")
-
+    #clip = mp.VideoFileClip(animation_filename)
+    #clip.write_videofile(animation_filename[:-4]+".mp4")
 
 def plot_episode(agents, obstacles, in_evaluate_mode,
                  env_map=None, test_case_index=0, env_id=0,

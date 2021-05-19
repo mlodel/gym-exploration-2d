@@ -33,12 +33,14 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
-# from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-# from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
-# from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-# from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
-# from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
+from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
+from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 #from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
@@ -47,7 +49,7 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import Unicycl
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
 from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
-# from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
+from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OtherAgentsStatesSensor import OtherAgentsStatesSensor
 from gym_collision_avoidance.envs.config import Config
@@ -169,7 +171,7 @@ def is_shape_valid(new_corners, obstacle):
             return False
     return True
 
-def go_to_goal(test_case_index, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):
+def go_to_goal(test_case_index, agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
     # Swap x-axis
@@ -185,7 +187,7 @@ def go_to_goal(test_case_index, agents_policy=RVOPolicy, agents_dynamics=Unicycl
               ]
     return agents
 
-def get_train_cases(test_case_index, agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):
+def get_train_cases(test_case_index, agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[]):
     pref_speed = 1.0
     radius = 0.5
     # Swap x-axis
@@ -542,7 +544,7 @@ def agents_swap(number_of_agents=2, agents_policy=RVOPolicy, agents_dynamics=Ext
 
     return agents
 
-def single_agents_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
+def single_agents_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
     print("single_agents_swap")
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -625,7 +627,7 @@ def single_agents_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agen
 
     return agents, []
 
-def single_agents_random_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
+def single_agents_random_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
     print("single_agents_pairwise_swap")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -683,7 +685,7 @@ def single_agents_random_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,oth
 
     return agents, []
 
-def single_agents_random_positions(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
+def single_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
 
     print("single_agents_random_positions")
 
@@ -756,7 +758,7 @@ def single_agents_random_positions(number_of_agents=2, ego_agent_policy=RVOPolic
                                     [OtherAgentsStatesSensor], ag_id))
     return agents, []
 
-def single_corridor_scenario(number_of_agents=5, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
+def single_corridor_scenario(number_of_agents=5, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamicsMaxAcc, agents_sensors=[],seed=None):
     print("single_corridor_scenario")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -824,7 +826,7 @@ def single_corridor_scenario(number_of_agents=5, ego_agent_policy=RVOPolicy,othe
                                     [OtherAgentsStatesSensor], 2*ag_id+1))
     return agents, []
 
-def homogeneous_agents_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def homogeneous_agents_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("homogeneous_agents_swap")
     pref_speed = 1.0 #np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -911,7 +913,7 @@ def homogeneous_agents_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other
 
     return agents, []
 
-def homogeneous_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def homogeneous_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("homogeneous_agents_pairwise_swap")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -976,7 +978,7 @@ def homogeneous_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=RVOPol
 
     return agents, []
 
-def homogeneous_agents_random_positions(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def homogeneous_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
 
     print("homogeneous_agents_random_positions")
 
@@ -1059,7 +1061,7 @@ def homogeneous_agents_random_positions(number_of_agents=2, ego_agent_policy=RVO
                                 [OtherAgentsStatesSensor], 2*ag_id+1))
     return agents, []
 
-def homogeneous_corridor_scenario(number_of_agents=5, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def homogeneous_corridor_scenario(number_of_agents=5, ego_agent_policy=MPCPolicy,other_agents_policy=MPCPolicy, agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("homogeneous_corridor_scenario")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -1116,7 +1118,7 @@ def homogeneous_corridor_scenario(number_of_agents=5, ego_agent_policy=RVOPolicy
                                 [OtherAgentsStatesSensor], 2*ag_id+1))
     return agents, []
 
-def change_side(number_of_agents=2, agents_policy=RVOPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
+def change_side(number_of_agents=2, agents_policy=MPCPolicy, agents_dynamics=ExternalDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1189,7 +1191,7 @@ def change_side(number_of_agents=2, agents_policy=RVOPolicy, agents_dynamics=Ext
 
     return agents
 
-def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("train_agents_swap_circle")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -1280,7 +1282,7 @@ def train_agents_swap_circle(number_of_agents=2, ego_agent_policy=RVOPolicy,othe
 
     return agents, obstacle
 
-def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("train_agents_pairwise_swap")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -1362,7 +1364,7 @@ def train_agents_pairwise_swap(number_of_agents=2, ego_agent_policy=RVOPolicy,ot
                   [OtherAgentsStatesSensor], 2*ag_id+1,cooperation_coef))
     return agents, []
 
-def train_agents_random_positions(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def train_agents_random_positions(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     print("train_agents_random_positions")
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
@@ -1462,7 +1464,7 @@ def train_agents_random_positions(number_of_agents=2, ego_agent_policy=RVOPolicy
 
     return agents, []
 
-def pedestrian_scenario(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
+def pedestrian_scenario(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1542,7 +1544,7 @@ def pedestrian_scenario(number_of_agents=2, ego_agent_policy=RVOPolicy,other_age
 
     return agents, obstacle
 
-def dataset_scenario(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None,dataset=None):
+def dataset_scenario(number_of_agents=2, ego_agent_policy=MPCPolicy,other_agents_policy=[MPCPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[],seed=None,dataset=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -1642,7 +1644,7 @@ def dataset_scenario(number_of_agents=2, ego_agent_policy=RVOPolicy,other_agents
 
     return agents, obstacle
 
-def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=RVOPolicy, agents_dynamics=UnicycleSecondOrderEulerDynamics, agents_sensors=[]):
+def corridor_scenario(test_case_index, number_of_agents=5, agents_policy=MPCPolicy, agents_dynamics=UnicycleSecondOrderEulerDynamics, agents_sensors=[]):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -2234,7 +2236,7 @@ def get_testcase_hololens_and_ga3c_cadrl():
               # Agent(-goal_x1, goal_y1, goal_x1, -goal_y1, 0.5, 1.0, 0.5, ExternalPolicy, ExternalDynamics, [], 5)]
     return agents
 
-def agent_with_obstacle(number_of_agents=1, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     In this scenario there is an obstacle in the middle and there is 1 agent that needs to cross the room, avoiding the obstacle
     There will always be 1 other agent in the environment
@@ -2267,13 +2269,13 @@ def agent_with_obstacle(number_of_agents=1, ego_agent_policy=RVOPolicy,other_age
                         other_agents_dynamics,
                         [OtherAgentsStatesSensor], 1))
 
-    # if "Static" in str(agents[0].policy):
-    #     #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
-    #     agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    if "Static" in str(agents[0].policy):
+        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
-def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     In this scenario there is an obstacle in the middle and there is 1 agent that needs to cross the room, avoiding the obstacle
     The number_of_agents include the ego_agent. So for number_of_agents = 4, there is 1 ego_agent and 3 other_agents
@@ -2350,13 +2352,13 @@ def test_agent_with_obstacle(number_of_agents=1, ego_agent_policy=RVOPolicy,othe
                                 None, other_agents_policy, other_agents_dynamics,
                                 [OtherAgentsStatesSensor], ag_id)) #TODO: ask Bruno why this is 2*ag_id?? This errors in the MPC function
 
-    # if "Static" in str(agents[0].policy):
-    #     #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
-    #     agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    if "Static" in str(agents[0].policy):
+        #agents[0].sensors[1].static_obstacles_manager.obstacle = obstacle
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
-def train_stage_1(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def train_stage_1(number_of_agents=4, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     This is stage 1 of the training scenario.
     Square/wall shaped obstacles: [0,4]
@@ -2461,7 +2463,7 @@ def train_stage_1(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_po
 
     return agents, obstacle
 
-def train_stage_2(number_of_agents=10, ego_agent_policy=RVOPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def train_stage_2(number_of_agents=10, ego_agent_policy=MPCPolicy,other_agents_policy=[RVOPolicy], ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     This is stage 2 of the training scenario.
     Square/wall shaped obstacles: [2,10]
@@ -2571,7 +2573,7 @@ def train_stage_2(number_of_agents=10, ego_agent_policy=RVOPolicy,other_agents_p
 
     return agents, obstacle
 
-def agent_with_door(number_of_agents=4, ego_agent_policy=RVOPolicy, other_agents_policy=[RVOPolicy],ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_door(number_of_agents=4, ego_agent_policy=MPCPolicy, other_agents_policy=[RVOPolicy],ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
     In this scenario there is a opening in the middle of two obstacles (also in the middle)
     The agents are on the opposite sides of the obstacles and have to pass through the door to get to the other side
@@ -2638,7 +2640,7 @@ def agent_with_door(number_of_agents=4, ego_agent_policy=RVOPolicy, other_agents
 
     return agents, obstacle
 
-def agent_with_multiple_obstacles(number_of_agents=1, ego_agent_policy=RVOPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_multiple_obstacles(number_of_agents=1, ego_agent_policy=MPCPolicy,other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     '''
         In this scenario there are multiple obstacles in the environment
         other_agents = [2-number_of_agents]
@@ -2772,7 +2774,7 @@ def only_two_agents(number_of_agents=4, ego_agent_policy=RVOPolicy,other_agents_
 
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
-    # agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
@@ -2838,7 +2840,7 @@ def only_two_agents_with_obstacle(number_of_agents=4, ego_agent_policy=RVOPolicy
 
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
-    # agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    agents[0].policy.static_obstacles_manager.obstacle = obstacle
     #agents[1].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
@@ -2924,11 +2926,11 @@ def agent_with_corridor(number_of_agents=4, ego_agent_policy=RVOPolicy,other_age
 
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
-    # agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
 
-def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=RVOPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -3012,12 +3014,12 @@ def agent_with_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=RVOPo
 
         agents[ag_id].end_condition = ec._corridor_check_if_at_goal
 
-    # agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
 
     return agents, obstacle
 
-def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=RVOPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -3027,18 +3029,18 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
-    obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
-    obstacle.extend([obstacle_1, obstacle_2])
+    #obstacle_1 = [(20,8), (-20, 8), (-20, 5), (20, 5)]
+    #obstacle_2 = [(20, -5), (-20, -5), (-20, -8), (20, -8)]
+    #obstacle.extend([obstacle_1, obstacle_2])
 
     # Size of square
     size_square = np.random.uniform(2, 4)
     # Upper x,y value square
-    x_v_up = 2#np.random.uniform(-4,4)
-    y_v_up = 2#np.random.uniform(-4,4)
+    x_v_up = np.random.uniform(-2,2)
+    y_v_up = np.random.uniform(-2,2)
     # Lower x,y value of square
-    x_v_low = x_v_up - size_square
-    y_v_low = y_v_up - size_square
+    x_v_low = x_v_up - np.random.uniform(2, 4)
+    y_v_low = y_v_up - np.random.uniform(2, 4)
     obstacle_corners = [(x_v_up, y_v_up), (x_v_low, y_v_up), (x_v_low, y_v_low), (x_v_up, y_v_low)]
     obstacle.append(obstacle_corners)
 
@@ -3046,29 +3048,35 @@ def single_agent_in_a_corridor_with_obstacle(number_of_agents=5, ego_agent_polic
     goal_positions_list = []
 
     sign = random.choice((-1,1))
-    x0_agent_1 = sign*np.random.uniform(7.0, 12.0)
-    y0_agent_1 = np.random.uniform(-4, 4)
+    x0_agent_1 = random.choice((-1,1))*np.random.uniform(-6.0, 6.0)
+    y0_agent_1 = random.choice((-1,1))*np.random.uniform(-6, 6)
     goal_x_1 = -x0_agent_1
-    goal_y_1 = y0_agent_1
+    goal_y_1 = -y0_agent_1
     ini_positions_list.append(np.array([x0_agent_1, y0_agent_1]))
     goal_positions_list.append(np.array([goal_x_1, goal_y_1]))
 
     agents.append(Agent(ini_positions_list[0][0], ini_positions_list[0][1],
                        goal_positions_list[0][0], goal_positions_list[0][1], radius, pref_speed,
                        None, ego_agent_policy, ego_agent_dynamics,
-                       [LaserScanSensor], 0))
+                       [OtherAgentsStatesSensor], 0))
 
-
+    # Addin other RVO Agent
+    agents.append(Agent(goal_positions_list[0][0], goal_positions_list[0][1],
+                       ini_positions_list[0][0], ini_positions_list[0][1], radius, pref_speed,
+                       None, other_agents_policy, ego_agent_dynamics,
+                       [OtherAgentsStatesSensor], 0))
 
     agents[0].end_condition = ec._corridor_check_if_at_goal
 
-    # agents[0].policy.static_obstacles_manager.obstacle = obstacle
-
+    try:
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+    except:
+        "Obstacle Manager is missing"
 
     return agents, obstacle
 
 
-def agent_with_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolicy, other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+def agent_with_crossing(number_of_agents=1, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics,other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0#np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
@@ -3137,7 +3145,7 @@ def agent_with_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolic
     return agents, obstacle
 
 
-def agent_with_hallway(number_of_agents=6, ego_agent_policy=RVOPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics,agents_sensors=[], seed=None, obstacle=None):
+def agent_with_hallway(number_of_agents=6, ego_agent_policy=MPCPolicy, other_agents_policy=RVOPolicy, ego_agent_dynamics=FirstOrderDynamics, other_agents_dynamics=UnicycleDynamics,agents_sensors=[], seed=None, obstacle=None):
     pref_speed = 1.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5# np.random.uniform(0.5, 0.5)
     agents = []
