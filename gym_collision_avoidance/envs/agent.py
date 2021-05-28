@@ -7,7 +7,8 @@ import math
 
 class Agent(object):
     def __init__(self, start_x, start_y, goal_x, goal_y, radius,
-                 pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 1.0):
+                 pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 1.0,
+                 ig_model=None):
 
         if policy =="GA3CCADRLPolicy":
             self.policy = "GA3CCADRLPolicy"
@@ -16,6 +17,11 @@ class Agent(object):
 
         self.dynamics_model = dynamics_model(self)
         self.sensors = [sensor() for sensor in sensors]
+
+        if ig_model is not None:
+            self.ig_model = ig_model(self)
+        else:
+            self.ig_model = None
 
         # Global Frame states
         self.pos_global_frame = np.array([start_x, start_y], dtype='float64')

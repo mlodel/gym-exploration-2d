@@ -10,7 +10,13 @@ runs = (
     "Ntree30__Ncycles10__mcts_cp1.0__horizon4__xdt5_",
     "Ntree30__Ncycles10__mcts_cp2.0__horizon4__xdt5_",
     "Ntree30__Ncycles15__mcts_cp1.0__horizon4__xdt5_",
-    "Ntree30__Ncycles15__mcts_cp2.0__horizon4__xdt5_"
+    "Ntree30__Ncycles15__mcts_cp2.0__horizon4__xdt5_",
+    "Ntree30__Ncycles5__mcts_cp1.0__Nsims10__horizon4__xdt5_",
+    "Ntree30__Ncycles5__mcts_cp2.0__Nsims10__horizon4__xdt5_",
+    "Ntree30__Ncycles10__mcts_cp1.0__Nsims10__horizon4__xdt5_",
+    "Ntree30__Ncycles10__mcts_cp2.0__Nsims10__horizon4__xdt5_",
+    "Ntree30__Ncycles15__mcts_cp1.0__Nsims10__horizon4__xdt5_",
+    "Ntree30__Ncycles15__mcts_cp2.0__Nsims10__horizon4__xdt5_",
 
 )
 

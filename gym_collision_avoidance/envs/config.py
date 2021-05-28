@@ -88,9 +88,12 @@ class Config:
     # STATIC MAP
     MAP_WIDTH = 30  # Meters
     MAP_HEIGHT = 30  # Meters
+    MAP_WIDTH_PXL = int(MAP_WIDTH/SUBMAP_RESOLUTION)
+    MAP_HEIGHT_PXL = int(MAP_HEIGHT/SUBMAP_RESOLUTION)
+
 
     SCENARIOS_FOR_TRAINING = [
-        "IG_agent_crossing"]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+        "IG_single_agent_crossing"]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
 
     # Angular Map
     NUM_OF_SLICES = 16
@@ -215,9 +218,17 @@ class Config:
             'size': 1,
             'bounds': [0., 1.],
             'attr': 'get_agent_data_equiv("policy.str", "learning")'
-        }
+        },
+        'target_map': {
+            'dtype': np.float32,
+            'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.targetMap.map',
+            'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
+            'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
+        },
     }
-    MEAN_OBS = {};
+    MEAN_OBS = {}
     STD_OBS = {}
     for state in STATES_IN_OBS:
         if 'mean' in STATE_INFO_DICT[state]:
