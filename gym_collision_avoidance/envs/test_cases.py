@@ -34,14 +34,15 @@ from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolic
 from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
-from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
+from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
+# from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
 from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
-from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
+# from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 # from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
@@ -50,7 +51,7 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import Unicycl
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
 from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
-from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
+# from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.sensors.OtherAgentsStatesSensor import OtherAgentsStatesSensor
 from gym_collision_avoidance.envs.config import Config
@@ -85,7 +86,7 @@ policy_train_dict = {
 def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
                              other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
-    pref_speed = 1.0  # np.random.uniform(1.0, 0.5)
+    pref_speed = 4.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
     # if seed:
@@ -98,14 +99,19 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperative
     obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
     obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
     obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
-    obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4])
+    obstacle_5 = [(-14.5, 15), (-15, 15), (-15, -15), (-14.5, -15)]
+    obstacle_6 = [(14.5, 15), (15, 15), (15, -15), (14.5, -15)]
+    obstacle_7 = [(-15, 14.5), (-15, 15), (15, 15), (15, 14.5)]
+    obstacle_8 = [(-15, -14.5), (-15, -15), (15, -15), (15, -14.5)]
+
+    obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
-    agents.append(Agent(-5, 0, 16, 0, radius, pref_speed, 0, NonCooperativePolicy, FirstOrderDynamics,
+    agents.append(Agent(-4, 0, -6, -12, radius, pref_speed, 0, MPCRLStaticObsPolicy, FirstOrderDynamics,
                         [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
-
+    # agents[0].policy.is_still_learning = False
     # target agents
-    agents.append(Agent(6, 12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
+    agents.append(Agent(0, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
     agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
 
 

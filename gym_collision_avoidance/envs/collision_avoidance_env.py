@@ -30,6 +30,8 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynam
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
+
+
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCRLPolicy import SecondOrderMPCRLPolicy
@@ -82,7 +84,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "SecondOrderMPCRLPolicy"
+        self.ego_policy = "RVOPolicy"
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
@@ -206,7 +208,7 @@ class CollisionAvoidanceEnv(gym.Env):
                          perturbed_obs=self.perturbed_obs,
                          show=Config.SHOW_EPISODE_PLOTS,
                          save=True,
-                         targetMap=self.agents[0].policy.targetMap)
+                         targetMap=self.agents[0].ig_model.targetMap)
 
         # Check which agents' games are finished (at goal/collided/out of time)
         which_agents_done, game_over = self._check_which_agents_done()
@@ -233,7 +235,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def reset(self):
         if self.agents:
-            agent0_targetmap = self.agents[0].policy.targetMap
+            agent0_targetmap = self.agents[0].ig_model.targetMap
         else:
             agent0_targetmap = None
 
@@ -282,7 +284,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents), 1, Config.FORCES_N, 6))
+            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
             for ag_id, agent in enumerate(self.agents):
                 for t in range(Config.FORCES_N):
                     self.predicted_trajectory[ag_id, t,
@@ -310,10 +312,10 @@ class CollisionAvoidanceEnv(gym.Env):
                 dmcts_agents.append(agent_index)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index,
-                                                                            self.obstacles)  # obstacle is added by Sant
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index)
 
-        dmcts_actions = self._take_action_dmcts(dmcts_agents)
+        if len(dmcts_agents) > 0:
+            dmcts_actions = self._take_action_dmcts(dmcts_agents)
         for agent_index in dmcts_agents:
             all_actions[agent_index, :] = dmcts_actions[agent_index]
 
@@ -747,7 +749,7 @@ class CollisionAvoidanceEnv(gym.Env):
             agent.sense(self.agents, i, self.map)
 
         # IG Agents update their models
-        for i,agent in enumerate(self.agents):
+        for i, agent in enumerate(self.agents):
             if agent.ig_model is not None:
                 agent.ig_model.update(self.agents)
 

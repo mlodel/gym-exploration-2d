@@ -22,12 +22,12 @@ class ig_agent():
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
 
         self.detect_range = detect_range
-        self.detect_fov = detect_fov
+        self.detect_fov = detect_fov * np.pi / 180
 
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 5,
-                                   sensFOV=self.detect_fov * np.pi / 180, sensRange=self.detect_range, rOcc=1.5,
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=1.5,
                                    rEmp=0.66)
 
     def update(self, agents):

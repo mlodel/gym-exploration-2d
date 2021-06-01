@@ -41,9 +41,11 @@ class Map():
         # for a single [px, py] -> [gx, gy]
         gx = int(np.floor(self.origin_coords[0]-pos[1]/self.grid_cell_size))
         gy = int(np.floor(self.origin_coords[1]+pos[0]/self.grid_cell_size))
+        gx = np.clip(gx, 0, self.dims[0]-1)
+        gy = np.clip(gy, 0, self.dims[1]-1)
         grid_coords = np.array([gx, gy])
         #in_map = gx >= 0 and gy >= 0 and gx < self.map.shape[0] and gy < self.map.shape[1]
-        in_map = gx >= 0 and gy >= 0 and gx < self.dims[0] and gy < self.dims[1] # replaced self.map.shape[0] with self.dims[0]
+        in_map = 0 <= gx < self.dims[0] and gy >= 0 and gy < self.dims[1] # replaced self.map.shape[0] with self.dims[0]
         return grid_coords, in_map
 
     def world_coordinates_to_map_indices_vec(self, pos):
@@ -118,8 +120,8 @@ class Map():
             start_idx, _ = self.world_coordinates_to_map_indices(obs[1])
             end_idx, _ = self.world_coordinates_to_map_indices(obs[3])
 
-            for ii in range(start_idx[0],(end_idx[0]+1),1):
-                for jj in range(start_idx[1],(end_idx[1]+1),1):
+            for ii in range(start_idx[0],(end_idx[0]+1),int(np.sign((end_idx[0]+1) - start_idx[0]))):
+                for jj in range(start_idx[1],(end_idx[1]+1),int(np.sign((end_idx[1]+1) - start_idx[1]))):
                     occupancy_grid[ii, jj] = 1
 
             '''

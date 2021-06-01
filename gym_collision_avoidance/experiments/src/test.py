@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 if type(tf.contrib) != type(tf): tf.contrib._warning = None
 
 
-def main(sim):
+def main():
     name = 'test'
     # Instantiate the environment
     env = gym.make("CollisionAvoidance-v0")
@@ -48,7 +48,7 @@ def main(sim):
     profiler.enable()
 
     # Repeatedly send actions to the environment based on agents' observations
-    num_steps = 300
+    num_steps = 50
     for i in range(num_steps):
         actions = {}
         # Run a simulation step (check for collisions, move sim agents)
