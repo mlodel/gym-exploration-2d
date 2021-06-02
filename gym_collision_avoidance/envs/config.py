@@ -9,7 +9,7 @@ class Config:
     ACTION_SPACE_TYPE = continuous
 
     ANIMATE_EPISODES = True
-    SHOW_EPISODE_PLOTS = False
+    SHOW_EPISODE_PLOTS = True
     SAVE_EPISODE_PLOTS = True
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
     PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -100,7 +100,7 @@ class Config:
     MAX_RANGE = 6
 
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net

@@ -19,6 +19,8 @@ class ig_agent():
 
         self.host_agent = host_agent
 
+        self.greedy_goal = None
+
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
 
         self.detect_range = detect_range
@@ -77,3 +79,34 @@ class ig_agent():
                     targets.append(other_agent[0:2] + global_pose[0:2])
 
         return targets
+
+    def get_greedy_goal(self, pose, max_dist, min_dist=0.0, Nsamples=30):
+        # Generate candidate goals in polar coordinates + yaw angle
+        candidates_polar = np.random.rand(Nsamples,3)
+        # Scale radius
+        candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist
+        # Scale angle
+        candidates_polar[:,1] = 2*np.pi * candidates_polar[:,1] - np.pi
+        # Scale heading angle
+        candidates_polar[:,2] = 2*np.pi * candidates_polar[:,2] - np.pi
+
+        # Convert to xy
+        candidates = np.zeros(candidates_polar.shape)
+        candidates[:,0] = candidates_polar[:,0] * np.cos(candidates_polar[:,1])
+        candidates[:,1] = candidates_polar[:,0] * np.sin(candidates_polar[:,1])
+        candidates[:,2] = candidates_polar[:,2]
+
+        best_cand_idx = None
+        max_reward = 0
+
+        for i in range(Nsamples):
+
+            reward = self.targetMap.get_reward_from_pose(candidates[i,:])
+
+            if reward > max_reward:
+                max_reward = reward
+                best_cand_idx = i
+
+        self.greedy_goal = candidates[best_cand_idx, :]
+
+        return self.greedy_goal
