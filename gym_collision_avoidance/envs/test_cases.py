@@ -35,6 +35,7 @@ from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
+from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
@@ -107,11 +108,11 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperative
     obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
-    agents.append(Agent(-4, 0, -6, -12, radius, pref_speed, 0, MPCRLStaticObsPolicy, FirstOrderDynamics,
+    agents.append(Agent(0, 0, 10, 0, radius, pref_speed, 0, MPCPolicy, FirstOrderDynamics,
                         [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
     # agents[0].policy.is_still_learning = False
-    # target agents
-    agents.append(Agent(0, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
+    # target agent
+    agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
     agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
 
 

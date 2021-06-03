@@ -266,7 +266,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.SUBMAP_RESOLUTION,
-                                          detect_fov=361.0, detect_range=5.0)
+                                          detect_fov=360.0, detect_range=5.0)
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -312,7 +312,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 dmcts_agents.append(agent_index)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index)
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles)
 
         if len(dmcts_agents) > 0:
             dmcts_actions = self._take_action_dmcts(dmcts_agents)

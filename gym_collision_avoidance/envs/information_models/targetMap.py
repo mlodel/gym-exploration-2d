@@ -46,9 +46,16 @@ class targetMap():
         phi = pose[2]
         ## Get rectangular map section to be updated
         # FOV center, left, right limiting point
-        center  = pose[0:2] + self.sensRange * np.array([ np.cos(phi), np.sin(phi) ])
-        left    = pose[0:2] + self.sensRange * np.array([ np.cos(phi + self.sensFOV), np.sin(phi + self.sensFOV) ])
-        right   = pose[0:2] + self.sensRange * np.array([ np.cos(phi - self.sensFOV), np.sin(phi - self.sensFOV) ])
+        if self.sensFOV <= np.pi:
+            left    = pose[0:2] + self.sensRange * np.array([ np.cos(phi + self.sensFOV/2), np.sin(phi + self.sensFOV/2) ])
+            right   = pose[0:2] + self.sensRange * np.array([ np.cos(phi - self.sensFOV/2), np.sin(phi - self.sensFOV/2) ])
+            center = pose[0:2] + self.sensRange * np.array([np.cos(phi), np.sin(phi)])
+            posepos = pose[0:2]
+        else:
+            left = pose[0:2] + self.sensRange * np.array([ np.cos(phi + np.pi/4), np.sin(phi + np.pi/4) ])
+            right = pose[0:2] + self.sensRange * np.array([np.cos(phi - np.pi / 4), np.sin(phi - np.pi / 4)])
+            center = pose[0:2] + self.sensRange * np.array([np.cos(phi + 3*np.pi / 4), np.sin(phi + 3*np.pi / 4)])
+            posepos = pose[0:2] + self.sensRange * np.array([np.cos(phi - 3*np.pi / 4), np.sin(phi - 3*np.pi / 4)])
         # Check if in Map Limits
         center = self.get_pos_in_map_lims(center)
         left = self.get_pos_in_map_lims(left)
@@ -56,7 +63,7 @@ class targetMap():
 
         # Find Cell indices of pose, center, left, right
         limCellsX, limCellsY = np.zeros(4).astype(int), np.zeros(4).astype(int)
-        limCellsX[0], limCellsY[0] = self.getCellsFromPose(pose) 
+        limCellsX[0], limCellsY[0] = self.getCellsFromPose(posepos)
         limCellsX[1], limCellsY[1] = self.getCellsFromPose(center)
         limCellsX[2], limCellsY[2] = self.getCellsFromPose(left)
         limCellsX[3], limCellsY[3] = self.getCellsFromPose(right)
@@ -76,7 +83,7 @@ class targetMap():
                 r = np.dot(R, np.asarray(cellPos - pose[0:2]))
                 dphi = np.arctan2(r[1], r[0])
                 r_norm = np.sqrt(r[0]**2 + r[1]**2)
-                if r_norm < self.sensRange and abs(dphi) < self.sensFOV/2:
+                if r_norm < self.sensRange and abs(dphi) <= self.sensFOV/2:
                     visible = self.edfMapObj.checkVisibility(pose, cellPos)
                     if visible:
                         visibleCells.add((i,j))
