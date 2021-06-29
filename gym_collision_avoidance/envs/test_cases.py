@@ -37,12 +37,15 @@ from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
-from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
-from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
+from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
+from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
+
+# from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
+# from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
+# from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 # from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
-from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
-from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
+# from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
+# from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
 # from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
 # from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
@@ -83,6 +86,19 @@ policy_train_dict = {
     '1': GA3CCADRLPolicy
 }
 
+def IG_single_agent():
+    pref_speed = 4.0  # np.random.uniform(1.0, 0.5)
+    radius = 0.5  # np.random.uniform(0.5, 0.5)
+    agents = []
+
+    # Corridor scenario
+    obstacle = []
+
+    # ego agent
+    agents.append(Agent(0, 0, 0, 10, radius, pref_speed, 0, MPCStaticObsPolicy, FirstOrderDynamics,
+                        [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
+
+    return agents, obstacle
 
 def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
@@ -108,15 +124,44 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperative
     obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
-    agents.append(Agent(0, 0, 10, 0, radius, pref_speed, 0, MPCPolicy, FirstOrderDynamics,
+    agents.append(Agent(0, 0, 15, 15, radius, pref_speed, 0, MPC_IG_Policy, UnicycleSecondOrderEulerDynamics,
                         [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
-    # agents[0].policy.is_still_learning = False
     # target agent
-    agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
-    agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
+    agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
+    agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))
+    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
+    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
+    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 5))
+    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 6))
 
 
-    if "MPCRLStaticObsPolicy" == str(agents[0].policy):
+    if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
+            or "MPC_IG_Policy" == str(agents[0].policy):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+
+    return agents, obstacle
+
+def test_scenario(number_of_agents=1, ego_agent_policy=NonCooperativePolicy,
+                             other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
+                             other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
+    pref_speed = 4.0  # np.random.uniform(1.0, 0.5)
+    radius = 0.5  # np.random.uniform(0.5, 0.5)
+    agents = []
+
+    obstacle = []
+
+    # ego agent
+    agents.append(Agent(0, 0, 10, 10, radius, pref_speed, 0, MPCStaticObsPolicy, UnicycleSecondOrderEulerDynamics,
+                        [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
+
+    agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
+    agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))
+    agents.append(Agent(11, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
+    agents.append(Agent(-5, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
+    agents.append(Agent(12, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 5))
+    agents.append(Agent(-4, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 6))
+
+    if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle

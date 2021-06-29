@@ -52,10 +52,10 @@ class targetMap():
             center = pose[0:2] + self.sensRange * np.array([np.cos(phi), np.sin(phi)])
             posepos = pose[0:2]
         else:
-            left = pose[0:2] + self.sensRange * np.array([ np.cos(phi + np.pi/4), np.sin(phi + np.pi/4) ])
-            right = pose[0:2] + self.sensRange * np.array([np.cos(phi - np.pi / 4), np.sin(phi - np.pi / 4)])
-            center = pose[0:2] + self.sensRange * np.array([np.cos(phi + 3*np.pi / 4), np.sin(phi + 3*np.pi / 4)])
-            posepos = pose[0:2] + self.sensRange * np.array([np.cos(phi - 3*np.pi / 4), np.sin(phi - 3*np.pi / 4)])
+            left = pose[0:2] + self.sensRange * np.array([ 1, 1 ])
+            right = pose[0:2] + self.sensRange * np.array([ 1, -1])
+            center = pose[0:2] + self.sensRange * np.array([ -1, 1 ])
+            posepos = pose[0:2] + self.sensRange * np.array([ -1, -1 ])
         # Check if in Map Limits
         center = self.get_pos_in_map_lims(center)
         left = self.get_pos_in_map_lims(left)

@@ -9,7 +9,7 @@ class Config:
     ACTION_SPACE_TYPE = continuous
 
     ANIMATE_EPISODES = True
-    SHOW_EPISODE_PLOTS = True
+    SHOW_EPISODE_PLOTS = False
     SAVE_EPISODE_PLOTS = True
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
     PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -59,7 +59,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 3.0  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 100.0  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0

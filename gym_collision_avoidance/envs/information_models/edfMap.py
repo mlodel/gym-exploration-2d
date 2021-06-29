@@ -14,9 +14,14 @@ class edfMap():
     def get_edf_value_from_pose(self,pose):
         if len(pose) > 2:
             pose = pose[0:2]
+
         xIdc = np.floor((pose[0] + self.mapSize[0] / 2) / self.cellSize)
         yIdc = np.floor((pose[1] + self.mapSize[1] / 2) / self.cellSize)
-        return self.map[int(yIdc),int(xIdc)]
+
+        if xIdc < 0 or xIdc >= self.mapSize[0]/self.cellSize or yIdc < 0 or yIdc >= self.mapSize[1]/self.cellSize:
+            return 0.0
+        else:
+            return self.map[int(yIdc),int(xIdc)]
 
     def checkVisibility(self, pose, goal):
         pose = np.asarray(pose) if 'list' in str(type(pose)) else pose

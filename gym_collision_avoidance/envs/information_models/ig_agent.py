@@ -29,8 +29,8 @@ class ig_agent():
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 5,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=1.5,
-                                   rEmp=0.66)
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=1.1,
+                                   rEmp=0.9)
 
     def update(self, agents):
 
@@ -80,33 +80,43 @@ class ig_agent():
 
         return targets
 
-    def get_greedy_goal(self, pose, max_dist, min_dist=0.0, Nsamples=30):
+    def get_greedy_goal(self, pose, max_dist=5.0, min_dist=2.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
-        candidates_polar = np.random.rand(Nsamples,3)
+        candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist
         # Scale angle
         candidates_polar[:,1] = 2*np.pi * candidates_polar[:,1] - np.pi
         # Scale heading angle
-        candidates_polar[:,2] = 2*np.pi * candidates_polar[:,2] - np.pi
+        # candidates_polar[:,2] = 2*np.pi * candidates_polar[:,2] - np.pi
 
         # Convert to xy
         candidates = np.zeros(candidates_polar.shape)
         candidates[:,0] = candidates_polar[:,0] * np.cos(candidates_polar[:,1])
         candidates[:,1] = candidates_polar[:,0] * np.sin(candidates_polar[:,1])
-        candidates[:,2] = candidates_polar[:,2]
+        # candidates[:,2] = candidates_polar[:,2]
 
         best_cand_idx = None
         max_reward = 0
 
+        if self.greedy_goal is None:
+            self.greedy_goal = pose
+
         for i in range(Nsamples):
 
-            reward = self.targetMap.get_reward_from_pose(candidates[i,:])
+            goal = np.append( candidates[i,:] + pose, 0.0)
+
+
+            # Check if Candidate Goal is Obstacle
+            edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(goal)
+            if edf_next_pose < self.host_agent.radius + 0.1:
+                continue
+            reward = self.targetMap.get_reward_from_pose(goal)
 
             if reward > max_reward:
                 max_reward = reward
                 best_cand_idx = i
 
-        self.greedy_goal = candidates[best_cand_idx, :]
+        self.greedy_goal = candidates[best_cand_idx, :] + pose
 
         return self.greedy_goal
