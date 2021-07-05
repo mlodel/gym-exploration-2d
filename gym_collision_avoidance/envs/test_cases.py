@@ -36,6 +36,8 @@ from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
 from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
+from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
+
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
@@ -100,10 +102,10 @@ def IG_single_agent():
 
     return agents, obstacle
 
-def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperativePolicy,
+def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObsIGPolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
                              other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None):
-    pref_speed = 4.0  # np.random.uniform(1.0, 0.5)
+    pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
     # if seed:
@@ -124,8 +126,8 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=NonCooperative
     obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
-    agents.append(Agent(0, 0, 15, 15, radius, pref_speed, 0, MPC_IG_Policy, UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor, LaserScanSensor], 0, ig_model=ig_agent))
+    agents.append(Agent(0, 0, 50, 0, radius, pref_speed, 0, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     # target agent
     agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
     agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))

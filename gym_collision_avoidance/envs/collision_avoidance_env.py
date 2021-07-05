@@ -84,7 +84,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "RVOPolicy"
+        self.ego_policy = "MPCRLStaticObsIGPolicy"
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
@@ -556,13 +556,15 @@ class CollisionAvoidanceEnv(gym.Env):
                 # if gets close to goal
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
-                if hasattr(agent.policy, "targetMap"):
-                    ig_reward = agent.policy.targetMap.get_reward_from_pose(np.append(agent.pos_global_frame,
-                                                                                      agent.heading_global_frame))
+                if agent.ig_model is not None:
+                    ig_reward = agent.ig_model.get_reward(agent.pos_global_frame, agent.heading_global_frame)
+                    # ig_reward = agent.policy.targetMap.get_reward_from_pose(np.append(agent.pos_global_frame,
+                    #                                                                   agent.heading_global_frame))
                     rewards[i] += ig_reward
 
-        rewards = np.clip(rewards, self.min_possible_reward,
-                          self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
+        # rewards = np.clip(rewards, self.min_possible_reward,
+        #                   self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
+
         if Config.TRAIN_SINGLE_AGENT:
             rewards = rewards[0]
         return rewards

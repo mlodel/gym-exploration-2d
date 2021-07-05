@@ -137,7 +137,7 @@ class OccupancyGridSensor(Sensor):
         # Rotate grid into direction of initial heading
         grid = grid.copy()
         rows, cols = grid.shape
-        M = cv2.getRotationMatrix2D(center=(agent_pos[1], agent_pos[0]), angle=angle, scale=1)
+        M = cv2.getRotationMatrix2D(center=(float(agent_pos[1]), float(agent_pos[0])), angle=angle, scale=1)
         grid = cv2.warpAffine(grid, M, (rows, cols))
 
         return grid

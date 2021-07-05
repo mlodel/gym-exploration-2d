@@ -44,6 +44,9 @@ class ig_agent():
         ig_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != self.host_agent.id]
         self.update_belief(ig_agents, global_pose, agents, other_agents_states)
 
+    def get_reward(self, agent_pos, agent_heading):
+        return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
+
     def update_belief(self, ig_agents, global_pose, agents, other_agents_states):
         targets = []
         poses = []

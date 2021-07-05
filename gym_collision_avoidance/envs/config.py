@@ -59,7 +59,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.75
-    MAX_TIME_RATIO = 100.0  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 5.0  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0
@@ -88,8 +88,8 @@ class Config:
     # STATIC MAP
     MAP_WIDTH = 30  # Meters
     MAP_HEIGHT = 30  # Meters
-    MAP_WIDTH_PXL = int(MAP_WIDTH/SUBMAP_RESOLUTION)
-    MAP_HEIGHT_PXL = int(MAP_HEIGHT/SUBMAP_RESOLUTION)
+    MAP_WIDTH_PXL = 60
+    MAP_HEIGHT_PXL = 60
 
 
     SCENARIOS_FOR_TRAINING = [
