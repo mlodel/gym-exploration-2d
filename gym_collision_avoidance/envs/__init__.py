@@ -1,4 +1,4 @@
-from gym_collision_avoidance.envs.collision_avoidance_env import CollisionAvoidanceEnv
+# from gym_collision_avoidance.envs.collision_avoidance_env import CollisionAvoidanceEnv
 # from gym_collision_avoidance.envs import mfe_utils
 # from gym_collision_avoidance.envs import CADRL
 

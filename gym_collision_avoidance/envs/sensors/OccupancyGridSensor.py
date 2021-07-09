@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
 
+
+
 class OccupancyGridSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
@@ -16,6 +18,9 @@ class OccupancyGridSensor(Sensor):
         self.grid_cell_size = Config.SUBMAP_RESOLUTION
         self.plot = False
         self.name = 'local_grid'
+        self.floatmap_rot = None
+        self.map = None
+        self.agent_idx = None
 
     def sense(self, agents, agent_index, top_down_map):
 
@@ -73,21 +78,28 @@ class OccupancyGridSensor(Sensor):
         ego_agent_heading = ego_agent.heading_global_frame
 
         # Get map indices of ego agent
-        ego_agent_pos_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
+        self.agent_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
 
         span_x = int(np.ceil(self.x_width))  # 60
         span_y = int(np.ceil(self.y_width))  # 60
 
+        self.map = top_down_map.map
+
+        # Expand map
+        self.expand_map()
+
         # Get submap indices around ego agent
-        start_idx_x, start_idx_y, end_idx_x, end_idx_y = top_down_map.getSubmapByIndices(ego_agent_pos_idx[0],
-                                                                                     ego_agent_pos_idx[1], span_x, span_y)
+        start_idx_x, start_idx_y, end_idx_x, end_idx_y = self.getSubmapByIndices(span_x, span_y)
+
+
 
         # Get the batch_grid with filled in values
-        float_map = top_down_map.map.astype(float)
-        float_map = self.rotate_grid_around_center(float_map, ego_agent_pos_idx, angle=-ego_agent_heading*180/np.pi)
-        batch_grid = float_map[start_idx_x:end_idx_x, start_idx_y:end_idx_y]
-
+        # float_map = self.map.astype(float)
         # Rotate grid such that it is aligned with the heading
+        self.floatmap_rot = self.rotate_grid_around_center(self.map.astype(float), angle=-ego_agent_heading*180/np.pi)
+        batch_grid = self.floatmap_rot[start_idx_y:end_idx_y, start_idx_x:end_idx_x]
+
+
         batch_grid = batch_grid.astype(bool)
 
         if self.plot:
@@ -128,30 +140,113 @@ class OccupancyGridSensor(Sensor):
         resized_og_map = og_map.copy()
         return resized_og_map
 
-    def rotate_grid_around_center(self, grid, agent_pos, angle):
+    def rotate_grid_around_center(self, grid, angle):
         """
         inputs:
           grid: numpy array (gridmap) that needs to be rotated
           angle: rotation angle in degrees
         """
+        agent_pos = self.agent_idx
+
         # Rotate grid into direction of initial heading
         grid = grid.copy()
         rows, cols = grid.shape
         M = cv2.getRotationMatrix2D(center=(float(agent_pos[1]), float(agent_pos[0])), angle=angle, scale=1)
-        grid = cv2.warpAffine(grid, M, (rows, cols))
+        grid = cv2.warpAffine(grid, M, (cols, rows), borderValue=1.0)
 
         return grid
+
+    def expand_map(self):
+
+        # submap_size = [Config.SUBMAP_WIDTH / Config.SUBMAP_RESOLUTION, Config.SUBMAP_HEIGHT / Config.SUBMAP_RESOLUTION]
+        submap_size = (np.array([Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT])).astype(int)
+        # map_size = [Config.MAP_WIDTH / Config.SUBMAP_RESOLUTION, Config.MAP_HEIGHT / Config.SUBMAP_RESOLUTION]
+        map_size = (np.array([Config.MAP_WIDTH, Config.MAP_HEIGHT]) / Config.SUBMAP_RESOLUTION).astype(int)
+
+        if self.agent_idx[1] + submap_size[0]/2 > map_size[0]:
+            trues_h = np.ones([submap_size[0] // 2, map_size[1]], bool)
+            self.map = np.r_[self.map, trues_h]
+            map_size[0] += submap_size[0] / 2
+        if self.agent_idx[0] + submap_size[1]/2 > map_size[1]:
+            trues_v = np.ones([map_size[0], submap_size[1] // 2], bool)
+            self.map = np.c_[self.map, trues_v]
+            map_size[1] += submap_size[1] / 2
+        if self.agent_idx[1] - submap_size[0]/2 < 0:
+            trues_h = np.ones([submap_size[0] // 2, map_size[1]], bool)
+            self.map = np.r_[trues_h, self.map]
+            map_size[0] += submap_size[0] / 2
+            self.agent_idx[1] += submap_size[0] / 2
+        if self.agent_idx[0] - submap_size[1]/2 < 0:
+            trues_v = np.ones([map_size[0], submap_size[1] // 2], bool)
+            self.map = np.c_[trues_v, self.map]
+            map_size[1] += submap_size[1] / 2
+            self.agent_idx[0] += submap_size[1] / 2
+
+    def getSubmapByIndices(self, span_x, span_y):
+        """
+        Extract a submap of span (span_x, span_y) around
+        center index (center_idx_x, center_idx_y)
+        """
+
+        center_idx_x = self.agent_idx[1]
+        center_idx_y = self.agent_idx[0]
+
+        # Start corner indices of the submap
+        start_idx_x = max(0, int(center_idx_x - np.floor(span_x / 2)))
+        start_idx_y = max(0, int(center_idx_y - np.floor(span_y / 2)))
+
+        # Compute end indices (assure size of submap is correct, if out pf bounds)
+        max_idx_x = self.map.shape[0] - 1
+        max_idx_y = self.map.shape[1] - 1
+
+        # End indices of the submap (this corrects for the bounds of the grid
+        end_idx_x = start_idx_x + span_x
+        if end_idx_x > max_idx_x:
+            end_idx_x = max_idx_x
+            start_idx_x = end_idx_x - span_x
+        end_idx_y = start_idx_y + span_y
+        if end_idx_y > max_idx_y:
+            end_idx_y = max_idx_y
+            start_idx_y = end_idx_y - span_y
+
+        return start_idx_x, start_idx_y, end_idx_x, end_idx_y
+
 
 if __name__ == '__main__':
     from gym_collision_avoidance.envs.Map import Map
     from gym_collision_avoidance.envs.agent import Agent
-    from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+    from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
     from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 
-    top_down_map = Map(x_width=10, y_width=10, grid_cell_size=0.1)
-    agents = [Agent(0, 3.05, 10, 10, 0.5, 1.0, 0.5, GA3CCADRLPolicy, UnicycleDynamics, [], 0)]
-    top_down_map.add_agents_to_map(agents)
+    obstacle_1 = [(10, 10), (2, 10), (2, 6), (10, 6)]
+    obstacle_5 = [(-14.5, 15), (-15, 15), (-15, -15), (-14.5, -15)]
+    obstacle_6 = [(15, 15), (14.5, 15), (14.5, -15), (15, -15)]
+    obstacle_7 = [(-15, 14.5), (-15, 15), (15, 15), (15, 14.5)]
+    obstacle_8 = [(15, -14.5), (-15, -14.5), (-15, -15), (15, -15)]
+    obstacle = []
+    obstacle.extend([obstacle_1, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+
+    top_down_map = Map(x_width=30, y_width=30, grid_cell_size=0.1, map_filename=obstacle)
+    agents = [Agent(0, 13, 10, 10, 0.5, 1.0, 0*np.pi/180, NonCooperativePolicy, UnicycleDynamics, [], 0)]
+    # top_down_map.add_agents_to_map(agents)
     og = OccupancyGridSensor()
     og_map = og.sense(agents, 0, top_down_map)
 
-    print(og_map)
+    # print(og_map)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 3, 1)
+    ax.imshow(og_map, extent=[-30, 30, -30, 30])
+    ax.scatter(0, 0, s=100, c='red', marker='o')
+    ax.arrow(0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
+              fc='yellow')  # agent poiting direction
+    pos = top_down_map.world_coordinates_to_map_indices(agents[0].pos_global_frame)
+    ax2 = fig.add_subplot(1, 3, 2)
+    ax2.imshow(og.floatmap_rot)
+    # ax2.scatter(14,0, s=10, c='red', marker='o')
+
+    ax3 = fig.add_subplot(1, 3, 3)
+    ax3.imshow(top_down_map.map)
+    # ax3.scatter(14,0, s=10, c='red', marker='o')
+
+    plt.show()

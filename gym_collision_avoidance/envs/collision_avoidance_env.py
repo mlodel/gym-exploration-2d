@@ -40,6 +40,10 @@ from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics impo
 # from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
 from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
+from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
+from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
+
+
 # from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 # from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
 # from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
@@ -84,7 +88,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "MPCRLStaticObsIGPolicy"
+        self.ego_policy = "MPCStaticObsPolicy"
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"

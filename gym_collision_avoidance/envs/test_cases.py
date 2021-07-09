@@ -114,19 +114,19 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(10, 10), (2, 10), (2, 2), (10, 2)]
-    obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
-    obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
-    obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
+    obstacle_1 = [(10, 10), (-10, 10), (-10, -10), (10, -10)]
+    # obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
+    # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
+    # obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
     obstacle_5 = [(-14.5, 15), (-15, 15), (-15, -15), (-14.5, -15)]
     obstacle_6 = [(14.5, 15), (15, 15), (15, -15), (14.5, -15)]
     obstacle_7 = [(-15, 14.5), (-15, 15), (15, 15), (15, 14.5)]
     obstacle_8 = [(-15, -14.5), (-15, -15), (15, -15), (15, -14.5)]
 
-    obstacle.extend([obstacle_1, obstacle_2, obstacle_3, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+    obstacle.extend([obstacle_1, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
-    agents.append(Agent(0, 0, 50, 0, radius, pref_speed, 0, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+    agents.append(Agent(-12, -12, 15, 15, radius, pref_speed, 0, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
                         [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     # target agent
     agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
