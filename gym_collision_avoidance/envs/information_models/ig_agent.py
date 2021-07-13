@@ -3,6 +3,10 @@ import numpy as np
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
+import time
+
+def current_milli_time():
+    return int(round(time.time() * 1000))
 
 class ig_agent():
     def __init__(self, host_agent):
@@ -21,6 +25,8 @@ class ig_agent():
 
         self.greedy_goal = None
 
+        np.random.seed(current_milli_time() - int(1.625e12))
+
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
 
         self.detect_range = detect_range
@@ -28,7 +34,7 @@ class ig_agent():
 
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
-        self.targetMap = targetMap(edf_map_obj, map_size, map_res * 5,
+        self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
                                    sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=1.1,
                                    rEmp=0.9)
 
@@ -83,8 +89,9 @@ class ig_agent():
 
         return targets
 
-    def get_greedy_goal(self, pose, max_dist=5.0, min_dist=2.0, Nsamples=30):
+    def get_greedy_goal(self, pose, max_dist=5.0, min_dist=1.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
+        np.random.seed(np.random.randint(10000))
         candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist
@@ -113,10 +120,13 @@ class ig_agent():
             # Check if Candidate Goal is Obstacle
             edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(goal)
             if edf_next_pose < self.host_agent.radius + 0.1:
-                continue
-            reward = self.targetMap.get_reward_from_pose(goal)
+                reward = 0
+            elif not self.targetMap.edfMapObj.checkVisibility(pose, goal):
+                reward = 0
+            else:
+                reward = self.targetMap.get_reward_from_pose(goal)
 
-            if reward > max_reward:
+            if reward >= max_reward:
                 max_reward = reward
                 best_cand_idx = i
 

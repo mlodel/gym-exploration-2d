@@ -114,23 +114,32 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(10, 10), (-10, 10), (-10, -10), (10, -10)]
+    obstacle_1 = [(10, 10), (-8, 10), (-8, -6), (10, -6)]
     # obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
     # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
     # obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
-    obstacle_5 = [(-14.5, 15), (-15, 15), (-15, -15), (-14.5, -15)]
-    obstacle_6 = [(14.5, 15), (15, 15), (15, -15), (14.5, -15)]
-    obstacle_7 = [(-15, 14.5), (-15, 15), (15, 15), (15, 14.5)]
-    obstacle_8 = [(-15, -14.5), (-15, -15), (15, -15), (15, -14.5)]
+    obstacle_5 = [(-14.7, 15), (-15, 15), (-15, -15), (-14.7, -15)]
+    obstacle_6 = [(15, 15), (14.7, 15), (14.7, -15), (15, -15)]
+    obstacle_7 = [(-15, 14.7), (-15, 15), (15, 15), (15, 14.7)]
+    obstacle_8 = [(15, -14.7), (-15, -14.7), (-15, -15), (15, -15)]
 
     obstacle.extend([obstacle_1, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
+    # Get random initial position
+    obstacle_margin = 0.5
+    pos_lims = (-Config.MAP_HEIGHT/2 + obstacle_margin + radius + 0.5, Config.MAP_HEIGHT/2 - obstacle_margin - radius - 0.5)
+    init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
+    init_heading = 2*np.pi * np.random.rand() - np.pi
     # ego agent
-    agents.append(Agent(-12, -12, 15, 15, radius, pref_speed, 0, ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+    agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
+                        ego_agent_policy, UnicycleSecondOrderEulerDynamics,
                         [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
+    # agents.append(Agent(0, -7, -12, -12 + 100.0, radius, pref_speed, 0.0,
+    #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     # target agent
-    agents.append(Agent(10, 0, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
-    agents.append(Agent(-6, -12, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))
+    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
+    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))
     # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
     # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
     # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 5))

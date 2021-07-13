@@ -42,7 +42,7 @@ class edfMap():
         while u < 1:
             nextPoint = (1-u)*pose + u*goal
             xIdc = int(np.floor( (nextPoint[0] + self.mapSize[0]/2) / self.cellSize ))
-            yIdc = int(np.floor( (nextPoint[1] + self.mapSize[1]/2) / self.cellSize ))
+            yIdc = int(np.floor( (-nextPoint[1] + self.mapSize[1]/2) / self.cellSize ))
             minDist = self.map[yIdc, xIdc]
 
             if minDist < thres:

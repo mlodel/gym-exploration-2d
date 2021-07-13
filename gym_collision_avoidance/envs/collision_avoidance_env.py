@@ -88,7 +88,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "MPCStaticObsPolicy"
+        self.ego_policy = "MPCRLStaticObsIGPolicy"
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
@@ -261,9 +261,16 @@ class CollisionAvoidanceEnv(gym.Env):
         self.episode_number += 1
         self.begin_episode = True
         self.episode_step_number = 0
+
         self._init_agents()
         self._init_prediction_model()
         self._init_static_map()
+        _, collision_with_wall, _, _ = self._check_for_collisions()
+        init_pos_infeas = collision_with_wall[0]
+        while init_pos_infeas:
+            self._init_agents()
+            _, collision_with_wall, _, _ = self._check_for_collisions()
+            init_pos_infeas = collision_with_wall[0]
 
         for agent in self.agents:
             if agent.ig_model is not None:
@@ -435,10 +442,13 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.number_of_agents = 6
 
             # scenario_index = np.random.randint(0,len(self.scenario))
+
             self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
                 self.number_of_agents) + ", seed=" + str(
                 self.episode_number) + ", ego_agent_policy=" + self.ego_policy +
                                                ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ", other_agents_policy=" + self.other_agents_policy + ")")
+
+
 
         if self.episode_number == 1:
             self.policies = []
@@ -561,11 +571,12 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
                 if agent.ig_model is not None:
-                    ig_reward = agent.ig_model.get_reward(agent.pos_global_frame, agent.heading_global_frame)
+                    ig_reward = agent.ig_model.team_reward
                     # ig_reward = agent.policy.targetMap.get_reward_from_pose(np.append(agent.pos_global_frame,
                     #                                                                   agent.heading_global_frame))
                     rewards[i] += ig_reward
 
+                # rewards[i] += 0.01 * agent.speed_global_frame
         # rewards = np.clip(rewards, self.min_possible_reward,
         #                   self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
 
