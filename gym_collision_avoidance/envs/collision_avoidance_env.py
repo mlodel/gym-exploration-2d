@@ -576,6 +576,18 @@ class CollisionAvoidanceEnv(gym.Env):
                     #                                                                   agent.heading_global_frame))
                     rewards[i] += ig_reward
 
+                # If subgoal position in inside an obstacle
+                """ """
+                if i == 0:
+                    [pi, pj], in_map = self.map.world_coordinates_to_map_indices(agent.policy.goal_)
+                    mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
+                    if in_map and np.any(self.map.static_map[mask]):
+                        print("Subgoal Inside Wall!")
+                        rewards[i] += -0.1
+                    elif not in_map:
+                        print("Subgoal Inside Wall!")
+                        rewards[i] += -0.1
+
                 # rewards[i] += 0.01 * agent.speed_global_frame
         # rewards = np.clip(rewards, self.min_possible_reward,
         #                   self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
