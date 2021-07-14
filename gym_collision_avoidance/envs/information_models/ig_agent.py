@@ -25,7 +25,7 @@ class ig_agent():
 
         self.greedy_goal = None
 
-        np.random.seed(current_milli_time() - int(1.625e12))
+        # np.random.seed(current_milli_time() - int(1.625e12))
 
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
 
@@ -68,8 +68,8 @@ class ig_agent():
             poses.append(other_agent_pose)
 
         # Update Target Map
-        self.team_obsv_cells = self.targetMap.update(poses, targets, frame='global')
-        self.team_reward = self.targetMap.get_reward_from_cells(self.team_obsv_cells)
+        self.team_obsv_cells, self.team_reward = self.targetMap.update(poses, targets, frame='global')
+        # self.team_reward = self.targetMap.get_reward_from_cells(self.team_obsv_cells)
 
     def find_targets_in_obs(self, other_agents_states, global_pose):
 

@@ -23,7 +23,10 @@ class targetMap():
         shape = (int(self.mapSize[1]/self.cellSize), int(self.mapSize[0]/self.cellSize))
         self.map = np.ones(shape) * prior
 
-        self.probMap = self.map / (self.map + 1)
+        p_prior = prior / (prior + 1)
+        self.probMap = np.ones(shape) * p_prior
+
+        self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) )
 
     def getCellsFromPose(self, pose):
         if len(pose) > 2:
@@ -94,6 +97,7 @@ class targetMap():
 
     def update(self, poses, observations, frame='global'):
         obsvdCells = set()
+        reward = 0
         # Update for all agents observations
         for pose, obs in zip(poses, observations):
             c, s = np.cos(pose[2]), np.sin(pose[2])
@@ -110,7 +114,6 @@ class targetMap():
                 else:
                     raise Exception("Unsupported Frame for Target Map Update")
                 detections.append(ego_pose)
-
             visibleCells = self.getVisibleCells(pose)
             for i,j in visibleCells:
                 if n_detected > 0:
@@ -132,10 +135,20 @@ class targetMap():
                         rSens = self.rEmp
                 else:
                     rSens = self.rEmp
+
+                reward += self.get_reward_from_cells([(i,j)])
                 self.map[j,i] *= rSens
+
+                # Update probabilities
+                p_cell = self.map[j,i] / (self.map[j,i] + 1)
+                self.probMap[j,i] = p_cell
+
+                # Update Entropies and obtain reward
+                # cell_entropy = -p_cell*np.log(p_cell) - (1-p_cell)*np.log(1-p_cell)
+                # reward += self.entropyMap[j,i] - cell_entropy
+                # self.entropyMap[j,i] = cell_entropy
             obsvdCells.update(visibleCells)
-        self.probMap = self.map / (self.map + 1)
-        return obsvdCells
+        return obsvdCells, reward
 
     def get_reward_from_cells(self, cells):
         cell_mi = []
