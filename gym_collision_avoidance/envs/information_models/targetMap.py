@@ -23,6 +23,8 @@ class targetMap():
         shape = (int(self.mapSize[1]/self.cellSize), int(self.mapSize[0]/self.cellSize))
         self.map = np.ones(shape) * prior
 
+        self.probMap = self.map / (self.map + 1)
+
     def getCellsFromPose(self, pose):
         if len(pose) > 2:
             pose = pose[0:2]
@@ -132,6 +134,7 @@ class targetMap():
                     rSens = self.rEmp
                 self.map[j,i] *= rSens
             obsvdCells.update(visibleCells)
+        self.probMap = self.map / (self.map + 1)
         return obsvdCells
 
     def get_reward_from_cells(self, cells):

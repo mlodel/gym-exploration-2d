@@ -192,7 +192,7 @@ class Config:
         'local_grid': {
             'dtype': np.float32,
             'size': (SUBMAP_WIDTH, SUBMAP_HEIGHT),
-            'bounds': [-np.inf, np.inf],
+            'bounds': [0.0, 1.0],
             'attr': 'get_sensor_data("local_grid")',
             'std': np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.float32),
             'mean': np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.float32),
@@ -222,8 +222,8 @@ class Config:
         'target_map': {
             'dtype': np.float32,
             'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
-            'bounds': [-np.inf, np.inf],
-            'attr': 'ig_model.targetMap.map',
+            'bounds': [0.0, 1.0],
+            'attr': 'ig_model.targetMap.probMap',
             'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
             'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
         },
