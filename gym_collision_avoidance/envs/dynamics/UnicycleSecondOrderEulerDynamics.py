@@ -8,6 +8,7 @@ class UnicycleSecondOrderEulerDynamics(Dynamics):
         Dynamics.__init__(self, agent)
         self.max_turn_rate = 3.0 # rad/s
         self.max_vel = 1.0
+        self.num_actions = 2
 
     def step(self, action, dt):
         selected_speed = np.clip(np.linalg.norm(self.agent.vel_global_frame)+action[0]*dt, 0, self.max_vel)

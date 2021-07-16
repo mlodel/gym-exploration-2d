@@ -3,10 +3,11 @@ from gym_collision_avoidance.envs.policies.Policy import Policy
 
 class StaticPolicy(Policy):
     def __init__(self):
-        Policy.__init__(self, str="Static")
+        Policy.__init__(self, str="StaticPolicy")
         pass
 
     def find_next_action(self, obs, agents, i, obstacles):
         # Static Agents do not move.
-        action = np.array([0.0, 0.0])
+
+        action = np.zeros(agents[i].dynamics_model.num_actions)
         return action

@@ -6,6 +6,7 @@ import math
 class FirstOrderDynamics(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
+        self.num_actions = 2
 
     def step(self, action, dt):
         selected_speed = action[0]

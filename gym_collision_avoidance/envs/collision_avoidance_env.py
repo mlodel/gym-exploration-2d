@@ -30,6 +30,8 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynam
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
+from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
+
 
 
 # from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
@@ -42,7 +44,7 @@ from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsP
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
 from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
 from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
-
+from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy_fasttraining import MPCRLStaticObsIGPolicy_fasttraining
 
 # from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
 # from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
@@ -307,7 +309,7 @@ class CollisionAvoidanceEnv(gym.Env):
             agent.policy.all_predicted_trajectory = self.predicted_trajectory
 
     def _take_action(self, actions, dt):
-        num_actions_per_agent = 2  # speed, delta heading angle
+        num_actions_per_agent = self.agents[0].dynamics_model.num_actions
         all_actions = np.zeros((len(self.agents), num_actions_per_agent), dtype=np.float32)
 
         dmcts_agents = []
@@ -673,7 +675,7 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, j in agent_pairs:
             agent = self.agents[i]
             other_agent = self.agents[j]
-            if "Static" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
+            if "StaticPolicy" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
                 continue
             else:
                 dist_btwn = np.linalg.norm(
@@ -713,7 +715,7 @@ class CollisionAvoidanceEnv(gym.Env):
         agent_front_zones = []
         i = 0
         for other_agent in other_agents:
-            if "Static" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
+            if "StaticPolicy" in str(type(other_agent.policy)) and not Config.COLLISION_AV_W_STATIC_AGENT:
                 continue
             else:
                 dist_btwn = np.linalg.norm(

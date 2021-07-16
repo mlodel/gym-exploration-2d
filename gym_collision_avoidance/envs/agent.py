@@ -48,7 +48,7 @@ class Agent(object):
         self.chosen_action_dict = {}
 
         self.num_actions_to_store = 2
-        self.action_dim = 2
+        self.action_dim = self.dynamics_model.num_actions
         self.past_actions = np.zeros((self.num_actions_to_store,
                                       self.action_dim))
         self.next_state = []
@@ -128,7 +128,7 @@ class Agent(object):
         #self.is_at_goal = is_near_goal
         self.end_condition(self)
 
-    def set_state(self, px, py, vx=None, vy=None, heading=None):
+    def set_state(self, px, py, vx=None, vy=None, heading=None, ang_speed=None):
         if vx is None or vy is None:
             if self.step_num == 0:
                 # On first timestep, just set to zero
@@ -138,6 +138,16 @@ class Agent(object):
                 self.vel_global_frame = (np.array([px, py]) - self.pos_global_frame) / self.dt_nominal
         else:
             self.vel_global_frame = np.array([vx, vy])
+
+        if ang_speed is None:
+            if self.step_num == 0:
+                # On first timestep, just set to zero
+                self.angular_speed_global_frame = 0.0
+            else:
+                # Interpolate ang velocity from last pos
+                self.angular_speed_global_frame = (heading - self.heading_global_frame) / self.dt_nominal
+        else:
+            self.angular_speed_global_frame = ang_speed
 
         if heading is None:
             # Estimate heading to be the direction of the velocity vector

@@ -8,9 +8,9 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = continuous
 
-    ANIMATE_EPISODES = True
+    ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
-    SAVE_EPISODE_PLOTS = True
+    SAVE_EPISODE_PLOTS = False
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
     PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
     EVALUATE_MODE = False  # Enable to see the trained agent in action (for testing)

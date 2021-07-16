@@ -131,23 +131,19 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
     init_heading = 2*np.pi * np.random.rand() - np.pi
     # ego agent
-    agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
-                        ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
-    # agents.append(Agent(0, -7, -12, -12 + 100.0, radius, pref_speed, 0.0,
+    # agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
     #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
+    agents.append(Agent(-12, -12, 12, 12 + 100.0, radius, pref_speed, 0.0,
+                        ego_agent_policy, ExternalDynamics,
+                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     # target agent
-    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 1))
-    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 2))
-    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 3))
-    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 4))
-    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 5))
-    # agents.append(Agent(5, 5, 0, 0, 0.2, pref_speed, 0, StaticPolicy, FirstOrderDynamics, [], 6))
-
+    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, ExternalDynamics, [], 1))
+    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, ExternalDynamics, [], 2))
 
     if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
-            or "MPC_IG_Policy" == str(agents[0].policy):
+            or "MPC_IG_Policy" == str(agents[0].policy) or "MPCRLStaticObsIGPolicy" == str(agents[0].policy) \
+            or "MPCRLStaticObsIGPolicy_fasttraining" == str(agents[0].policy):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 
     return agents, obstacle
