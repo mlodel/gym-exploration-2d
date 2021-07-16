@@ -14,7 +14,7 @@ After defining a test case function that returns a list of Agents, you can selec
 import numpy as np
 import random
 
-np.random.seed(1)
+# np.random.seed(1)
 import sys
 
 sys.path.append('/home/bdebrito/code/mpc-rl-collision-avoidance')
@@ -135,11 +135,11 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
     #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     agents.append(Agent(-12, -12, 12, 12 + 100.0, radius, pref_speed, 0.0,
-                        ego_agent_policy, ExternalDynamics,
+                        ego_agent_policy, UnicycleSecondOrderEulerDynamics,
                         [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
     # target agent
-    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, ExternalDynamics, [], 1))
-    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, ExternalDynamics, [], 2))
+    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
+    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
 
     if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
             or "MPC_IG_Policy" == str(agents[0].policy) or "MPCRLStaticObsIGPolicy" == str(agents[0].policy) \
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     seed = 1
     carrl = False
 
-    np.random.seed(seed)
+    # np.random.seed(seed)
     # speed_bnds = [0.5, 1.5]
     speed_bnds = [1.0, 1.0]
     # radius_bnds = [0.2, 0.8]
