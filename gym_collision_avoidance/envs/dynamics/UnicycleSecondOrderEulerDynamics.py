@@ -7,7 +7,7 @@ class UnicycleSecondOrderEulerDynamics(Dynamics):
     def __init__(self, agent):
         Dynamics.__init__(self, agent)
         self.max_turn_rate = 3.0 # rad/s
-        self.max_vel = 3.0
+        self.max_vel = 2.0
         self.num_actions = 2
 
     def step(self, action, dt):

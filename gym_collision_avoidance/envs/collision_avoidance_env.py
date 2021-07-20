@@ -116,6 +116,9 @@ class CollisionAvoidanceEnv(gym.Env):
                                          self.max_heading_change])
             self.action_space = gym.spaces.Box(self.low_action, self.high_action, dtype=np.float32)
 
+        # Expert goals for supervised learning (used if not network_output is passed)
+        self.use_expert_goal = True
+
         # original observation space
         # self.observation_space = gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
 
@@ -165,6 +168,8 @@ class CollisionAvoidanceEnv(gym.Env):
         self.prev_scenario_index = 0
         self.scenario_index = 0
 
+        self.plot_env = True
+
     def step(self, actions, dt=None):
         ###############################
         # This is the main function. An external process will compute an action for every agent
@@ -186,58 +191,80 @@ class CollisionAvoidanceEnv(gym.Env):
         if dt is None:
             dt = self.dt_nominal
 
-        self.episode_step_number += 1
-        self.total_number_of_steps += 1
+        rewards = 0
 
-        # Generate Predictions
-        if self.prediction_model:
-            self._prediction_step()
+        if actions.size == 0 and self.use_expert_goal:
+            actions = self.get_expert_goal()
+            actions = np.clip(actions, self.action_space.low, self.action_space.high)
+        elif actions.size == 0 and not self.use_expert_goal:
+            actions = self.agents[0].goal_global_frame - self.agents[0].pos_global_frame
+            actions = np.clip(actions, self.action_space.low, self.action_space.high)
 
-        # Take action
-        self._take_action(actions, dt)
+        for _ in range(Config.REPEAT_STEPS):
 
-        # Collect rewards
-        rewards = self._compute_rewards()
+            self.episode_step_number += 1
+            self.total_number_of_steps += 1
 
-        # Take observation
-        next_observations = self._get_obs()
+            # Generate Predictions
+            if self.prediction_model:
+                self._prediction_step()
 
-        if (
-                self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number % self.animation_period_steps == 0:
-            plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
-                         circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
-                         plot_save_dir=self.plot_save_dir,
-                         plot_policy_name=self.plot_policy_name,
-                         save_for_animation=True,
-                         limits=self.plt_limits,
-                         fig_size=self.plt_fig_size,
-                         perturbed_obs=self.perturbed_obs,
-                         show=Config.SHOW_EPISODE_PLOTS,
-                         save=True,
-                         targetMap=self.agents[0].ig_model.targetMap)
+            # Take action
+            self._take_action(actions, dt)
 
-        # Check which agents' games are finished (at goal/collided/out of time)
-        which_agents_done, game_over = self._check_which_agents_done()
+            # Collect rewards
+            step_rewards = self._compute_rewards()
+            rewards += step_rewards
 
-        if game_over and (str(self.prediction_model) != 'CVModel') and self.prediction_model is not None:
-            if not Config.PERFORMANCE_TEST:
-                self.n_collisions = np.roll(self.n_collisions, 1)
-                self.n_collisions[0] = self.agents[0].in_collision
-                self.n_timeouts = np.roll(self.n_timeouts, 1)
-                self.n_timeouts[0] = self.agents[0].ran_out_of_time
-                # if self.agents[0].in_collision or self.episode_number<200:
-                self.prediction_model.data_handler.addEpisodeData(self.agents)
-                if (self.episode_number >= 100) and (self.episode_number % 100 == 0) and (
-                        len(self.prediction_model.data_handler.trajectory_set) >= 100):
-                    self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
-                                                     np.mean(self.n_timeouts))
+            # Take observation
+            next_observations = self._get_obs()
 
-        which_agents_done_dict = {}
-        for i, agent in enumerate(self.agents):
-            which_agents_done_dict[agent.id] = which_agents_done[i]
+            if (
+                    self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
+                    and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
+                    and self.episode_step_number % self.animation_period_steps == 0:
+                plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
+                             circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
+                             plot_save_dir=self.plot_save_dir,
+                             plot_policy_name=self.plot_policy_name,
+                             save_for_animation=True,
+                             limits=self.plt_limits,
+                             fig_size=self.plt_fig_size,
+                             perturbed_obs=self.perturbed_obs,
+                             show=Config.SHOW_EPISODE_PLOTS,
+                             save=True,
+                             targetMap=self.agents[0].ig_model.targetMap)
 
-        return next_observations, rewards, game_over, \
-               {'which_agents_done': which_agents_done_dict}
+            # Check which agents' games are finished (at goal/collided/out of time)
+            which_agents_done, game_over = self._check_which_agents_done()
+
+            if game_over and (str(self.prediction_model) != 'CVModel') and self.prediction_model is not None:
+                if not Config.PERFORMANCE_TEST:
+                    self.n_collisions = np.roll(self.n_collisions, 1)
+                    self.n_collisions[0] = self.agents[0].in_collision
+                    self.n_timeouts = np.roll(self.n_timeouts, 1)
+                    self.n_timeouts[0] = self.agents[0].ran_out_of_time
+                    # if self.agents[0].in_collision or self.episode_number<200:
+                    self.prediction_model.data_handler.addEpisodeData(self.agents)
+                    if (self.episode_number >= 100) and (self.episode_number % 100 == 0) and (
+                            len(self.prediction_model.data_handler.trajectory_set) >= 100):
+                        self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
+                                                         np.mean(self.n_timeouts))
+
+            which_agents_done_dict = {}
+            for i, agent in enumerate(self.agents):
+                which_agents_done_dict[agent.id] = which_agents_done[i]
+
+        infos = {'which_agents_done': which_agents_done_dict,
+                 'is_infeasible': self.agents[0].is_infeasible,
+                 'is_at_goal': self.agents[0].is_at_goal,
+                 'step_num': self.agents[0].step_num,
+                 'ran_out_of_time': self.agents[0].ran_out_of_time,
+                 'in_collision': self.agents[0].in_collision,
+                 'n_other_agents': sum([0 if agent.policy.str == "Static" else 1 for agent in self.agents]) - 1,
+                 'actions': actions}
+
+        return next_observations, rewards, game_over, infos
 
     def reset(self):
         if self.agents:
@@ -293,7 +320,7 @@ class CollisionAvoidanceEnv(gym.Env):
         return
 
     def _prediction_step(self):
-        if self.episode_number >= 100:
+        if self.episode_number >= 100 and self.prediction_model:
             self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
         else:
             # For the first time step Use CV model
@@ -811,6 +838,12 @@ class CollisionAvoidanceEnv(gym.Env):
         self.min_possible_reward = np.min(self.possible_reward_values)
         self.max_possible_reward = np.max(self.possible_reward_values)
 
+    def get_expert_goal(self):
+        # goal = self.agents[0].ig_model.get_greedy_goal(self.agents[0].pos_global_frame)\
+        #        - self.agents[0].pos_global_frame
+        goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
+        return goal
+
     def set_plot_save_dir(self, plot_save_dir):
         os.makedirs(plot_save_dir, exist_ok=True)
         self.plot_save_dir = plot_save_dir
@@ -818,6 +851,8 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_perturbed_info(self, perturbed_obs):
         self.perturbed_obs = perturbed_obs
 
+    def set_plot_env(self,plot_env=True):
+        self.plot_env = plot_env
 
 if __name__ == '__main__':
     print("See example.py for a minimum working example.")

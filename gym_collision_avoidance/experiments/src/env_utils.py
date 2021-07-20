@@ -3,8 +3,10 @@ import numpy as np
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.wrappers import FlattenDictWrapper, MultiagentFlattenDictWrapper, MultiagentDummyVecEnv
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
+from stable_baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 
-def create_env(n_envs=1,eval_env=True):
+
+def create_env(n_envs=1,eval_env=True, subproc=False):
     import tensorflow as tf
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     tf.Session().__enter__()
@@ -23,19 +25,28 @@ def create_env(n_envs=1,eval_env=True):
             env = MultiagentFlattenDictWrapper(env, dict_keys=Config.STATES_IN_OBS, max_num_agents=Config.MAX_NUM_AGENTS_IN_ENVIRONMENT)
         
         return env
-    
+
     # To be prepared for training on multiple instances of the env at once
     if Config.TRAIN_SINGLE_AGENT:
-        env = DummyVecEnv([make_env for _ in range(n_envs)])
+        if subproc:
+            env = SubprocVecEnv([make_env for _ in range(n_envs)])
+            unwrapped_envs = None
+        else:
+            env = DummyVecEnv([make_env for _ in range(n_envs)])
+            unwrapped_envs = [e.unwrapped for e in env.envs]
     else:
         env = MultiagentDummyVecEnv([make_env for _ in range(n_envs)])
-    unwrapped_envs = [e.unwrapped for e in env.envs]
-    
+        unwrapped_envs = [e.unwrapped for e in env.envs]
+
     # Set env id for each env
-    for i, e in enumerate(unwrapped_envs):
-        e.id = i
-    
-    one_env = unwrapped_envs[0]
+
+    if unwrapped_envs is not None:
+        for i, e in enumerate(unwrapped_envs):
+            e.id = i
+        one_env = unwrapped_envs[0]
+    else:
+        one_env = None
+
     return env, one_env
 
 def run_episode(env, one_env):

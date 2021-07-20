@@ -91,7 +91,7 @@ class ig_agent():
 
     def get_greedy_goal(self, pose, max_dist=4.0, min_dist=0.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
-        np.random.seed(10)
+        # np.random.seed(10)
         candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist
@@ -121,8 +121,8 @@ class ig_agent():
             edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(goal)
             if edf_next_pose < self.host_agent.radius + 0.4:
                 reward = 0
-            elif not self.targetMap.edfMapObj.checkVisibility(pose, goal):
-                reward = 0
+            # elif not self.targetMap.edfMapObj.checkVisibility(pose, goal):
+            #     reward = 0
             else:
                 reward = self.targetMap.get_reward_from_pose(goal)
 
