@@ -132,8 +132,8 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
 
     if targetMap:
         ax3 = fig.add_axes([0.72, 0.2, 0.3, 0.3])
-        prob_map = targetMap.map / (targetMap.map + 1)
-        ax3.imshow(prob_map, vmin=0, vmax=1, cmap='jet', origin='lower')
+        # prob_map = targetMap.map / (targetMap.map + 1)
+        ax3.imshow(targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
 

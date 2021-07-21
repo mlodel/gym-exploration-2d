@@ -4,8 +4,8 @@ from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 
 
 class targetMap():
-    def __init__(self, edfMapObj, mapSize, cellSize, sensFOV, sensRange, rOcc, rEmp, tolerance=0.01, prior=1.0,
-                 p_false_neg=0.1, p_false_pos=0.05):
+    def __init__(self, edfMapObj, mapSize, cellSize, sensFOV, sensRange, rOcc, rEmp, tolerance=0.01, prior=0.0,
+                 p_false_neg=0.1, p_false_pos=0.05, logmap_bound=4.0):
         self.edfMapObj = edfMapObj
         
         self.cellSize = cellSize
@@ -13,6 +13,8 @@ class targetMap():
         self.sensFOV = sensFOV
         self.sensRange = sensRange
 
+        self.lOcc = np.log(rOcc)
+        self.lEmp = np.log(rEmp)
         self.rOcc = rOcc
         self.rEmp = rEmp
         self.tolerance = tolerance
@@ -23,8 +25,11 @@ class targetMap():
         shape = (int(self.mapSize[1]/self.cellSize), int(self.mapSize[0]/self.cellSize))
         self.map = np.ones(shape) * prior
 
-        p_prior = prior / (prior + 1)
+        p_prior = np.exp(prior) / (np.exp(prior) + 1)
         self.probMap = np.ones(shape) * p_prior
+        # self.logMap = np.log(self.map)
+
+        self.logMap_bound = logmap_bound
 
         self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) )
 
@@ -130,17 +135,20 @@ class targetMap():
                             break
 
                     if in_current_cell:
-                        rSens = self.rOcc
+                        lSens = self.lOcc
                     else:
-                        rSens = self.rEmp
+                        lSens = self.lEmp
                 else:
-                    rSens = self.rEmp
+                    lSens = self.lEmp
 
                 reward += self.get_reward_from_cells([(i,j)])
-                self.map[j,i] *= rSens
+                self.map[j,i] += lSens
+                self.map[j,i] = np.clip(self.map[j,i], -self.logMap_bound, self.logMap_bound)
 
                 # Update probabilities
-                p_cell = self.map[j,i] / (self.map[j,i] + 1)
+
+                # p_cell = self.map[j,i] / (self.map[j,i] + 1)
+                p_cell = 1 / ( (1/np.exp(self.map[j, i])) + 1 )
                 self.probMap[j,i] = p_cell
 
                 # Update Entropies and obtain reward
@@ -153,7 +161,7 @@ class targetMap():
     def get_reward_from_cells(self, cells):
         cell_mi = []
         for i, j in cells:
-            r = self.map[j, i]
+            r = np.exp(self.map[j, i])
             p = r / (r + 1)
             f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (r * self.rOcc + 1)
             f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (r * self.rEmp + 1)
