@@ -31,7 +31,7 @@ class targetMap():
 
         self.logMap_bound = logmap_bound
 
-        self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) )
+        self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) ) / np.log(2)
 
     def getCellsFromPose(self, pose):
         if len(pose) > 2:
@@ -152,9 +152,9 @@ class targetMap():
                 self.probMap[j,i] = p_cell
 
                 # Update Entropies and obtain reward
-                # cell_entropy = -p_cell*np.log(p_cell) - (1-p_cell)*np.log(1-p_cell)
+                cell_entropy = (-p_cell*np.log(p_cell) - (1-p_cell)*np.log(1-p_cell)) / np.log(2)
                 # reward += self.entropyMap[j,i] - cell_entropy
-                # self.entropyMap[j,i] = cell_entropy
+                self.entropyMap[j,i] = cell_entropy
             obsvdCells.update(visibleCells)
         return obsvdCells, reward
 

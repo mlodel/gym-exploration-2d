@@ -26,7 +26,7 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 1000  # for tensorboard visualization
+    PLOT_EVERY_N_EPISODES = 500  # for tensorboard visualization
     DT = 0.1  # seconds between simulation time steps
     REWARD_AT_GOAL = 0.0  # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = 0.0  # reward given when agent collides with another agent
@@ -223,7 +223,7 @@ class Config:
             'dtype': np.float32,
             'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             'bounds': [-np.inf, np.inf],
-            'attr': 'ig_model.targetMap.map',
+            'attr': 'ig_model.targetMap.entropyMap',
             'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
             'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
         },

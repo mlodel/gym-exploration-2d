@@ -199,7 +199,7 @@ class CollisionAvoidanceEnv(gym.Env):
         elif actions.size == 0 and not self.use_expert_goal:
             actions = self.agents[0].goal_global_frame - self.agents[0].pos_global_frame
             actions = np.clip(actions, self.action_space.low, self.action_space.high)
-
+        new_action = True
         for _ in range(Config.REPEAT_STEPS):
 
             self.episode_step_number += 1
@@ -210,8 +210,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 self._prediction_step()
 
             # Take action
-            self._take_action(actions, dt)
-
+            self._take_action(actions, dt, new_action)
+            new_action = False
             # Collect rewards
             step_rewards = self._compute_rewards()
             rewards += step_rewards
@@ -335,7 +335,7 @@ class CollisionAvoidanceEnv(gym.Env):
             agent.policy.predicted_trajectory = self.predicted_trajectory[indices != id]
             agent.policy.all_predicted_trajectory = self.predicted_trajectory
 
-    def _take_action(self, actions, dt):
+    def _take_action(self, actions, dt, new_action=True):
         num_actions_per_agent = self.agents[0].dynamics_model.num_actions
         all_actions = np.zeros((len(self.agents), num_actions_per_agent), dtype=np.float32)
 
@@ -347,7 +347,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if agent.policy.is_external:
                 all_actions[agent_index, :] = agent.policy.convert_to_action(actions[agent_index])
             elif agent.policy.is_still_learning:
-                all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index, self.agents, actions)
+                all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index, self.agents, actions, new_action)
             elif "ig_mcts" in str(agent.policy):
                 dmcts_agents.append(agent_index)
             else:

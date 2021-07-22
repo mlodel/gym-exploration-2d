@@ -265,7 +265,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
 
     for i, agent in reversed(list(enumerate(agents))):
 
-        if "ig_" in str(type(agent.policy)):
+        if agent.ig_model is not None:
             draw_agent_ig(agent, i, ax)
             continue
 
@@ -476,22 +476,39 @@ def draw_agent_ig(agent, i, ax):
             agent.global_state_history[:agent.step_num - 1, 2],
             color=plt_color)
 
-    plan = agent.policy.best_paths.X[0].pose_seq
-    fov = 60.0
-    for j in range(len(plan)):
-        if j == 0:
-            continue
-        pose = plan[j]
-        alpha = 1.0 - 0.2 * j
+    fov = agent.ig_model.detect_fov * 180.0 / np.pi
+
+    if hasattr(agent.policy, "best_paths"):
+        plan = agent.policy.best_paths.X[0].pose_seq
+
+        for j in range(len(plan)):
+            if j == 0:
+                continue
+            pose = plan[j]
+            alpha = 1.0 - 0.2 * j
+            c = rgba2rgb(plt_color + [float(alpha)])
+            heading = pose[2] * 180.0 / np.pi
+            ax.add_patch(Wedge(center=pose[0:2], r=.75, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
+                               fill=True))
+
+    if hasattr(agent.policy, "goal_"):
+        pose = agent.policy.goal_
+        alpha = 0.5
         c = rgba2rgb(plt_color + [float(alpha)])
-        heading = pose[2] * 180.0 / np.pi
-        ax.add_patch(Wedge(center=pose[0:2], r=.75, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
+        heading = 0.0
+        ax.add_patch(Wedge(center=pose[0:2], r=.4, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
                            fill=True))
+
+    if hasattr(agent.policy, "predicted_traj"):
+        ax.plot(agent.policy.predicted_traj[:,0], agent.policy.predicted_traj[:,1], color=plt_color, alpha=0.5)
+
     # currentPose = agent.global_state_history[agent.step_num-1, (1,2,10)]
-    currentPose = plan[0]
-    heading = currentPose[2] * 180.0 / np.pi
-    ax.add_patch(Wedge(center=currentPose[0:2], r=1., theta1=(heading - fov / 2),
-                       theta2=(heading + fov / 2), fc=plt_color, ec=plt_color, fill=True))
+    currentPose = agent.pos_global_frame
+    heading = agent.heading_global_frame * 180.0 / np.pi
+    alpha = 0.6
+    c = rgba2rgb(plt_color + [float(alpha)])
+    ax.add_patch(Wedge(center=currentPose[0:2], r=0.5, theta1=(heading - fov / 2),
+                       theta2=(heading + fov / 2), fc=c, ec=plt_color, fill=True))
 
 
 def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):
