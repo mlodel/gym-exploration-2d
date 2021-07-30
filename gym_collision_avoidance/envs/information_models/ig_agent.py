@@ -3,13 +3,17 @@ import numpy as np
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
+from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
+from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
+
+
 import time
 
 def current_milli_time():
     return int(round(time.time() * 1000))
 
 class ig_agent():
-    def __init__(self, host_agent):
+    def __init__(self, host_agent, expert_policy):
 
         self.targetMap = None
         self.detect_fov = None
@@ -22,6 +26,10 @@ class ig_agent():
         self.team_reward = None
 
         self.host_agent = host_agent
+
+        self.expert_goal = None
+
+        self.expert_policy = expert_policy(self)
 
         self.greedy_goal = None
 
@@ -91,7 +99,7 @@ class ig_agent():
 
     def get_greedy_goal(self, pose, max_dist=4.0, min_dist=1.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
-        # np.random.seed(10)
+        np.random.seed(10)
         candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist
@@ -109,13 +117,12 @@ class ig_agent():
         best_cand_idx = None
         max_reward = 0
 
-        if self.greedy_goal is None:
-            self.greedy_goal = pose
+        # if self.greedy_goal is None:
+        #     self.greedy_goal = pose
 
         for i in range(Nsamples):
 
             goal = np.append( candidates[i,:] + pose, 0.0)
-
 
             # Check if Candidate Goal is Obstacle
             edf_next_pose = self.targetMap.edfMapObj.get_edf_value_from_pose(goal)

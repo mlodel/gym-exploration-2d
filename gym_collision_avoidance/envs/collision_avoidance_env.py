@@ -24,7 +24,7 @@ from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
-from gym_collision_avoidance.envs.policies.ig_greedy import ig_greedy
+from gym_collision_avoidance.envs.policies.ig_greedy_old import ig_greedy
 
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
@@ -306,7 +306,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.SUBMAP_RESOLUTION,
-                                          detect_fov=360.0, detect_range=4.0)
+                                          detect_fov=360.0, detect_range=3.0)
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -839,9 +839,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.max_possible_reward = np.max(self.possible_reward_values)
 
     def get_expert_goal(self):
-        # goal = self.agents[0].ig_model.get_greedy_goal(self.agents[0].pos_global_frame)\
-        #        - self.agents[0].pos_global_frame
-        goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
+        goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]\
+               - self.agents[0].pos_global_frame
+        # goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
         return goal
 
     def set_plot_save_dir(self, plot_save_dir):

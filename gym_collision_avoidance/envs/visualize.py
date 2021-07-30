@@ -381,7 +381,6 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
                 obstacles = np.array(agent.policy.static_obstacles_manager.obstacle)
                 for obs in obstacles:
                     ax.add_patch(plt.Polygon(obs, ec=plt_colors[-1], fill=False))
-
                 # Plot angular map
                 if 'laserscan' in agent.sensor_data:
                     angular_map = (1 - agent.sensor_data['laserscan']) * Config.MAX_RANGE
@@ -391,7 +390,8 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
                     ax2.scatter(0, 0, s=100, c='red', marker='o')
                     aanliggend = 1 * math.cos(agent.heading_global_frame)
                     overstaand = 1 * math.sin(agent.heading_global_frame)
-                    ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5, head_length=0.5)  # agent poiting direction
+                    ax2.arrow(0, 0, aanliggend, overstaand, head_width=0.5,
+                              head_length=0.5)  # agent poiting direction
                     ax2.set_xlim([-6 - 1, 6 + 1])
                     ax2.set_ylim([-6 - 1, 6 + 1])
                 if 'local_grid' in agent.sensor_data:
@@ -406,8 +406,7 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
                               fc='yellow')  # agent poiting direction
 
                 workspace_constr_a = np.array([[1, 0], [0, 1], [-1, 0], [0, -1]])
-                workspace_constr_b = np.array([20, 20, 20, 20])
-
+                workspace_constr_b = np.array([10, 10, 10, 10])
                 for constr in agent.policy.linear_constraints:
                     workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0], axis=0)))
                     workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[1]])))
@@ -472,14 +471,28 @@ def draw_agent_ig(agent, i, ax):
     # colors[:, 3] = np.linspace(0.2, 1., agent.global_state_history.shape[0])
     # colors = rgba2rgb(colors)
 
+    if hasattr(agent.policy, 'static_obstacles_manager') and Config.PLT_FREE_SPACE:
+        workspace_constr_a = np.array([[1, 0], [0, 1], [-1, 0], [0, -1]])
+        workspace_constr_b = np.array([15, 15, 15, 15])
+        for constr in agent.policy.linear_constraints[0:3]:
+            workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0], axis=0)))
+            workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[1]])))
+            # workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0:2], axis=0)))
+            # workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[2]])))
+        try:
+            vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
+            ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True, alpha=0.5))
+        except:
+            print("Something went wrong drawing the polygon")
+
     ax.plot(agent.global_state_history[:agent.step_num - 1, 1],
             agent.global_state_history[:agent.step_num - 1, 2],
             color=plt_color)
 
     fov = agent.ig_model.detect_fov * 180.0 / np.pi
 
-    if hasattr(agent.policy, "best_paths"):
-        plan = agent.policy.best_paths.X[0].pose_seq
+    if hasattr(agent.ig_model.expert_policy, "best_paths"):
+        plan = agent.ig_model.expert_policy.best_paths.X[0].pose_seq
 
         for j in range(len(plan)):
             if j == 0:
@@ -488,10 +501,10 @@ def draw_agent_ig(agent, i, ax):
             alpha = 1.0 - 0.2 * j
             c = rgba2rgb(plt_color + [float(alpha)])
             heading = pose[2] * 180.0 / np.pi
-            ax.add_patch(Wedge(center=pose[0:2], r=.75, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
+            ax.add_patch(Wedge(center=pose[0:2], r=.4, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
                                fill=True))
 
-    if hasattr(agent.policy, "goal_"):
+    elif hasattr(agent.policy, "goal_"):
         pose = agent.policy.goal_
         alpha = 0.5
         c = rgba2rgb(plt_color + [float(alpha)])

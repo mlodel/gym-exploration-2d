@@ -2,13 +2,14 @@ import numpy as np
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.util import wrap, find_nearest
 from gym_collision_avoidance.envs.utils import end_conditions as ec
+from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 import operator
 import math
 
 class Agent(object):
     def __init__(self, start_x, start_y, goal_x, goal_y, radius,
                  pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 1.0,
-                 ig_model=None):
+                 ig_model=None, ig_expert=None):
 
         if policy =="GA3CCADRLPolicy":
             self.policy = "GA3CCADRLPolicy"
@@ -19,7 +20,7 @@ class Agent(object):
         self.sensors = [sensor() for sensor in sensors]
 
         if ig_model is not None:
-            self.ig_model = ig_model(self)
+            self.ig_model = ig_model(self, ig_expert)
         else:
             self.ig_model = None
 

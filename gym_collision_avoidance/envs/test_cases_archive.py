@@ -23,8 +23,8 @@ from gym_collision_avoidance.envs.agent import Agent
 # from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
-from gym_collision_avoidance.envs.policies.ig_greedy import ig_greedy
-from gym_collision_avoidance.envs.policies.ig_mcts import ig_mcts
+from gym_collision_avoidance.envs.policies.ig_greedy_old import ig_greedy
+from gym_collision_avoidance.envs.policies.ig_mcts_old import ig_mcts
 
 # from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
 # from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy

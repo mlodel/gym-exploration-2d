@@ -23,8 +23,8 @@ from gym_collision_avoidance.envs.agent import Agent
 # from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
-from gym_collision_avoidance.envs.policies.ig_greedy import ig_greedy
-from gym_collision_avoidance.envs.policies.ig_mcts import ig_mcts
+from gym_collision_avoidance.envs.policies.ig_greedy_old import ig_greedy
+from gym_collision_avoidance.envs.policies.ig_mcts_old import ig_mcts
 
 # from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
 # from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy
@@ -65,6 +65,8 @@ from gym_collision_avoidance.envs.utils import end_conditions as ec
 # from gym_collision_avoidance.envs.dataset import Dataset
 
 from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
+from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
+from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
 
 import os
 import pickle
@@ -114,16 +116,17 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(10, 10), (-8, 10), (-8, -6), (10, -6)]
-    # obstacle_2 = [(-2, 10), (-10, 10), (-10, 2), (-2, 2)]
+    obstacle_1 = [(7, 7), (-5, 7), (-5, 5), (7, 5)]
+    obstacle_2 = [(7, 7), (5, 7), (5, -4), (7, -4)]
     # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
-    # obstacle_4 = [(-2, -2), (-10, -2), (-10, -10), (-2, -10)]
-    obstacle_5 = [(-14.7, 15), (-15, 15), (-15, -15), (-14.7, -15)]
-    obstacle_6 = [(15, 15), (14.7, 15), (14.7, -15), (15, -15)]
-    obstacle_7 = [(-15, 14.7), (-15, 15), (15, 15), (15, 14.7)]
-    obstacle_8 = [(15, -14.7), (-15, -14.7), (-15, -15), (15, -15)]
+    obstacle_4 = [(-2, -1), (-6, -1), (-6, -7), (-2, -7)]
 
-    obstacle.extend([obstacle_1, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+    obstacle_5 = [(-9.8, 10), (-10, 10), (-10, -10), (-9.8, -10)]
+    obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
+    obstacle_7 = [(-10, 9.8), (-10, 10), (10, 10), (10, 9.8)]
+    obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
+
+    obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # Get random initial position
     obstacle_margin = 0.5
@@ -133,13 +136,13 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # ego agent
     agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
                         ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
-    # agents.append(Agent(-12, -12, 12, 12 + 100.0, radius, pref_speed, 0.0,
+                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_mcts))
+    # agents.append(Agent(7.5001, 0, 12, 12 + 100.0, radius, pref_speed, - np.pi,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent))
+    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_mcts))
     # target agent
-    agents.append(Agent(14, 14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
-    agents.append(Agent(0, -14, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
+    # agents.append(Agent(9, 9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
+    # agents.append(Agent(-7, -9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
 
     if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
             or "MPC_IG_Policy" == str(agents[0].policy) or "MPCRLStaticObsIGPolicy" == str(agents[0].policy) \

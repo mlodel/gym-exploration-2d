@@ -72,24 +72,18 @@ class Config:
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
-    PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
-    PLT_LIMITS = ((-15, 15), (-15, 15))
-    PLT_FIG_SIZE = (12, 8)
-    PLT_SHOW_LEGEND = False
-    PLT_SUBPLT_TRAJ = False
-    PLT_SUBPLT_TARGMAP = True
-
     # Gridmap parameters
-    SUBMAP_WIDTH = 60  # Pixels
-    SUBMAP_HEIGHT = 60  # Pixels
+    SUBMAP_WIDTH = 40  # Pixels
+    SUBMAP_HEIGHT = 40  # Pixels
     SUBMAP_RESOLUTION = 0.1  # Pixel / meter
 
     # STATIC MAP
-    MAP_WIDTH = 30  # Meters
-    MAP_HEIGHT = 30  # Meters
-    MAP_WIDTH_PXL = 30
-    MAP_HEIGHT_PXL = 30
+    MAP_WIDTH = 20  # Meters
+    MAP_HEIGHT = 20  # Meters
+    MAP_WIDTH_PXL = 20
+    MAP_HEIGHT_PXL = 20
+
+    IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
 
 
     SCENARIOS_FOR_TRAINING = [
@@ -98,6 +92,15 @@ class Config:
     # Angular Map
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
+
+    PLOT_CIRCLES_ALONG_TRAJ = False
+    ANIMATION_PERIOD_STEPS = 5  # plot every n-th DT step (if animate mode on)
+    PLT_LIMITS = ((-MAP_WIDTH/2, MAP_WIDTH/2), (-MAP_HEIGHT/2, MAP_HEIGHT/2))
+    PLT_FIG_SIZE = (12, 8)
+    PLT_SHOW_LEGEND = False
+    PLT_SUBPLT_TRAJ = False
+    PLT_SUBPLT_TARGMAP = True
+    PLT_FREE_SPACE = True
 
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
     STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
@@ -223,7 +226,7 @@ class Config:
             'dtype': np.float32,
             'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             'bounds': [-np.inf, np.inf],
-            'attr': 'ig_model.targetMap.entropyMap',
+            'attr': 'ig_model.targetMap.probMap',
             'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
             'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
         },

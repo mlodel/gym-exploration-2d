@@ -16,7 +16,7 @@ class edfMap():
             pose = pose[0:2]
 
         xIdc = np.floor((pose[0] + self.mapSize[0] / 2) / self.cellSize)
-        yIdc = np.floor((pose[1] + self.mapSize[1] / 2) / self.cellSize)
+        yIdc = np.floor((-pose[1] + self.mapSize[1] / 2) / self.cellSize)
 
         if xIdc < 0 or xIdc >= self.mapSize[0]/self.cellSize or yIdc < 0 or yIdc >= self.mapSize[1]/self.cellSize:
             return 0.0
