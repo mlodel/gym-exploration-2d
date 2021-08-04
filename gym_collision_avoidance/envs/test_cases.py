@@ -116,7 +116,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(7, 7), (-5, 7), (-5, 5), (7, 5)]
+    obstacle_1 = [(2, 6), (-6, 6), (-6, 4), (2, 4)]
     obstacle_2 = [(7, 7), (5, 7), (5, -4), (7, -4)]
     # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
     obstacle_4 = [(-2, -1), (-6, -1), (-6, -7), (-2, -7)]
@@ -127,6 +127,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
 
     obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+    # obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # Get random initial position
     obstacle_margin = 0.5
@@ -136,13 +137,13 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # ego agent
     agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
                         ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_mcts))
-    # agents.append(Agent(7.5001, 0, 12, 12 + 100.0, radius, pref_speed, - np.pi,
+                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
+    # agents.append(Agent(4, 3, 12, 12 + 100.0, radius, pref_speed, - 1*np.pi,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_mcts))
+    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
     # target agent
-    # agents.append(Agent(9, 9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
-    # agents.append(Agent(-7, -9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
+    agents.append(Agent(4, 5, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
+    agents.append(Agent(-9, -9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
 
     if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
             or "MPC_IG_Policy" == str(agents[0].policy) or "MPCRLStaticObsIGPolicy" == str(agents[0].policy) \
