@@ -37,10 +37,10 @@ class ActionDistribution:
         self.X = X
 
         # Normalise 
-        if sum(q) == 0:
-            self.q = [1 / float(len(q))] * len(q)
-        else:
-            self.q = (np.array(q).astype(float) / sum(q)).tolist()
+        # if sum(q) == 0:
+        #     self.q = [1 / float(len(q))] * len(q)
+        # else:
+        #     self.q = (np.array(q).astype(float) / sum(q)).tolist()
 
     def best_action(self):
         """

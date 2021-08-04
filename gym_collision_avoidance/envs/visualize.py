@@ -134,6 +134,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         ax3 = fig.add_axes([0.72, 0.2, 0.3, 0.3])
         # prob_map = targetMap.map / (targetMap.map + 1)
         ax3.imshow(targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
+        # ax3.imshow(agents[0].ig_model.agent_pos_map, cmap=plt.cm.binary, origin='lower')
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
 
@@ -474,14 +475,14 @@ def draw_agent_ig(agent, i, ax):
     if hasattr(agent.policy, 'static_obstacles_manager') and Config.PLT_FREE_SPACE:
         workspace_constr_a = np.array([[1, 0], [0, 1], [-1, 0], [0, -1]])
         workspace_constr_b = np.array([15, 15, 15, 15])
-        for constr in agent.policy.linear_constraints[0:3]:
-            workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0], axis=0)))
-            workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[1]])))
-            # workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0:2], axis=0)))
-            # workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[2]])))
+        for constr in agent.policy.linear_constraints[0:4]:
+            # workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0], axis=0)))
+            # workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[1]])))
+            workspace_constr_a = np.concatenate((workspace_constr_a, np.expand_dims(constr[0:2], axis=0)))
+            workspace_constr_b = np.concatenate((workspace_constr_b, np.array([constr[2]])))
         try:
             vertices = pypoman.polygon.compute_polygon_hull(workspace_constr_a, workspace_constr_b)
-            ax.add_patch(plt.Polygon(vertices, ec=plt_colors[9], fill=True, alpha=0.5))
+            ax.add_patch(plt.Polygon(vertices, ec=plt_colors[8], fc=plt_colors[8], fill=True, alpha=0.5))
         except:
             print("Something went wrong drawing the polygon")
 

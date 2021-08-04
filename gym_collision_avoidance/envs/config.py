@@ -85,6 +85,8 @@ class Config:
 
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
 
+    REWARD_MAX_IG = 6.0
+
 
     SCENARIOS_FOR_TRAINING = [
         "IG_single_agent_crossing"]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
@@ -94,7 +96,7 @@ class Config:
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 5  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH/2, MAP_WIDTH/2), (-MAP_HEIGHT/2, MAP_HEIGHT/2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False
@@ -103,7 +105,8 @@ class Config:
     PLT_FREE_SPACE = True
 
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
@@ -230,6 +233,14 @@ class Config:
             'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
             'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
         },
+        'agent_pos_map': {
+            'dtype': np.float32,
+            'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.agent_pos_map',
+            'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+            'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+        }
     }
     MEAN_OBS = {}
     STD_OBS = {}

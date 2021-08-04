@@ -33,6 +33,9 @@ class ig_agent():
 
         self.greedy_goal = None
 
+        self.agent_pos_map = None
+        self.agent_pos_idc = None
+
         # np.random.seed(current_milli_time() - int(1.625e12))
 
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
@@ -43,8 +46,12 @@ class ig_agent():
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=1.1,
-                                   rEmp=0.9)
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=3,
+                                   rEmp=0.333)
+
+        self.agent_pos_map = np.zeros(self.targetMap.map.shape)
+        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
+        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
     def update(self, agents):
 
@@ -57,6 +64,10 @@ class ig_agent():
 
         ig_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != self.host_agent.id]
         self.update_belief(ig_agents, global_pose, agents, other_agents_states)
+
+        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
+        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
+        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
     def get_reward(self, agent_pos, agent_heading):
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
@@ -82,18 +93,24 @@ class ig_agent():
     def find_targets_in_obs(self, other_agents_states, global_pose):
 
         # Find Targets in Range and FOV (Detector Emulation)
+        c, s = np.cos(global_pose[2]), np.sin(global_pose[2])
+        R = np.array(((c, s), (-s, c)))
         targets = []
         for other_agent in other_agents_states:
             if other_agent[9] == 1.0:
                 # Static Agent = Target
                 # r = other_agent[0:2] - global_pose[0:2]
                 r = other_agent[0:2]
-                dphi = np.arctan2(r[1], r[0]) - global_pose[2]
-                in_fov = abs(dphi) <= self.detect_fov / 2.0
                 r_norm = np.sqrt(r[0] ** 2 + r[1] ** 2)
                 in_range = r_norm <= self.detect_range
-                if in_fov and in_range:
-                    targets.append(other_agent[0:2] + global_pose[0:2])
+                if in_range:
+                    r_rot = np.dot(R, r)
+                    dphi = (np.arctan2(r_rot[1], r_rot[0]))
+                    in_fov = abs(dphi) <= self.detect_fov / 2.0
+                    if in_fov:
+                        targets.append(other_agent[0:2] + global_pose[0:2])
+                    else:
+                        what=1
 
         return targets
 

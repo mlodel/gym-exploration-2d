@@ -306,7 +306,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.SUBMAP_RESOLUTION,
-                                          detect_fov=360.0, detect_range=3.0)
+                                          detect_fov=360.0, detect_range=2.5)
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -605,6 +605,10 @@ class CollisionAvoidanceEnv(gym.Env):
                     #                                                                   agent.heading_global_frame))
                     rewards[i] += ig_reward
 
+                # if agent.step_num > 5:
+                #     distance = np.linalg.norm(agent.pos_global_frame - agent.global_state_history[:agent.step_num - 5, 1:2])
+                #     rewards[i] += - distance*0.001
+
                 # If subgoal position in inside an obstacle
                 """ """
                 if i == 0:
@@ -618,8 +622,8 @@ class CollisionAvoidanceEnv(gym.Env):
                         rewards[i] += -0.1
 
                 # rewards[i] += 0.01 * agent.speed_global_frame
-        # rewards = np.clip(rewards, self.min_possible_reward,
-        #                   self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
+        rewards = np.clip(rewards, self.min_possible_reward,
+                          self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
 
         if Config.TRAIN_SINGLE_AGENT:
             rewards = rewards[0]
@@ -824,24 +828,38 @@ class CollisionAvoidanceEnv(gym.Env):
         self.reward_getting_close = Config.REWARD_GETTING_CLOSE
         self.reward_entered_norm_zone = Config.REWARD_ENTERED_NORM_ZONE
         self.reward_time_step = Config.REWARD_TIME_STEP
+        self.reward_timeout = Config.REWARD_TIMEOUT
 
         self.reward_wiggly_behavior = Config.REWARD_WIGGLY_BEHAVIOR
         self.wiggly_behavior_threshold = Config.WIGGLY_BEHAVIOR_THRESHOLD
+        self.reward_max_ig = Config.REWARD_MAX_IG
 
-        self.possible_reward_values = \
+        self.possible_terminal_reward_values = \
             np.array([self.reward_at_goal,
                       self.reward_collision_with_agent,
-                      self.reward_time_step,
                       self.reward_collision_with_wall,
-                      self.reward_wiggly_behavior
+                      self.reward_timeout
                       ])
-        self.min_possible_reward = np.min(self.possible_reward_values)
-        self.max_possible_reward = np.max(self.possible_reward_values)
+
+        self.possible_step_reward_values = [self.reward_max_ig]
+
+        self.min_possible_reward = Config.REPEAT_STEPS * self.reward_time_step \
+                                                          + sum(
+                    [r if r < 0 else 0 for r in self.possible_step_reward_values]) \
+                                   + np.min(self.possible_terminal_reward_values)
+
+        self.max_possible_reward = Config.REPEAT_STEPS * self.reward_time_step \
+                                                          + sum(
+                    [r if r > 0 else 0 for r in self.possible_step_reward_values]) \
+                                   + np.max(self.possible_terminal_reward_values)
+
+
+
 
     def get_expert_goal(self):
-        goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]\
-               - self.agents[0].pos_global_frame
-        # goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
+        # goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]\
+        #        - self.agents[0].pos_global_frame
+        goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
         return goal
 
     def set_plot_save_dir(self, plot_save_dir):

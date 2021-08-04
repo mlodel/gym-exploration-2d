@@ -42,7 +42,7 @@ class ig_mcts():
         self.mcts_gamma = 0.99
         self.cooperation_coef = 0
         self.DT = 0.1
-        self.xDT = 6
+        self.xDT = 12
 
     def set_param(self, ego_agent, dt=0.1, xdt=1,
                   Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10, mcts_gamma=0.99, Ncycles=5,
@@ -196,8 +196,8 @@ class ig_mcts():
 
     @staticmethod
     def mcts_avail_actions(data, state, robot_id):
-        vel_list = [0.0, 1.0, 3.0]
-        dphi_list = [-0.5*np.pi, 0, 0.5*np.pi]
+        vel_list = [1.0, 3.0]
+        dphi_list = [-0.25*np.pi, -0.1*np.pi, 0, 0.1*np.pi, 0.25*np.pi]
 
         action_list = [np.array([vel, dphi]) for vel in vel_list for dphi in dphi_list]
         return action_list
