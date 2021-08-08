@@ -84,8 +84,9 @@ class Config:
     MAP_HEIGHT_PXL = 20
 
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
-
-    REWARD_MAX_IG = 6.0
+    IG_SENSE_RADIUS = 3.5
+    IG_SENSE_FOV = 360.0
+    REWARD_MAX_IG = 11.6 # 0.2
 
 
     SCENARIOS_FOR_TRAINING = [
@@ -106,7 +107,8 @@ class Config:
 
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
@@ -158,6 +160,22 @@ class Config:
             'size': 2,
             'bounds': [-np.inf, np.inf],
             'attr': 'get_agent_data("pos_global_frame")',
+            'std': np.array([1.0], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+        },
+        'vel_global_frame': {
+            'dtype': np.float32,
+            'size': 2,
+            'bounds': [-np.inf, np.inf],
+            'attr': 'get_agent_data("vel_global_frame")',
+            'std': np.array([1.0], dtype=np.float32),
+            'mean': np.array([0.], dtype=np.float32)
+        },
+        'angvel_global_frame': {
+            'dtype': np.float32,
+            'size': 1,
+            'bounds': [-np.inf, np.inf],
+            'attr': 'get_agent_data("angular_speed_global_frame")',
             'std': np.array([1.0], dtype=np.float32),
             'mean': np.array([0.], dtype=np.float32)
         },

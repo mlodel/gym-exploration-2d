@@ -1,3 +1,5 @@
+import gc
+
 import numpy as np
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
@@ -94,7 +96,8 @@ def animate_episode(num_agents, plot_save_dir=None, plot_policy_name=None, test_
     os.makedirs(animation_save_dir, exist_ok=True)
     animation_filename = animation_save_dir+animation_filename
     imageio.mimsave(animation_filename, images)
-
+    del images
+    gc.collect()
     # convert .gif to .mp4
     #clip = mp.VideoFileClip(animation_filename)
     #clip.write_videofile(animation_filename[:-4]+".mp4")
@@ -103,7 +106,7 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
                  env_map=None, test_case_index=0, env_id=0,
                  circles_along_traj=True, plot_save_dir=None, plot_policy_name=None,
                  save_for_animation=False, limits=None, perturbed_obs=None,
-                 fig_size=(12, 8), show=False, save=False, targetMap=None):
+                 fig_size=(12, 8), show=False, save=False):
     if max([agent.step_num for agent in agents]) == 0:
         return
 
@@ -130,10 +133,9 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
         max_time = draw_agents(agents, obstacles, circles_along_traj, ax, ax2, last_index=-2)
         plot_perturbed_observation(agents, ax, perturbed_obs)
 
-    if targetMap:
+    if agents[0].ig_model is not None:
         ax3 = fig.add_axes([0.72, 0.2, 0.3, 0.3])
-        # prob_map = targetMap.map / (targetMap.map + 1)
-        ax3.imshow(targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
+        ax3.imshow(agents[0].ig_model.targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
         # ax3.imshow(agents[0].ig_model.agent_pos_map, cmap=plt.cm.binary, origin='lower')
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])

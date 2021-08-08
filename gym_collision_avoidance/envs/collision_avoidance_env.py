@@ -220,7 +220,7 @@ class CollisionAvoidanceEnv(gym.Env):
             next_observations = self._get_obs()
 
             if (
-                    self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
+                    (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
                     and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
                     and self.episode_step_number % self.animation_period_steps == 0:
                 plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
@@ -232,8 +232,7 @@ class CollisionAvoidanceEnv(gym.Env):
                              fig_size=self.plt_fig_size,
                              perturbed_obs=self.perturbed_obs,
                              show=Config.SHOW_EPISODE_PLOTS,
-                             save=True,
-                             targetMap=self.agents[0].ig_model.targetMap)
+                             save=True)
 
             # Check which agents' games are finished (at goal/collided/out of time)
             which_agents_done, game_over = self._check_which_agents_done()
@@ -267,13 +266,8 @@ class CollisionAvoidanceEnv(gym.Env):
         return next_observations, rewards, game_over, infos
 
     def reset(self):
-        if self.agents:
-            agent0_targetmap = self.agents[0].ig_model.targetMap
-        else:
-            agent0_targetmap = None
-
         if (
-                self.episode_number % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
+                (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                          plot_save_dir=self.plot_save_dir,
@@ -281,8 +275,7 @@ class CollisionAvoidanceEnv(gym.Env):
                          limits=self.plt_limits,
                          fig_size=self.plt_fig_size,
                          show=Config.SHOW_EPISODE_PLOTS,
-                         save=Config.SAVE_EPISODE_PLOTS,
-                         targetMap=agent0_targetmap)
+                         save=Config.SAVE_EPISODE_PLOTS)
             animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                             plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                             agents=self.agents)
@@ -306,7 +299,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.SUBMAP_RESOLUTION,
-                                          detect_fov=360.0, detect_range=2.5)
+                                          detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS)
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):

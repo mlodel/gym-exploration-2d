@@ -90,7 +90,10 @@ class ig_mcts():
 
         self.best_paths = self.tree.send_comms()
 
-        goal = self.best_paths.X[0].pose_seq[1]
+        if len(self.best_paths.X[0].pose_seq) > 0:
+            goal = self.best_paths.X[0].pose_seq[1]
+        else:
+            goal = self.best_paths.X[0].pose_seq[0]
 
         return goal
 
@@ -196,7 +199,7 @@ class ig_mcts():
 
     @staticmethod
     def mcts_avail_actions(data, state, robot_id):
-        vel_list = [1.0, 3.0]
+        vel_list = [0., 1.0, 3.0]
         dphi_list = [-0.25*np.pi, -0.1*np.pi, 0, 0.1*np.pi, 0.25*np.pi]
 
         action_list = [np.array([vel, dphi]) for vel in vel_list for dphi in dphi_list]

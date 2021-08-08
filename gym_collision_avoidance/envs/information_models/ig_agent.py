@@ -1,3 +1,5 @@
+import gc
+
 import numpy as np
 
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
@@ -46,9 +48,9 @@ class ig_agent():
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=3,
-                                   rEmp=0.333)
-
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=3.0,
+                                   rEmp=0.33)
+        gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0

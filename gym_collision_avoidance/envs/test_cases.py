@@ -110,30 +110,53 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
+    n_targets = 3
     # if seed:
     #     random.seed(seed)
     #     np.random.seed(seed)
 
     # Corridor scenario
     obstacle = []
-    obstacle_1 = [(2, 6), (-6, 6), (-6, 4), (2, 4)]
-    obstacle_2 = [(7, 7), (5, 7), (5, -4), (7, -4)]
+    # obstacle_1 = [(2, 6), (-6, 6), (-6, 4), (2, 4)]
+    # obstacle_2 = [(7, 7), (5, 7), (5, -4), (7, -4)]
     # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
-    obstacle_4 = [(-2, -1), (-6, -1), (-6, -7), (-2, -7)]
+    # obstacle_4 = [(-2, -1), (-6, -1), (-6, -7), (-2, -7)]
 
     obstacle_5 = [(-9.8, 10), (-10, 10), (-10, -10), (-9.8, -10)]
     obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
     obstacle_7 = [(-10, 9.8), (-10, 10), (10, 10), (10, 9.8)]
     obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
+    obstacle_margin = 0.3
+    pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + radius + 0.5,
+                Config.MAP_HEIGHT / 2 - obstacle_margin - radius - 0.5)
 
-    obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
-    # obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+    obst_width = 10.0
+    obst_height = 3.0
+    obst_center = (pos_lims[1] - pos_lims[0] - obst_width) * np.random.rand(2) + pos_lims[0] + obst_width/2
+    obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
+    obstacle_dummy = np.array([[obst_width/2, obst_height/2], [-obst_width/2, obst_height/2],
+                [-obst_width/2, -obst_height/2], [obst_width/2, -obst_height/2]])
+    obstacle_shift = obstacle_dummy + (np.ones(obstacle_dummy.shape) * obst_center)
+    R = np.array([[np.cos(obst_heading), -np.sin(obst_heading)], [np.sin(obst_heading), np.cos(obst_heading)]])
+    obstacle_rot = np.dot(R, obstacle_shift.transpose()).transpose()
+    obstacle_rand = [(p[0], p[1]) for p in list(obstacle_rot)]
+    obstacle_rand = [obstacle_rand[(i+3)%4] for i in range(4)] if obst_heading != 0.0 else obstacle_rand
+
+    # obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+    obstacle.extend([obstacle_rand, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # Get random initial position
-    obstacle_margin = 0.5
-    pos_lims = (-Config.MAP_HEIGHT/2 + obstacle_margin + radius + 0.5, Config.MAP_HEIGHT/2 - obstacle_margin - radius - 0.5)
-    init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
-    init_heading = 2*np.pi * np.random.rand() - np.pi
+    pos_infeasible = True
+    while pos_infeasible:
+        init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
+        init_heading = 2*np.pi * np.random.rand() - np.pi
+        obstacle_limits = [[np.min(obstacle_rot[:,0]), np.max(obstacle_rot[:,0])],
+                           [np.min(obstacle_rot[:,1]), np.max(obstacle_rot[:,1])]]
+        pos_infeasible = all([(init_pos[i] > obstacle_limits[i][0] - radius - 0.2
+                               and init_pos[i] < obstacle_limits[i][1] + radius + 0.2)
+                            for i in range(2)])
+
+
     # ego agent
     agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
                         ego_agent_policy, UnicycleSecondOrderEulerDynamics,
@@ -141,9 +164,19 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # agents.append(Agent(4, 3, 12, 12 + 100.0, radius, pref_speed, - 1*np.pi,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
     #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
+
     # target agent
-    agents.append(Agent(4, 5, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
-    agents.append(Agent(-9, -9, 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 2))
+    for i in range(n_targets):
+        pos_infeasible = True
+        while pos_infeasible:
+            init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
+            init_heading = 2 * np.pi * np.random.rand() - np.pi
+            obstacle_limits = [[np.min(obstacle_rot[:, 0]), np.max(obstacle_rot[:, 0])],
+                               [np.min(obstacle_rot[:, 1]), np.max(obstacle_rot[:, 1])]]
+            pos_infeasible = all([(init_pos[i] > obstacle_limits[i][0] - radius - 0.2
+                                   and init_pos[i] < obstacle_limits[i][1] + radius + 0.2)
+                                  for i in range(2)])
+        agents.append(Agent(init_pos[0], init_pos[1], 100, 100, 0.2, pref_speed, 0, StaticPolicy, UnicycleSecondOrderEulerDynamics, [], 1))
 
     if "MPCRLStaticObsPolicy" == str(agents[0].policy) or "MPCStaticObsPolicy" == str(agents[0].policy) \
             or "MPC_IG_Policy" == str(agents[0].policy) or "MPCRLStaticObsIGPolicy" == str(agents[0].policy) \
