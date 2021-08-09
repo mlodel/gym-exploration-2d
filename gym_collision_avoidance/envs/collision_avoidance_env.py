@@ -170,6 +170,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.plot_env = True
 
+        # TODO: MOVE THIS TO DIFERENT CLASS
+        self.dagger = True
+        self.beta = 1
+
     def step(self, actions, dt=None):
         ###############################
         # This is the main function. An external process will compute an action for every agent
@@ -200,6 +204,28 @@ class CollisionAvoidanceEnv(gym.Env):
             actions = self.agents[0].goal_global_frame - self.agents[0].pos_global_frame
             actions = np.clip(actions, self.action_space.low, self.action_space.high)
         new_action = True
+
+        # # Supervisor
+        # mpc_actions, _ = self.agents[0].policy.mpc_output(0, self.agents)
+        #
+        # # Warm-start
+        # if self.total_number_of_steps < Config.PRE_TRAINING_STEPS / 4:
+        #     if self.dagger:
+        #         # LINEAR DECAY
+        #         self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
+        #         if np.random.uniform(0, 1) > self.beta:
+        #             selected_action = actions
+        #         else:
+        #             selected_action = mpc_actions
+        #     else:
+        #         selected_action = mpc_actions
+        # else:
+        #     self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
+        #     selected_action = actions
+        #
+        # clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
+        # clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
+
         for _ in range(Config.REPEAT_STEPS):
 
             self.episode_step_number += 1
@@ -212,12 +238,18 @@ class CollisionAvoidanceEnv(gym.Env):
             # Take action
             self._take_action(actions, dt, new_action)
             new_action = False
-            # Collect rewards
-            step_rewards = self._compute_rewards()
-            rewards += step_rewards
 
-            # Take observation
-            next_observations = self._get_obs()
+            # # Collect rewards
+            # step_rewards = self._compute_rewards()
+            # rewards += step_rewards
+            #
+            # # Take observation
+            # next_observations = self._get_obs()
+            #
+            # # IG Agents update their models
+            # for i, agent in enumerate(self.agents):
+            #     if agent.ig_model is not None:
+            #         agent.ig_model.update(self.agents)
 
             if (
                     (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
@@ -244,15 +276,26 @@ class CollisionAvoidanceEnv(gym.Env):
                     self.n_timeouts = np.roll(self.n_timeouts, 1)
                     self.n_timeouts[0] = self.agents[0].ran_out_of_time
                     # if self.agents[0].in_collision or self.episode_number<200:
-                    self.prediction_model.data_handler.addEpisodeData(self.agents)
-                    if (self.episode_number >= 100) and (self.episode_number % 100 == 0) and (
-                            len(self.prediction_model.data_handler.trajectory_set) >= 100):
-                        self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
-                                                         np.mean(self.n_timeouts))
+                    # self.prediction_model.data_handler.addEpisodeData(self.agents)
+                    # if (self.episode_number >= 100) and (self.episode_number % 100 == 0) and (
+                    #         len(self.prediction_model.data_handler.trajectory_set) >= 100):
+                    #     self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
+                    #                                      np.mean(self.n_timeouts))
 
             which_agents_done_dict = {}
             for i, agent in enumerate(self.agents):
                 which_agents_done_dict[agent.id] = which_agents_done[i]
+
+        # Get Rewards
+        rewards = self._compute_rewards()
+
+        # Take observation
+        next_observations = self._get_obs()
+
+        # IG Agents update their models
+        for i, agent in enumerate(self.agents):
+            if agent.ig_model is not None:
+                agent.ig_model.update(self.agents)
 
         infos = {'which_agents_done': which_agents_done_dict,
                  'is_infeasible': self.agents[0].is_infeasible,
@@ -261,7 +304,9 @@ class CollisionAvoidanceEnv(gym.Env):
                  'ran_out_of_time': self.agents[0].ran_out_of_time,
                  'in_collision': self.agents[0].in_collision,
                  'n_other_agents': sum([0 if agent.policy.str == "Static" else 1 for agent in self.agents]) - 1,
-                 'actions': actions}
+                 'actions': actions,
+                 # 'mpc_actions': mpc_actions
+                 }
 
         return next_observations, rewards, game_over, infos
 
@@ -803,10 +848,6 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             agent.sense(self.agents, i, self.map)
 
-        # IG Agents update their models
-        for i, agent in enumerate(self.agents):
-            if agent.ig_model is not None:
-                agent.ig_model.update(self.agents)
 
         # Agents fill in their element of the multiagent observation vector
         for i, agent in enumerate(self.agents):
