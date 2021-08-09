@@ -86,7 +86,7 @@ class Config:
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
-    REWARD_MAX_IG = 11.6 # 0.2
+    REWARD_MAX_IG = 11.6 # 11.6 # 0.2
 
 
     SCENARIOS_FOR_TRAINING = [
@@ -107,8 +107,9 @@ class Config:
 
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
@@ -250,6 +251,14 @@ class Config:
             'attr': 'ig_model.targetMap.probMap',
             'std': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
             'mean': np.ones( (MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32 ),
+        },
+        'entropy_map': {
+            'dtype': np.float32,
+            'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.targetMap.entropyMap',
+            'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+            'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
         },
         'agent_pos_map': {
             'dtype': np.float32,
