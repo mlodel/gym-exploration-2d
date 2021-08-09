@@ -49,7 +49,7 @@ class ig_agent():
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
                                    sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=3.0,
-                                   rEmp=0.33)
+                                   rEmp=0.33) # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
