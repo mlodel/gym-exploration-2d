@@ -48,6 +48,8 @@ class Config:
     PERFORMANCE_TEST = False
     PLOT_PREDICTIONS = True
     COLLISION_AV_W_STATIC_AGENT = False
+    EWC = False
+    MODEL_DESCRIPTION = " DAGGER MULTITHREAD test occupancy grid network network SPARSE REWARD BC cloning with warmstart dt=0.2 and k=2 COLL OFF"
 
     # MPC
     FORCES_N = 15
@@ -95,7 +97,7 @@ class Config:
 
     REWARDS_NORMALIZE = True
 
-    PRE_TRAINING_STEPS = 0
+    PRE_TRAINING_STEPS = 500000
 
 
 

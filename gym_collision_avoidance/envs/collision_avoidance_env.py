@@ -208,8 +208,8 @@ class CollisionAvoidanceEnv(gym.Env):
         if dt is None:
             dt = self.dt_nominal
 
-        self.episode_step_number += 1
-        self.total_number_of_steps += 1
+        # self.episode_step_number += 1
+        # self.total_number_of_steps += 1
 
         rewards = 0
 
@@ -219,7 +219,7 @@ class CollisionAvoidanceEnv(gym.Env):
         mpc_actions = self.get_expert_goal()
 
         # Warm-start
-        if self.total_number_of_steps < Config.PRE_TRAINING_STEPS / 8:
+        if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / 8:
             if self.dagger:
                 # LINEAR DECAY
                 self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
@@ -238,8 +238,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
         for i in range(Config.REPEAT_STEPS):
 
-            # self.episode_step_number += 1
-            # self.total_number_of_steps += 1
+            self.episode_step_number += 1
+            self.total_number_of_steps += 1
 
             # Generate Predictions
             if self.prediction_model:
@@ -260,7 +260,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards += step_rewards
 
             if (
-                    (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
+                    (self.episode_number - 0) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
                     and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
                     and self.episode_step_number % self.animation_period_steps == 0:
                 plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
@@ -312,7 +312,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def reset(self):
         if (
-                (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
+                (self.episode_number - 0) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.episode_step_number > 10:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
                          plot_save_dir=self.plot_save_dir,
