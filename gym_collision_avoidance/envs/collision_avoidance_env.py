@@ -222,7 +222,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / 8:
             if self.dagger:
                 # LINEAR DECAY
-                self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
+                self.beta = np.maximum(self.beta - 8 / Config.PRE_TRAINING_STEPS, 0)
                 if np.random.uniform(0, 1) > self.beta:
                     selected_action = actions
                 else:
@@ -484,7 +484,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                         self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy + ", seed=" + str(
                         self.episode_number) +
-                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ")")
+                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics
+                    + ", n_steps=" + str(self.total_number_of_steps) + ")")
             else:
                 self.agents, self.obstacles = eval(
                     "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
