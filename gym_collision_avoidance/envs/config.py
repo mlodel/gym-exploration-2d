@@ -83,7 +83,7 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
-    # IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
+    IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
@@ -94,6 +94,8 @@ class Config:
     IG_REWARD_BINARY_CELL = 0.1
 
     REWARDS_NORMALIZE = True
+
+    PRE_TRAINING_STEPS = 0
 
 
 

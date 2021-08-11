@@ -168,6 +168,19 @@ class CollisionAvoidanceEnv(gym.Env):
         self.prev_scenario_index = 0
         self.scenario_index = 0
 
+        self.avg_step_time = 0
+        self.avg_reset_time = 0
+
+        self.n_other_agents = 0
+
+        # Rendering
+        self.viewer = None
+        self.automatic_rendering_callback = None
+        self.should_update_rendering = True
+        self.rendering_mode = 'human'
+        self.offscreen = False
+        self.enable_auto_render = False
+        self.run = True
         self.plot_env = True
 
         # TODO: MOVE THIS TO DIFERENT CLASS
@@ -195,48 +208,45 @@ class CollisionAvoidanceEnv(gym.Env):
         if dt is None:
             dt = self.dt_nominal
 
+        self.episode_step_number += 1
+        self.total_number_of_steps += 1
+
         rewards = 0
 
-        if actions.size == 0 and self.use_expert_goal:
-            actions = self.get_expert_goal()
-            actions = np.clip(actions, self.action_space.low, self.action_space.high)
-        elif actions.size == 0 and not self.use_expert_goal:
-            actions = self.agents[0].goal_global_frame - self.agents[0].pos_global_frame
-            actions = np.clip(actions, self.action_space.low, self.action_space.high)
         new_action = True
 
-        # # Supervisor
-        # mpc_actions, _ = self.agents[0].policy.mpc_output(0, self.agents)
-        #
-        # # Warm-start
-        # if self.total_number_of_steps < Config.PRE_TRAINING_STEPS / 4:
-        #     if self.dagger:
-        #         # LINEAR DECAY
-        #         self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
-        #         if np.random.uniform(0, 1) > self.beta:
-        #             selected_action = actions
-        #         else:
-        #             selected_action = mpc_actions
-        #     else:
-        #         selected_action = mpc_actions
-        # else:
-        #     self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
-        #     selected_action = actions
-        #
-        # clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
-        # clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
+        # Supervisor
+        mpc_actions = self.get_expert_goal()
+
+        # Warm-start
+        if self.total_number_of_steps < Config.PRE_TRAINING_STEPS / 8:
+            if self.dagger:
+                # LINEAR DECAY
+                self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
+                if np.random.uniform(0, 1) > self.beta:
+                    selected_action = actions
+                else:
+                    selected_action = mpc_actions
+            else:
+                selected_action = mpc_actions
+        else:
+            self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
+            selected_action = actions
+
+        clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
+        clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
 
         for i in range(Config.REPEAT_STEPS):
 
-            self.episode_step_number += 1
-            self.total_number_of_steps += 1
+            # self.episode_step_number += 1
+            # self.total_number_of_steps += 1
 
             # Generate Predictions
             if self.prediction_model:
                 self._prediction_step()
 
             # Take action
-            self._take_action(actions, dt, new_action)
+            self._take_action(clipped_selected_action, dt, new_action)
             new_action = False
 
             if Config.IG_ACCUMULATE_REWARDS or i == Config.REPEAT_STEPS - 1:
@@ -280,9 +290,9 @@ class CollisionAvoidanceEnv(gym.Env):
                     #     self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
                     #                                      np.mean(self.n_timeouts))
 
-            which_agents_done_dict = {}
-            for i, agent in enumerate(self.agents):
-                which_agents_done_dict[agent.id] = which_agents_done[i]
+        which_agents_done_dict = {}
+        for i, agent in enumerate(self.agents):
+            which_agents_done_dict[agent.id] = which_agents_done[i]
 
         # Take observation
         next_observations = self._get_obs()
@@ -295,7 +305,7 @@ class CollisionAvoidanceEnv(gym.Env):
                  'in_collision': self.agents[0].in_collision,
                  'n_other_agents': sum([0 if agent.policy.str == "Static" else 1 for agent in self.agents]) - 1,
                  'actions': actions,
-                 # 'mpc_actions': mpc_actions
+                 'mpc_actions': mpc_actions
                  }
 
         return next_observations, rewards, game_over, infos
