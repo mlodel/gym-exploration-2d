@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
-
+from gym_collision_avoidance.envs.config import Config
 
 class targetMap():
     def __init__(self, edfMapObj, mapSize, cellSize, sensFOV, sensRange, rOcc, rEmp, tolerance=0.01, prior=0.0,
@@ -32,6 +32,8 @@ class targetMap():
         self.logMap_bound = logmap_bound
 
         self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) ) / np.log(2)
+
+        self.binaryMap = np.zeros(shape).astype(bool)
 
     def getCellsFromPose(self, pose):
         if len(pose) > 2:
@@ -141,7 +143,15 @@ class targetMap():
                 else:
                     lSens = self.lEmp
 
-                reward += self.get_reward_from_cells([(i,j)])
+
+                # REWARD computation
+                if Config.IG_REWARD_MODE == "binary":
+                    reward += Config.IG_REWARD_BINARY_CELL if not self.binaryMap[j,i] else 0.0
+                else:
+                    reward += self.get_reward_from_cells([(i,j)])
+
+                self.binaryMap[j,i] = True
+
                 self.map[j,i] += lSens
                 self.map[j,i] = np.clip(self.map[j,i], -self.logMap_bound, self.logMap_bound)
 

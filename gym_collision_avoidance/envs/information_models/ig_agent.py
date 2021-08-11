@@ -8,6 +8,7 @@ from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
 from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
 
+from gym_collision_avoidance.envs.config import Config
 
 import time
 
@@ -48,8 +49,8 @@ class ig_agent():
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=3.0,
-                                   rEmp=0.33) # rOcc 3.0 1.1 rEmp 0.33 0.9
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=Config.IG_SENSE_rOcc,
+                                   rEmp=Config.IG_SENSE_rEmp) # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
@@ -62,10 +63,8 @@ class ig_agent():
 
         global_pose = np.append(pos_global_frame, heading_global_frame)
 
-        other_agents_states = self.host_agent.get_sensor_data('other_agents_states')
-
         ig_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != self.host_agent.id]
-        self.update_belief(ig_agents, global_pose, agents, other_agents_states)
+        self.update_belief(ig_agents, global_pose, agents)
 
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
@@ -74,11 +73,11 @@ class ig_agent():
     def get_reward(self, agent_pos, agent_heading):
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
 
-    def update_belief(self, ig_agents, global_pose, agents, other_agents_states):
+    def update_belief(self, ig_agents, global_pose, agents):
         targets = []
         poses = []
         # Find Targets in Range and FOV (Detector Emulation)
-        self.obsvd_targets = self.find_targets_in_obs(other_agents_states, global_pose)
+        self.obsvd_targets = self.find_targets_in_obs(agents, global_pose)
         targets.append(self.obsvd_targets)
         poses.append(global_pose)
         # Get observations of other agens
@@ -92,17 +91,16 @@ class ig_agent():
         self.team_obsv_cells, self.team_reward = self.targetMap.update(poses, targets, frame='global')
         # self.team_reward = self.targetMap.get_reward_from_cells(self.team_obsv_cells)
 
-    def find_targets_in_obs(self, other_agents_states, global_pose):
+    def find_targets_in_obs(self, agents, global_pose):
 
         # Find Targets in Range and FOV (Detector Emulation)
         c, s = np.cos(global_pose[2]), np.sin(global_pose[2])
         R = np.array(((c, s), (-s, c)))
         targets = []
-        for other_agent in other_agents_states:
-            if other_agent[9] == 1.0:
+        for agent in agents:
+            if agent.policy.str == "StaticPolicy":
                 # Static Agent = Target
-                # r = other_agent[0:2] - global_pose[0:2]
-                r = other_agent[0:2]
+                r = agent.pos_global_frame - global_pose[0:2]
                 r_norm = np.sqrt(r[0] ** 2 + r[1] ** 2)
                 in_range = r_norm <= self.detect_range
                 if in_range:
@@ -110,7 +108,7 @@ class ig_agent():
                     dphi = (np.arctan2(r_rot[1], r_rot[0]))
                     in_fov = abs(dphi) <= self.detect_fov / 2.0
                     if in_fov:
-                        targets.append(other_agent[0:2] + global_pose[0:2])
+                        targets.append(agent.pos_global_frame)
                     else:
                         what=1
 

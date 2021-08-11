@@ -226,7 +226,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
         # clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
 
-        for _ in range(Config.REPEAT_STEPS):
+        for i in range(Config.REPEAT_STEPS):
 
             self.episode_step_number += 1
             self.total_number_of_steps += 1
@@ -239,17 +239,15 @@ class CollisionAvoidanceEnv(gym.Env):
             self._take_action(actions, dt, new_action)
             new_action = False
 
-            # # Collect rewards
-            # step_rewards = self._compute_rewards()
-            # rewards += step_rewards
-            #
-            # # Take observation
-            # next_observations = self._get_obs()
-            #
-            # # IG Agents update their models
-            # for i, agent in enumerate(self.agents):
-            #     if agent.ig_model is not None:
-            #         agent.ig_model.update(self.agents)
+            if Config.IG_ACCUMULATE_REWARDS or i == Config.REPEAT_STEPS - 1:
+                # IG Agents update their models
+                for i, agent in enumerate(self.agents):
+                    if agent.ig_model is not None:
+                        agent.ig_model.update(self.agents)
+
+                # Collect rewards
+                step_rewards = self._compute_rewards()
+                rewards += step_rewards
 
             if (
                     (self.episode_number - 1) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
@@ -286,16 +284,8 @@ class CollisionAvoidanceEnv(gym.Env):
             for i, agent in enumerate(self.agents):
                 which_agents_done_dict[agent.id] = which_agents_done[i]
 
-        # Get Rewards
-        rewards = self._compute_rewards()
-
         # Take observation
         next_observations = self._get_obs()
-
-        # IG Agents update their models
-        for i, agent in enumerate(self.agents):
-            if agent.ig_model is not None:
-                agent.ig_model.update(self.agents)
 
         infos = {'which_agents_done': which_agents_done_dict,
                  'is_infeasible': self.agents[0].is_infeasible,
@@ -350,6 +340,11 @@ class CollisionAvoidanceEnv(gym.Env):
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
                 self.observation[agent][state] = np.zeros((Config.STATE_INFO_DICT[state]['size']),
                                                           dtype=Config.STATE_INFO_DICT[state]['dtype'])
+
+        # IG Agents update their models
+        for i, agent in enumerate(self.agents):
+            if agent.ig_model is not None:
+                agent.ig_model.update(self.agents)
 
         return self._get_obs()
 
@@ -638,6 +633,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (agent.past_dist_to_goal - agent.dist_to_goal)
 
                 if agent.ig_model is not None:
+                    # team_reward is reward for last update in ig_model
                     ig_reward = agent.ig_model.team_reward
                     # ig_reward = agent.policy.targetMap.get_reward_from_pose(np.append(agent.pos_global_frame,
                     #                                                                   agent.heading_global_frame))
@@ -660,8 +656,9 @@ class CollisionAvoidanceEnv(gym.Env):
                         rewards[i] += -0.1
 
                 # rewards[i] += 0.01 * agent.speed_global_frame
-        rewards = np.clip(rewards, self.min_possible_reward,
-                          self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
+        if Config.REWARDS_NORMALIZE:
+            rewards = np.clip(rewards, self.min_possible_reward,
+                              self.max_possible_reward) / (self.max_possible_reward - self.min_possible_reward)
 
         if Config.TRAIN_SINGLE_AGENT:
             rewards = rewards[0]
@@ -847,7 +844,6 @@ class CollisionAvoidanceEnv(gym.Env):
         # Agents collect a reading from their map-based sensors
         for i, agent in enumerate(self.agents):
             agent.sense(self.agents, i, self.map)
-
 
         # Agents fill in their element of the multiagent observation vector
         for i, agent in enumerate(self.agents):

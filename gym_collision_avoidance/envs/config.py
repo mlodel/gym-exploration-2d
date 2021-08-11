@@ -83,10 +83,18 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
-    IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
+    # IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
-    REWARD_MAX_IG = 11.6 # 11.6 # 0.2
+    IG_SENSE_rOcc = 3.0
+    IG_SENSE_rEmp = 0.33
+    REWARD_MAX_IG = 1.2 # 6.7 4.0 # 0.2
+    IG_ACCUMULATE_REWARDS = False
+    IG_REWARD_MODE = "binary" # entropy, binary
+    IG_REWARD_BINARY_CELL = 0.1
+
+    REWARDS_NORMALIZE = True
+
 
 
     SCENARIOS_FOR_TRAINING = [
@@ -109,7 +117,13 @@ class Config:
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'binary_map']  # occupancy grid
+
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'binary_map']  # occupancy grid
+
+
     # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
     # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
@@ -265,6 +279,14 @@ class Config:
             'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             'bounds': [-np.inf, np.inf],
             'attr': 'ig_model.agent_pos_map',
+            'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+            'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+        },
+        'binary_map': {
+            'dtype': np.float32,
+            'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.targetMap.binaryMap.astype(float)',
             'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
             'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
         }
