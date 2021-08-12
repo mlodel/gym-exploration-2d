@@ -131,9 +131,9 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + radius + 0.5,
                 Config.MAP_HEIGHT / 2 - obstacle_margin - radius - 0.5)
 
-    if n_steps < 3000000:
+    if n_steps < 3000000 * Config.REPEAT_STEPS/8:
         n_obstacles = 1
-    elif n_steps < 6000000:
+    elif n_steps < 5500000 * Config.REPEAT_STEPS/8:
         n_obstacles = 2
     else:
         n_obstacles = 3

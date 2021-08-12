@@ -109,7 +109,7 @@ class Config:
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 10  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH/2, MAP_WIDTH/2), (-MAP_HEIGHT/2, MAP_HEIGHT/2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False
