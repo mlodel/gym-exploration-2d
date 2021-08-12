@@ -97,7 +97,7 @@ class Config:
 
     REWARDS_NORMALIZE = True
 
-    PRE_TRAINING_STEPS = 500000
+    PRE_TRAINING_STEPS = 1000000
 
 
 

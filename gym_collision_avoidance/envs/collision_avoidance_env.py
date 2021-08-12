@@ -222,7 +222,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / 8:
             if self.dagger:
                 # LINEAR DECAY
-                self.beta = np.maximum(self.beta - 1 / Config.PRE_TRAINING_STEPS, 0)
+                self.beta = np.maximum(self.beta - 8 / Config.PRE_TRAINING_STEPS, 0)
                 if np.random.uniform(0, 1) > self.beta:
                     selected_action = actions
                 else:
@@ -258,9 +258,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 # Collect rewards
                 step_rewards = self._compute_rewards()
                 rewards += step_rewards
-
-            if (
-                    (self.episode_number - 0) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
+            # a=b
+            if ( (self.episode_number - 0) % Config.PLOT_EVERY_N_EPISODES == 1 or Config.EVALUATE_MODE) \
                     and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
                     and self.episode_step_number % self.animation_period_steps == 0:
                 plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
