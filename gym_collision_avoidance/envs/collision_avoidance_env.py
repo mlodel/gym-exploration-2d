@@ -483,7 +483,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
                         self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy + ", seed=" + str(
                         self.episode_number) +
-                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics + ")")
+                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics
+                    + ", n_steps=" + str(self.total_number_of_steps) + ")")
             else:
                 self.agents, self.obstacles = eval(
                     "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
