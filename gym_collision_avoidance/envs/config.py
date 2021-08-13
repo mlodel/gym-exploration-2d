@@ -95,6 +95,8 @@ class Config:
     IG_REWARD_MODE = "binary" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
 
+    IG_CURRICULUM_LEARNING = True
+
     REWARDS_NORMALIZE = True
 
     PRE_TRAINING_STEPS = 1000000

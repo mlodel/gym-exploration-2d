@@ -187,6 +187,8 @@ class CollisionAvoidanceEnv(gym.Env):
         self.dagger = True
         self.beta = 1
 
+        self.n_env = 1
+
     def step(self, actions, dt=None):
         ###############################
         # This is the main function. An external process will compute an action for every agent
@@ -219,10 +221,10 @@ class CollisionAvoidanceEnv(gym.Env):
         mpc_actions = self.get_expert_goal()
 
         # Warm-start
-        if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / 8:
+        if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
             if self.dagger:
                 # LINEAR DECAY
-                self.beta = np.maximum(self.beta - 8 / Config.PRE_TRAINING_STEPS, 0)
+                self.beta = np.maximum(self.beta - self.n_env / Config.PRE_TRAINING_STEPS, 0)
                 if np.random.uniform(0, 1) > self.beta:
                     selected_action = actions
                 else:
@@ -484,7 +486,7 @@ class CollisionAvoidanceEnv(gym.Env):
                         self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy + ", seed=" + str(
                         self.episode_number) +
                     ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics
-                    + ", n_steps=" + str(self.total_number_of_steps) + ")")
+                    + ", n_steps=" + str(self.total_number_of_steps) + ", n_env+" + str(self.n_env) + ")")
             else:
                 self.agents, self.obstacles = eval(
                     "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
@@ -914,6 +916,9 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def set_plot_env(self,plot_env=True):
         self.plot_env = plot_env
+
+    def set_n_env(self,n_env):
+        self.n_env = n_env
 
 if __name__ == '__main__':
     print("See example.py for a minimum working example.")

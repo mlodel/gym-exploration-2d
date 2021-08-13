@@ -107,7 +107,7 @@ def IG_single_agent():
 def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObsIGPolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
                              other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None,
-                             n_steps=None):
+                             n_steps=0, n_env=1):
     pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
@@ -131,9 +131,9 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + radius + 0.5,
                 Config.MAP_HEIGHT / 2 - obstacle_margin - radius - 0.5)
 
-    if n_steps < 3000000 * Config.REPEAT_STEPS/8:
+    if n_steps < 3000000 * Config.REPEAT_STEPS/n_env or not Config.IG_CURRICULUM_LEARNING:
         n_obstacles = 1
-    elif n_steps < 5500000 * Config.REPEAT_STEPS/8:
+    elif n_steps < 5500000 * Config.REPEAT_STEPS/n_env:
         n_obstacles = 2
     else:
         n_obstacles = 3
