@@ -107,14 +107,15 @@ def IG_single_agent():
 def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObsIGPolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
                              other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None,
-                             n_steps=0, n_env=1):
+                             n_steps=0, n_env=1, n_obstacles=1):
     pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
     n_targets = 3
-    # if seed:
-    #     random.seed(seed)
-    #     np.random.seed(seed)
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+
 
     # Corridor scenario
     obstacle = []
@@ -127,16 +128,19 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
     obstacle_7 = [(-10, 9.8), (-10, 10), (10, 10), (10, 9.8)]
     obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
-    obstacle_margin = 0.3
-    pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + radius + 0.5,
-                Config.MAP_HEIGHT / 2 - obstacle_margin - radius - 0.5)
+    obstacle_margin = 0.2
+    pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + 2*radius + 0.6,
+                Config.MAP_HEIGHT / 2 - obstacle_margin - 2*radius - 0.6)
 
-    if n_steps < 3000000 * Config.REPEAT_STEPS/n_env or not Config.IG_CURRICULUM_LEARNING:
-        n_obstacles = 1
-    elif n_steps < 5500000 * Config.REPEAT_STEPS/n_env:
-        n_obstacles = 2
-    else:
-        n_obstacles = 3
+
+    if not Config.TEST_MODE:
+        if n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_2_OBS * Config.REPEAT_STEPS/n_env \
+                or not Config.IG_CURRICULUM_LEARNING:
+            n_obstacles = 1
+        elif n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_3_OBS * Config.REPEAT_STEPS/n_env:
+            n_obstacles = 2
+        else:
+            n_obstacles = 3
 
     obstacle_np = []
     obstacle_at_wall = False
@@ -144,6 +148,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     for k in range(n_obstacles):
         obst_width = 1.0 * np.random.randint(3, 15)
         obst_height = 1.0 * np.random.randint(1, 5)
+        obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
         if obstacle_at_wall:
             obst_center = (pos_lims[1] - pos_lims[0] - obst_width) \
                           * np.random.rand(2) + pos_lims[0] + obst_width / 2
@@ -163,7 +168,8 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
         obstacle_rand = [obstacle_rand[(i+3)%4] for i in range(4)] if obst_heading != 0.0 else obstacle_rand
         obstacle.extend([obstacle_rand])
 
-        obstacle_at_wall = any([np.max(np.abs(obstacle_rot[:,i])) > pos_lims[1] for i in range(2)])
+        if not obstacle_at_wall:
+            obstacle_at_wall = any([np.max(np.abs(obstacle_rot[:,i])) > pos_lims[1] for i in range(2)])
 
     # obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
     obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])

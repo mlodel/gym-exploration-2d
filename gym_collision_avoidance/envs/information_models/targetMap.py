@@ -5,7 +5,7 @@ from gym_collision_avoidance.envs.config import Config
 
 class targetMap():
     def __init__(self, edfMapObj, mapSize, cellSize, sensFOV, sensRange, rOcc, rEmp, tolerance=0.01, prior=0.0,
-                 p_false_neg=0.1, p_false_pos=0.05, logmap_bound=4.0):
+                 p_false_neg=0.1, p_false_pos=0.05, logmap_bound=30.0):
         self.edfMapObj = edfMapObj
         
         self.cellSize = cellSize
@@ -31,9 +31,34 @@ class targetMap():
 
         self.logMap_bound = logmap_bound
 
-        self.entropyMap = np.ones(shape) * ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) ) / np.log(2)
+        cell_entropy_prior = ( -p_prior*np.log(p_prior) - (1-p_prior)*np.log(1-p_prior) ) / np.log(2)
+        self.entropyMap = np.ones(shape) * cell_entropy_prior
 
         self.binaryMap = np.zeros(shape).astype(bool)
+
+        self.free_cells = set()
+        self._init_free_cells()
+        self.n_free_cells = len(self.free_cells)
+        self.entropy_free_space = cell_entropy_prior * self.n_free_cells # * shape[0] * shape [1]
+
+        self.visitedCells = set()
+        self.visited_share = 0.0
+
+        self.thres_share_vis_cells = Config.IG_THRES_VISITED_CELLS
+        self.thres_entropy = Config.IG_THRES_AVG_CELL_ENTROPY * self.n_free_cells
+
+        self.finished_binary = False
+        self.finished_entropy= False
+        self.finished = False
+
+    def _init_free_cells(self):
+
+        for i in range(self.map.shape[1]):
+            for j in range(self.map.shape[0]):
+                pose = self.getPoseFromCell((i,j))
+                if self.edfMapObj.get_edf_value_from_pose(pose) >= 0.001:
+                    self.free_cells.add((i,j))
+
 
     def getCellsFromPose(self, pose):
         if len(pose) > 2:
@@ -96,9 +121,10 @@ class targetMap():
                 dphi = np.arctan2(r[1], r[0])
                 r_norm = np.sqrt(r[0]**2 + r[1]**2)
                 if r_norm < self.sensRange and abs(dphi) <= self.sensFOV/2:
-                    visible = self.edfMapObj.checkVisibility(pose, cellPos)
-                    if visible:
-                        visibleCells.add((i,j))
+                    if (i,j) in self.free_cells:
+                        visible = self.edfMapObj.checkVisibility(pose, cellPos)
+                        if visible:
+                            visibleCells.add((i,j))
         
         return visibleCells
 
@@ -163,23 +189,47 @@ class targetMap():
 
                 # Update Entropies and obtain reward
                 cell_entropy = (-p_cell*np.log(p_cell) - (1-p_cell)*np.log(1-p_cell)) / np.log(2)
+
                 # reward += self.entropyMap[j,i] - cell_entropy
+                self.entropy_free_space = self.entropy_free_space - self.entropyMap[j,i] + cell_entropy
                 self.entropyMap[j,i] = cell_entropy
+
             obsvdCells.update(visibleCells)
+            self.visitedCells.update(obsvdCells)
+            self.visited_share = len(self.visitedCells) / len(self.free_cells)
+        # Check Termination
+        if self.entropy_free_space  <= self.thres_entropy:
+            self.finished_entropy = True
+        else:
+            self.finished_entropy = False
+
+        if self.visited_share >= self.thres_share_vis_cells:
+            self.finished_binary = True
+        else:
+            self.finished_binary = False
+
+        if Config.IG_REWARD_MODE == "binary":
+            self.finished = self.finished_binary
+        else:
+            self.finished = self.finished_entropy
+
         return obsvdCells, reward
 
     def get_reward_from_cells(self, cells):
         cell_mi = []
         for i, j in cells:
-            r = np.exp(self.map[j, i])
-            p = r / (r + 1)
-            f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (r * self.rOcc + 1)
-            f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (r * self.rEmp + 1)
+            if np.abs(self.map[j,i]) >= self.logMap_bound:
+                mi = 0.0
+            else:
+                r = np.exp(self.map[j, i])
+                p = r / (r + 1)
+                f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (r * self.rOcc + 1)
+                f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (r * self.rEmp + 1)
 
-            P_p = p * (1 - self.p_false_neg) + (1 - p) * self.p_false_pos
-            P_n = p * self.p_false_neg + (1 - p) * (1 - self.p_false_pos)
+                P_p = p * (1 - self.p_false_neg) + (1 - p) * self.p_false_pos
+                P_n = p * self.p_false_neg + (1 - p) * (1 - self.p_false_pos)
 
-            mi = P_p * f_p + P_n * f_n
+                mi = P_p * f_p + P_n * f_n
             cell_mi.append(mi)
         return sum(cell_mi)
 

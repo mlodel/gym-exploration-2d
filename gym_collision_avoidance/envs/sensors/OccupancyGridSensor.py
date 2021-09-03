@@ -100,6 +100,7 @@ class OccupancyGridSensor(Sensor):
         batch_grid = self.floatmap_rot[start_idx_y:end_idx_y, start_idx_x:end_idx_x]
 
 
+
         batch_grid = batch_grid.astype(bool)
 
         if self.plot:

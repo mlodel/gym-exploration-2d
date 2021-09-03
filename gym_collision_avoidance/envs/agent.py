@@ -112,17 +112,22 @@ class Agent(object):
         # self.latest_laserscan = LaserScan()
         # self.latest_laserscan.ranges = 10*np.ones(Config.LASERSCAN_LENGTH)
 
+        self.coverage_finished = False
         self.is_done = False
         self.warm_start = False
 
-    def __deepcopy__(self, memo):
-        # Copy every attribute about the agent except its policy
-        cls = self.__class__
-        obj = cls.__new__(cls)
-        for k, v in self.__dict__.items():
-            if k != 'policy':
-                setattr(obj, k, v)
-        return obj
+        self.is_deadlocked = False
+        self.subgoal_in_wall = False
+        self.deadlock_count = 0
+
+    # def __deepcopy__(self, memo):
+    #     # Copy every attribute about the agent except its policy
+    #     cls = self.__class__
+    #     obj = cls.__new__(cls)
+    #     for k, v in self.__dict__.items():
+    #         if k != 'policy':
+    #             setattr(obj, k, v)
+    #     return obj
 
     def _check_if_at_goal(self):
         #is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2

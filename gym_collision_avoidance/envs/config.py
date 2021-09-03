@@ -26,7 +26,6 @@ class Config:
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
     NUM_TEST_CASES = 50
-    PLOT_EVERY_N_EPISODES = 500  # for tensorboard visualization
     DT = 0.1  # seconds between simulation time steps
     REWARD_AT_GOAL = 0.0  # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = 0.0  # reward given when agent collides with another agent
@@ -35,9 +34,15 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = 0.0  # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE = 0.0  # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP = -0.01  # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP = -0.1  # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
+
+    REWARD_DEADLOCKED = -0.0
+    REWARD_SUBGOAL_INFEASIBLE = -0.0
+    REWARD_FACTOR_DISTANCE = 0.0 # -0.1
+    REWARD_COVERAGE = 0.0
+
     WIGGLY_BEHAVIOR_THRESHOLD = 0.0
     ENABLE_COLLISION_AVOIDANCE = True
     COLLISION_DIST = 0.5  # meters between agents' boundaries for collision
@@ -51,6 +56,8 @@ class Config:
     EWC = False
     MODEL_DESCRIPTION = " DAGGER MULTITHREAD test occupancy grid network network SPARSE REWARD BC cloning with warmstart dt=0.2 and k=2 COLL OFF"
 
+
+
     # MPC
     FORCES_N = 15
     FORCES_DT = 0.3
@@ -61,7 +68,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.25
-    MAX_TIME_RATIO = 3.2  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 6.4 # 3.2  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0
@@ -90,17 +97,25 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 1.2 # 6.7 4.0 # 0.2
+    REWARD_MAX_IG = 4.0 # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
-    IG_REWARD_MODE = "binary" # entropy, binary
+    IG_REWARD_MODE = "entropy" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
+    IG_THRES_VISITED_CELLS = 0.9
+    IG_THRES_AVG_CELL_ENTROPY = 0.4
 
     IG_CURRICULUM_LEARNING = True
+    IG_CURRICULUM_LEARNING_STEPS_2_OBS = 3000000
+    IG_CURRICULUM_LEARNING_STEPS_3_OBS = 6000000
+
+    PLOT_EVERY_N_STEPS = 500000  # for visualization
 
     REWARDS_NORMALIZE = True
 
     PRE_TRAINING_STEPS = 1000000
 
+    TEST_MODE = True
+    TEST_N_OBST = 3
 
 
     SCENARIOS_FOR_TRAINING = [
@@ -123,8 +138,8 @@ class Config:
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
+    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
+    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'binary_map']  # occupancy grid
 
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'binary_map']  # occupancy grid

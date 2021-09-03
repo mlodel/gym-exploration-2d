@@ -135,8 +135,8 @@ def plot_episode(agents, obstacles, in_evaluate_mode,
 
     if agents[0].ig_model is not None:
         ax3 = fig.add_axes([0.72, 0.2, 0.3, 0.3])
-        # ax3.imshow(agents[0].ig_model.targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
-        ax3.imshow(agents[0].ig_model.targetMap.binaryMap.astype(float), cmap=plt.cm.binary, origin='lower')
+        ax3.imshow(agents[0].ig_model.targetMap.probMap, vmin=0, vmax=1, cmap='jet', origin='lower')
+        # ax3.imshow(agents[0].ig_model.targetMap.binaryMap.astype(float), cmap=plt.cm.binary, origin='lower')
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
 

@@ -7,6 +7,7 @@ from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
 from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
 from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
+from gym_collision_avoidance.envs.information_models.ig_random import ig_random
 
 from gym_collision_avoidance.envs.config import Config
 
@@ -39,6 +40,10 @@ class ig_agent():
         self.agent_pos_map = None
         self.agent_pos_idc = None
 
+        self.finished_entropy = False
+        self.finished_binary = False
+        self.finished = False
+
         # np.random.seed(current_milli_time() - int(1.625e12))
 
     def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
@@ -56,6 +61,14 @@ class ig_agent():
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
+    def set_expert_policy(self, expert):
+        if expert == 'ig_greedy':
+            self.expert_policy = ig_greedy(self)
+        elif expert == 'ig_mcts':
+            self.expert_policy = ig_mcts(self)
+        elif expert == 'ig_random':
+            self.expert_policy = ig_random(self)
+
     def update(self, agents):
 
         pos_global_frame = self.host_agent.get_agent_data('pos_global_frame')
@@ -69,6 +82,8 @@ class ig_agent():
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
+
+        self.finished = self.targetMap.finished
 
     def get_reward(self, agent_pos, agent_heading):
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
