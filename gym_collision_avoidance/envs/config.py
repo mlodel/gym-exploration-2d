@@ -114,7 +114,7 @@ class Config:
 
     PRE_TRAINING_STEPS = 1000000
 
-    TEST_MODE = True
+    TEST_MODE = False
     TEST_N_OBST = 3
 
 

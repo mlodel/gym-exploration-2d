@@ -131,7 +131,6 @@ class ig_agent():
 
     def get_greedy_goal(self, pose, max_dist=4.0, min_dist=1.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
-        np.random.seed(10)
         candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist

@@ -11,7 +11,6 @@ class ig_greedy():
     def get_expert_goal(self, max_dist=6.0, min_dist=0.0, Nsamples=30):
         pose = self.ig_model.host_agent.pos_global_frame
         # Generate candidate goals in polar coordinates + yaw angle
-        # np.random.seed(10)
         candidates_polar = np.random.rand(Nsamples,2)
         # Scale radius
         candidates_polar[:,0] = (max_dist - min_dist) * candidates_polar[:,0] + min_dist

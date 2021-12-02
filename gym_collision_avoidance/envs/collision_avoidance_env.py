@@ -195,6 +195,10 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase = None
         self.testcase_count = 1
         self.testcase_repeat = 1
+        self.testcase_n_train = 128
+        self.testcase_n_test = 128
+        # self.testcases_seeds_train = np.arange(self.testcase_n_train)
+        # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
 
     def step(self, actions, dt=None):
         ###############################
@@ -333,7 +337,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if (
                 (self.episode_number - 0) % self.plot_every_n_episodes == 1 or ( Config.TEST_MODE
                              # and self.episode_number <= 2*self.testcase_repeat
-        )) \
+        ) or True) \
                 and Config.SAVE_EPISODE_PLOTS and self.episode_number >= 1 and self.episode_step_number > 0:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
@@ -538,12 +542,18 @@ class CollisionAvoidanceEnv(gym.Env):
                 scenario_index = 0
                 self.number_of_agents = 6
 
+
+
             # scenario_index = np.random.randint(0,len(self.scenario))
             if self.testcase_count == self.testcase_repeat or not Config.TEST_MODE:
                 if Config.TEST_MODE:
-                    seed = (self.env_id + 2200) * ( (self.episode_number - 1) // self.testcase_repeat + 1)
+                    testcases_per_env = self.testcase_n_test // self.n_env
+                    tc_start, tc_end = self.testcase_n_train + self.env_id*testcases_per_env, \
+                                       self.testcase_n_train + (self.env_id+1)*testcases_per_env
+                    seed = np.arange(tc_start, tc_end)[self.episode_number % testcases_per_env]
                 else:
-                    seed = None
+                    np.random.seed((self.env_id + 1234) * self.episode_number)
+                    seed = np.random.choice(self.testcase_n_train)
                 self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
                     self.number_of_agents) + ", seed=" + str(seed) +
                                                    ", ego_agent_policy=" + self.ego_policy +
@@ -561,7 +571,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 self.testcase_count += 1
                 self.agents = copy.deepcopy(self.testcase[0])
                 self.obstacles = self.testcase[1]
-
+            # np.random.seed((self.env_id + 1234) * self.episode_number)
 
 
         if self.episode_number == 1:
