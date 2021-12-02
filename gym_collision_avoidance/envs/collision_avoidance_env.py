@@ -337,7 +337,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if (
                 (self.episode_number - 0) % self.plot_every_n_episodes == 1 or ( Config.TEST_MODE
                              # and self.episode_number <= 2*self.testcase_repeat
-        ) or True) \
+        )) \
                 and Config.SAVE_EPISODE_PLOTS and self.episode_number >= 1 and self.episode_step_number > 0:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
                          self.id, circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
