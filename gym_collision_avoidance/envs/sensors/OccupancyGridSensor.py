@@ -93,13 +93,14 @@ class OccupancyGridSensor(Sensor):
 
 
 
+
         # Get the batch_grid with filled in values
         # float_map = self.map.astype(float)
         # Rotate grid such that it is aligned with the heading
         self.rotate_grid_around_center(angle=-ego_agent_heading*180/np.pi)
         batch_grid = self.floatmap_rot[start_idx_y:end_idx_y, start_idx_x:end_idx_x]
 
-
+        # batch_grid = self.fill_invisible(batch_grid)
 
         batch_grid = batch_grid.astype(bool)
 
@@ -109,6 +110,20 @@ class OccupancyGridSensor(Sensor):
             self.plot_batch_grid(batch_grid)
 
         return batch_grid
+
+    # def fill_invisible(self, grid):
+    #     grid = 1 - grid
+    #     pos = (self.x_width//2, self.y_width//2)
+    #     im = np.array(grid * 255, dtype=np.uint8)
+    #
+    #     contours, _ = cv2.findContours(im, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    #
+    #     for cnt in contours:
+    #         if cv2.pointPolygonTest(cnt, pos, measureDist=False) == -1:
+    #             cv2.drawContours(im, [cnt], 0, 0, -1)
+    #
+    #     return 1 - np.array(im / 255)
+
 
     # Plot
     def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title):
