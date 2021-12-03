@@ -8,7 +8,7 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = continuous
 
-    ANIMATE_EPISODES = True
+    ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
     SAVE_EPISODE_PLOTS = True
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -102,7 +102,7 @@ class Config:
     IG_REWARD_MODE = "entropy" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
-    IG_THRES_AVG_CELL_ENTROPY = 0.4
+    IG_THRES_AVG_CELL_ENTROPY = 0.1
 
     IG_CURRICULUM_LEARNING = True
     IG_CURRICULUM_LEARNING_STEPS_2_OBS = 3000000
@@ -114,7 +114,7 @@ class Config:
 
     PRE_TRAINING_STEPS = 1000000
 
-    TEST_MODE = False
+    TEST_MODE = True
     TEST_N_OBST = 3
 
 

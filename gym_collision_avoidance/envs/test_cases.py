@@ -128,9 +128,10 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
     obstacle_7 = [(-10, 9.8), (-10, 10), (10, 10), (10, 9.8)]
     obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
-    obstacle_margin = 0.2
-    pos_lims = (-Config.MAP_HEIGHT / 2 + obstacle_margin + 2*radius + 0.6,
-                Config.MAP_HEIGHT / 2 - obstacle_margin - 2*radius - 0.6)
+
+    pos_lims_map = Config.MAP_HEIGHT / 2
+    obstacle_margin = 4*radius
+    pos_lims_margin = Config.MAP_HEIGHT / 2 - obstacle_margin
 
 
     if not Config.TEST_MODE:
@@ -145,16 +146,15 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_np = []
     obstacle_at_wall = False
 
-    for k in range(n_obstacles):
-        obst_width = 1.0 * np.random.randint(3, 15)
-        obst_height = 1.0 * np.random.randint(1, 5)
+    while len(obstacle) < n_obstacles:
+        obst_width = 1.0 * np.random.randint(5, 15)
+        obst_height = 1.0 * np.random.randint(1, 7)
         obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
-        if obstacle_at_wall:
-            obst_center = (pos_lims[1] - pos_lims[0] - obst_width) \
-                          * np.random.rand(2) + pos_lims[0] + obst_width / 2
-        else:
-            obst_center = (Config.MAP_HEIGHT - obst_width) \
-                          * np.random.rand(2) - Config.MAP_HEIGHT / 2 + obst_width/2
+        # if obstacle_at_wall:
+        #     obst_center = (2*pos_lims_margin - obst_width) \
+        #                   * np.random.rand(2) - pos_lims_margin + obst_width / 2
+        # else:
+        obst_center = (2*pos_lims_map - obst_width/2) * np.random.rand(2) - pos_lims_map + obst_width/4
         obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
 
 
@@ -163,13 +163,47 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
         obstacle_shift = obstacle_dummy + (np.ones(obstacle_dummy.shape) * obst_center)
         R = np.array([[np.cos(obst_heading), -np.sin(obst_heading)], [np.sin(obst_heading), np.cos(obst_heading)]])
         obstacle_rot = np.dot(R, obstacle_shift.transpose()).transpose()
-        obstacle_np.append(obstacle_rot)
         obstacle_rand = [(p[0], p[1]) for p in list(obstacle_rot)]
         obstacle_rand = [obstacle_rand[(i+3)%4] for i in range(4)] if obst_heading != 0.0 else obstacle_rand
-        obstacle.extend([obstacle_rand])
 
-        if not obstacle_at_wall:
-            obstacle_at_wall = any([np.max(np.abs(obstacle_rot[:,i])) > pos_lims[1] for i in range(2)])
+        if any([0.2 < pos_lims_map - np.max(np.abs(obstacle_rot[:,i])) < obstacle_margin + 0.2 for i in range(2)]):
+            continue
+        elif any([0.2 >= pos_lims_map - np.max(np.abs(obstacle_rot[:,i])) for i in range(2)]):
+            if obstacle_at_wall:
+                continue
+            else:
+                obstacle_at_wall = True
+                obstacle_okay = True
+        else:
+            obstacle_okay = True
+
+        obstacle_okay = True
+        for obst in obstacle_np:
+            obstacle_okay = False
+
+            min1, max1 = np.min(obstacle_rot, axis=0), np.max(obstacle_rot, axis=0)
+            min2, max2 = np.min(obst, axis=0), np.max(obst, axis=0)
+            if ( (0 < min1[0] - max2[0] < obstacle_margin) or (0 < min2[0] - max1[0] < obstacle_margin) \
+                    and ((max2[1] - min1[1] > -obstacle_margin/2) and (max1[1] - min2[1] > -obstacle_margin/2)) ) \
+                    or \
+                    ((max2[0] - min1[0] > -obstacle_margin/2) and (max1[0] - min2[0] > -obstacle_margin/2)) \
+                    and (0 < min1[1] - max2[1] < obstacle_margin) or (0 < min2[1] - max1[1] < obstacle_margin):
+                break
+            else:
+                intersecting_area = max(0, min(max1[0], max2[0])
+                                        - max(min1[0], min2[0])) \
+                                    * max(0, - max(min1[1], min2[1])
+                                          + min(max1[1], max2[1]))
+                obstacle_area1 = obst_width*obst_height
+                obstacle_area2 = (max2[0] - min2[0]) * (max2[1] - min2[1])
+                if intersecting_area/obstacle_area1 > 0.3 or intersecting_area/obstacle_area2 > 0.3:
+                    break
+                else:
+                    obstacle_okay=True
+
+        if obstacle_okay:
+            obstacle_np.append(obstacle_rot)
+            obstacle.extend([obstacle_rand])
 
     # obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
     obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
@@ -177,7 +211,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # Get random initial position
     pos_infeasible = True
     while pos_infeasible:
-        init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
+        init_pos = (2*pos_lims_margin) * np.random.rand(2) - pos_lims_margin
         init_heading = 2*np.pi * np.random.rand() - np.pi
         pos_infeasible_list = []
         for k in range(n_obstacles):
@@ -201,7 +235,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     for i in range(n_targets):
         pos_infeasible = True
         while pos_infeasible:
-            init_pos = (pos_lims[1] - pos_lims[0]) * np.random.rand(2) + pos_lims[0]
+            init_pos = (2*pos_lims_margin) * np.random.rand(2) - pos_lims_margin
             pos_infeasible_list = []
             for k in range(n_obstacles):
                 obstacle_limits = [[np.min(obstacle_np[k][:, 0]), np.max(obstacle_np[k][:, 0])],
