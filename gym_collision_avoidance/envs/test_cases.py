@@ -147,8 +147,8 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_at_wall = False
 
     while len(obstacle) < n_obstacles:
-        obst_width = 1.0 * np.random.randint(5, 15)
-        obst_height = 1.0 * np.random.randint(1, 7)
+        obst_width = 1.0 * np.random.randint(6, 15)
+        obst_height = 1.0 * np.random.randint(1, 8)
         obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
         # if obstacle_at_wall:
         #     obst_center = (2*pos_lims_margin - obst_width) \

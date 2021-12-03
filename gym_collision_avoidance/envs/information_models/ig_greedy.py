@@ -8,7 +8,7 @@ class ig_greedy():
     def __init__(self, ig_model):
         self.ig_model = ig_model
 
-    def get_expert_goal(self, max_dist=6.0, min_dist=0.0, Nsamples=30):
+    def get_expert_goal(self, max_dist=4.0, min_dist=0.0, Nsamples=30):
         pose = self.ig_model.host_agent.pos_global_frame
         # Generate candidate goals in polar coordinates + yaw angle
         candidates_polar = np.random.rand(Nsamples,2)
