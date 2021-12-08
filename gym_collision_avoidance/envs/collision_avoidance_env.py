@@ -108,7 +108,14 @@ class CollisionAvoidanceEnv(gym.Env):
         self.action_space_type = Config.ACTION_SPACE_TYPE
 
         if self.action_space_type == Config.discrete:
-            self.action_space = gym.spaces.Discrete(self.actions.num_actions, dtype=np.float32)
+            if len(Config.DISCRETE_SUBGOAL_RADII) == 1:
+                self.action_space = gym.spaces.Discrete(Config.DISCRETE_SUBGOAL_ANGLES)
+                radius = Config.DISCRETE_SUBGOAL_RADII[0]
+                discrete_angles = np.arange(-np.pi, np.pi, 2*np.pi/Config.DISCRETE_SUBGOAL_ANGLES)
+                self.discrete_subgoals = np.asarray([[radius*np.cos(angle), radius*np.sin(angle)] for angle in discrete_angles])
+            # else:
+            #     self.action_space = gym.spaces.MultiDiscrete([])
+
         elif self.action_space_type == Config.continuous:
             self.low_action = np.array([self.min_speed,
                                         self.min_heading_change])
@@ -221,6 +228,11 @@ class CollisionAvoidanceEnv(gym.Env):
         if dt is None:
             dt = self.dt_nominal
 
+        if self.action_space_type == Config.discrete:
+            actions_subgoal = self.discrete_subgoals[actions]
+        else:
+            actions_subgoal = actions
+
         # self.episode_step_number += 1
         # self.total_number_of_steps += 1
 
@@ -240,18 +252,23 @@ class CollisionAvoidanceEnv(gym.Env):
                 # LINEAR DECAY
                 self.beta = np.maximum(self.beta - self.n_env / Config.PRE_TRAINING_STEPS, 0)
                 if np.random.uniform(0, 1) > self.beta:
-                    selected_action = actions
+                    selected_action = actions_subgoal
                 else:
                     selected_action = mpc_actions
             else:
                 selected_action = mpc_actions
         else:
             self.agents[0].policy.enable_collision_avoidance = Config.ENABLE_COLLISION_AVOIDANCE
-            selected_action = actions
+            selected_action = actions_subgoal
 
-        clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
-        clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
-        clipped_mpc_actions = np.clip(mpc_actions, self.action_space.low, self.action_space.high)
+        if self.action_space_type == Config.continuous and Config.CLIP_ACTION:
+            clipped_selected_action = np.clip(selected_action, self.action_space.low, self.action_space.high)
+            clipped_actions = np.clip(actions_subgoal, self.action_space.low, self.action_space.high)
+            clipped_mpc_actions = np.clip(mpc_actions, self.action_space.low, self.action_space.high)
+        else:
+            clipped_selected_action = selected_action
+            clipped_actions = actions_subgoal
+            clipped_mpc_actions = mpc_actions
 
         for i in range(Config.REPEAT_STEPS):
 
@@ -982,7 +999,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
 
     def get_expert_goal(self):
-        if Config.TEST_MODE:
+        if Config.TEST_MODE or Config.ACTION_SPACE_TYPE == Config.discrete:
             goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]\
                    - self.agents[0].pos_global_frame
         else:

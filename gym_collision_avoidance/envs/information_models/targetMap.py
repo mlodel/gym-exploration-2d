@@ -1,5 +1,6 @@
 import numpy as np
-import scipy
+import cv2
+# import scipy
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 from gym_collision_avoidance.envs.config import Config
 
@@ -50,6 +51,10 @@ class targetMap():
         self.finished_binary = False
         self.finished_entropy= False
         self.finished = False
+
+        # ego centric entropy map
+        self.ego_map = None
+        self.create_ego_map(np.zeros(3))
 
     def _init_free_cells(self):
 
@@ -197,6 +202,8 @@ class targetMap():
             obsvdCells.update(visibleCells)
             self.visitedCells.update(obsvdCells)
             self.visited_share = len(self.visitedCells) / len(self.free_cells)
+
+            self.create_ego_map(pose)
         # Check Termination
         if self.entropy_free_space  <= self.thres_entropy:
             self.finished_entropy = True
@@ -236,3 +243,44 @@ class targetMap():
     def get_reward_from_pose(self,pose):
         visibleCells = self.getVisibleCells(pose)
         return self.get_reward_from_cells(visibleCells)
+
+    def create_ego_map(self, pose):
+
+        map_cell = self.getCellsFromPose(pose[0:2])
+        # map_cell = (map_cell[0], 20-map_cell[1])
+        angle = pose[2] * 180/np.pi
+
+        # Taking image height and width
+        imgHeight, imgWidth = self.entropyMap.shape[0], self.entropyMap.shape[1]
+
+        # Computing the centre x,y coordinates
+        # of an image
+        centreY, centreX = imgHeight // 2, imgWidth // 2
+
+        # Computing 2D rotation Matrix to rotate an image
+        rotationMatrix = cv2.getRotationMatrix2D((centreY, centreX), 45, 1.0)
+
+        newImageWidth = 30
+        newImageHeight = 30
+
+        # After computing the new height & width of an image
+        # we also need to update the values of rotation matrix
+        rotationMatrix[0][2] += (newImageWidth / 2) - centreX
+        rotationMatrix[1][2] += (newImageHeight / 2) - centreY
+
+        # Now, we will perform actual image rotation
+        rotatingimage = cv2.warpAffine(
+            self.entropyMap, rotationMatrix, (newImageWidth, newImageHeight), borderValue=0.0)
+
+        ext_map = np.zeros((90, 90), dtype=np.float32)
+        ext_map[30:60, 30:60] = rotatingimage
+
+        transform_point = cv2.transform(np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix)[0][0]
+
+        point = transform_point + np.array([30, 30])
+
+        rot_mat = cv2.getRotationMatrix2D(tuple(point), 45 + angle, 1.0)
+        rot2 = cv2.warpAffine(ext_map, rot_mat, ext_map.shape[1::-1], borderValue=0.0)
+
+        final = rot2[point[1] - 30:point[1] + 30, point[0] - 30:point[0] + 30]
+        self.ego_map = cv2.flip(final,1)

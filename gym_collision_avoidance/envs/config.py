@@ -92,6 +92,8 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
+    EGO_MAP_SIZE = (60,60)
+
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
@@ -117,6 +119,12 @@ class Config:
     TEST_MODE = False
     TEST_N_OBST = 3
 
+
+    DISCRETE_SUBGOAL_ANGLES = 12
+    DISCRETE_SUBGOAL_RADII = [4.0]
+
+    SUBGOALS_EGOCENTRIC = True
+    CLIP_ACTION = True
 
     SCENARIOS_FOR_TRAINING = [
         "IG_single_agent_crossing"]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
@@ -308,6 +316,14 @@ class Config:
             'size': (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             'bounds': [-np.inf, np.inf],
             'attr': 'ig_model.targetMap.binaryMap.astype(float)',
+            'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+            'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+        },
+        'ego_entropy_map': {
+            'dtype': np.float32,
+            'size': (EGO_MAP_SIZE, EGO_MAP_SIZE),
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.targetMap.ego_map',
             'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
             'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
         }
