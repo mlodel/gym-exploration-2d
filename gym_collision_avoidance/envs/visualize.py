@@ -507,12 +507,20 @@ def draw_agent_ig(agent, i, ax):
             ax.add_patch(Wedge(center=pose[0:2], r=.4, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
                                fill=True))
 
-    elif hasattr(agent.policy, "goal_"):
-        pose = agent.policy.goal_
+    elif hasattr(agent.policy, "policy_goal"):
+        pose = agent.policy.policy_goal
         alpha = 0.5
         c = rgba2rgb(plt_color + [float(alpha)])
         heading = 0.0
         ax.add_patch(Wedge(center=pose[0:2], r=.4, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
+                           fill=True))
+
+    elif hasattr(agent.policy, "expert_goal"):
+        pose = agent.policy.expert_goal
+        alpha = 1.0
+        c = rgba2rgb(plt_color + [float(alpha)])
+        heading = 0.0
+        ax.add_patch(Wedge(center=pose[0:2], r=.2, theta1=(heading - fov / 2), theta2=(heading + fov / 2), fc=c, ec=c,
                            fill=True))
 
     if hasattr(agent.policy, "predicted_traj"):

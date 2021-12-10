@@ -999,9 +999,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
 
     def get_expert_goal(self):
-        if Config.TEST_MODE or Config.ACTION_SPACE_TYPE == Config.discrete:
-            goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]\
-                   - self.agents[0].pos_global_frame
+        if (Config.TEST_MODE and not Config.USE_MPC_EXPERT_IN_TEST) or Config.ACTION_SPACE_TYPE == Config.discrete:
+            goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2] # - self.agents[0].pos_global_frame
         else:
             goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
         return goal

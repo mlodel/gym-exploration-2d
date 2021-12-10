@@ -277,9 +277,9 @@ class targetMap():
 
         transform_point = cv2.transform(np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix)[0][0]
 
-        point = transform_point + np.array([30, 30])
+        point = transform_point + np.array([30, 30], dtype=int)
 
-        rot_mat = cv2.getRotationMatrix2D(tuple(point), 45 + angle, 1.0)
+        rot_mat = cv2.getRotationMatrix2D((int(point[0]), int(point[1])), 45 + angle, 1.0)
         rot2 = cv2.warpAffine(ext_map, rot_mat, ext_map.shape[1::-1], borderValue=0.0)
 
         final = rot2[point[1] - 30:point[1] + 30, point[0] - 30:point[0] + 30]

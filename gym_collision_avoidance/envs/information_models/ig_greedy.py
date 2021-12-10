@@ -65,7 +65,7 @@ class ig_greedy():
                 max_reward = reward
                 best_cand_idx = i
 
-        greedy_goal = candidates[best_cand_idx, :] + pose
+        greedy_goal = candidates[best_cand_idx, :]
         self.ig_model.expert_goal = greedy_goal
 
         return greedy_goal
