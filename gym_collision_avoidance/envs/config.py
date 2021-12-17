@@ -6,7 +6,7 @@ class Config:
     # GENERAL PARAMETERS
     COLLISION_AVOIDANCE = True
     continuous, discrete = range(2)  # Initialize game types as enum
-    ACTION_SPACE_TYPE = discrete
+    ACTION_SPACE_TYPE = continuous
 
     ANIMATE_EPISODES = True
     SHOW_EPISODE_PLOTS = False
@@ -116,7 +116,7 @@ class Config:
 
     PRE_TRAINING_STEPS = 1000000
 
-    TEST_MODE = True
+    TEST_MODE = False
     TEST_N_OBST = 3
 
 
@@ -125,7 +125,7 @@ class Config:
 
     SUBGOALS_EGOCENTRIC = True
     CLIP_ACTION = True
-    USE_MPC_EXPERT_IN_TEST = True
+    USE_MPC_EXPERT_IN_TEST = False
 
     SCENARIOS_FOR_TRAINING = [
         "IG_single_agent_crossing"]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]

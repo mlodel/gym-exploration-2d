@@ -200,10 +200,11 @@ class CollisionAvoidanceEnv(gym.Env):
                                      // (self.n_env * Config.MAX_TIME_RATIO * 200)
 
         self.testcase = None
-        self.testcase_count = 1
+        self.testcase_count = 0
         self.testcase_repeat = 1
+        self.testcase_seed = 0
         self.testcase_n_train = 128
-        self.testcase_n_test = 128
+        self.testcase_n_test = 16
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
 
@@ -242,9 +243,12 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Supervisor
         if self.total_number_of_steps < 2.1 * Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
+            start_time = time.time()
             mpc_actions = self.get_expert_goal()
+            expert_runtime = time.time()-start_time
         else:
             mpc_actions = np.array([0.0, 0.0])
+            expert_runtime = 0
 
         # Warm-start
         if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
@@ -344,7 +348,9 @@ class CollisionAvoidanceEnv(gym.Env):
                  'n_episodes': self.episode_number,
                  'ig_reward': self.agents[0].ig_model.team_reward if hasattr(self.agents[0], "ig_model") else 0.0,
                  'finished_coverage': self.agents[0].coverage_finished,
-                 'n_free_cells': self.agents[0].ig_model.targetMap.n_free_cells
+                 'n_free_cells': self.agents[0].ig_model.targetMap.n_free_cells,
+                 'scenario_seed': self.testcase_seed,
+                 'ig_expert_runtime': expert_runtime
                  }
 
         return next_observations, rewards, game_over, infos
@@ -370,6 +376,8 @@ class CollisionAvoidanceEnv(gym.Env):
                                 agents=self.agents)
 
         self.episode_number += 1
+        self.testcase_count += 1
+
         self.begin_episode = True
         self.episode_step_number = 0
 
@@ -518,97 +526,61 @@ class CollisionAvoidanceEnv(gym.Env):
         self._prediction_step()
 
     def _init_agents(self):
-        if self.agents is not None:
-            self.prev_episode_agents = copy.deepcopy(self.agents)
+        # if self.agents is not None:
+        #     self.prev_episode_agents = copy.deepcopy(self.agents)
 
-        if self.evaluate:
-            self.prev_scenario_index = self.scenario_index
-            self.scenario_index = np.random.randint(0, len(self.scenario))
-            if Config.ANIMATE_EPISODES or Config.PERFORMANCE_TEST:
-                self.agents, self.obstacles = eval(
-                    "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
-                        self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy + ", seed=" + str(
-                        self.episode_number) +
-                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics
-                    + ", n_steps=" + str(self.total_number_of_steps) + ", n_env+" + str(self.n_env) + ")")
-            else:
-                self.agents, self.obstacles = eval(
-                    "tc." + self.scenario[self.scenario_index] + "(number_of_agents=" + str(
-                        self.number_of_agents) + ", ego_agent_policy=" + self.ego_policy + ", other_agents_policy=" + self.other_agents_policy +
-                    ", ego_agent_dynamics=" + self.ego_agent_dynamics + ", other_agents_dynamics=" + self.other_agents_dynamics
-                    + ")")
+
+        # scenario_index = np.random.randint(0,len(self.scenario))
+        # if self.testcase_count == self.testcase_repeat or not Config.TEST_MODE:
+        if Config.TEST_MODE:
+            testcases_per_env = self.testcase_n_test // self.n_env
+            if self.testcase_repeat == 1:
+                self.testcase_count = (self.episode_number - 1)
+            tc_start, tc_end = self.testcase_n_train + self.env_id*testcases_per_env, \
+                               self.testcase_n_train + (self.env_id+1)*testcases_per_env
+            seed = np.arange(tc_start, tc_end)[self.testcase_count % testcases_per_env]
         else:
-            if self.total_number_of_steps < 300000:
-                # Supervised learning step
-                scenario_index = 0
-                self.number_of_agents = 2  # Maximum no. of agents
-            # RL steps:
-            elif self.total_number_of_steps < 2e6:
-                scenario_index = 0
-                self.number_of_agents = 2
-            elif self.total_number_of_steps < 4e6:
-                # scenario_choice = [0,1]
-                scenario_index = 0
-                self.number_of_agents = 4
-            elif self.total_number_of_steps < 6e6:
-                # scenario_choice = [0, 1, 1]
-                scenario_index = 0
-                self.number_of_agents = 6
-            elif self.total_number_of_steps >= 6e6:
-                # scenario_choice = [0, 1, 1]
-                scenario_index = 0
-                self.number_of_agents = 6
+            np.random.seed((self.env_id + 1234) * self.episode_number)
+            seed = np.random.choice(self.testcase_n_train)
+        self.agents, self.obstacles = eval("tc." + self.scenario[0] + "(number_of_agents=" + str(
+            self.number_of_agents) + ", seed=" + str(seed) +
+                                           ", ego_agent_policy=" + self.ego_policy +
+                                           ", ego_agent_dynamics=" + self.ego_agent_dynamics +
+                                           ", other_agents_dynamics=" + self.other_agents_dynamics +
+                                           ", other_agents_policy=" + self.other_agents_policy +
+                                           ", n_steps=" + str(self.total_number_of_steps) +
+                                           ", n_env=" + str(self.n_env) +
+                                           ", n_obstacles=" + str(Config.TEST_N_OBST) +
+                                           ")")
+        self.testcase_seed = seed
+        # if Config.TEST_MODE:
+        #     self.testcase = (copy.deepcopy(self.agents), self.obstacles)
+        #     self.testcase_count = 1
+        # else:
+        #     self.testcase_count += 1
+        #     self.agents = copy.deepcopy(self.testcase[0])
+        #     self.obstacles = self.testcase[1]
+        # np.random.seed((self.env_id + 1234) * self.episode_number)
 
 
-
-            # scenario_index = np.random.randint(0,len(self.scenario))
-            if self.testcase_count == self.testcase_repeat or not Config.TEST_MODE:
-                if Config.TEST_MODE:
-                    testcases_per_env = self.testcase_n_test // self.n_env
-                    tc_start, tc_end = self.testcase_n_train + self.env_id*testcases_per_env, \
-                                       self.testcase_n_train + (self.env_id+1)*testcases_per_env
-                    seed = np.arange(tc_start, tc_end)[self.episode_number % testcases_per_env]
-                else:
-                    np.random.seed((self.env_id + 1234) * self.episode_number)
-                    seed = np.random.choice(self.testcase_n_train)
-                self.agents, self.obstacles = eval("tc." + self.scenario[scenario_index] + "(number_of_agents=" + str(
-                    self.number_of_agents) + ", seed=" + str(seed) +
-                                                   ", ego_agent_policy=" + self.ego_policy +
-                                                   ", ego_agent_dynamics=" + self.ego_agent_dynamics +
-                                                   ", other_agents_dynamics=" + self.other_agents_dynamics +
-                                                   ", other_agents_policy=" + self.other_agents_policy +
-                                                   ", n_steps=" + str(self.total_number_of_steps) +
-                                                   ", n_env=" + str(self.n_env) +
-                                                   ", n_obstacles=" + str(Config.TEST_N_OBST) +
-                                                   ")")
-                if Config.TEST_MODE:
-                    self.testcase = (copy.deepcopy(self.agents), self.obstacles)
-                    self.testcase_count = 1
-            else:
-                self.testcase_count += 1
-                self.agents = copy.deepcopy(self.testcase[0])
-                self.obstacles = self.testcase[1]
-            # np.random.seed((self.env_id + 1234) * self.episode_number)
-
-
-        if self.episode_number == 1:
-            self.policies = []
-            ga3c_params = {
-                'policy': GA3CCADRLPolicy,
-                'checkpt_dir': 'IROS18',
-                'checkpt_name': 'network_01900000'
-            }
-            for ag in self.agents:
-                if "GA3C" in str(ag.policy):
-                    self.policies.append(GA3CCADRLPolicy())
-                    self.policies[-1].initialize_network(**ga3c_params)
-                    ag.policy = self.policies[-1]
-        else:
-            i = 0
-            for ag in self.agents:
-                if "GA3C" in str(ag.policy):
-                    ag.policy = self.policies[i]
-                    i += 1
+        # if self.episode_number == 1:
+        #     self.policies = []
+        #     ga3c_params = {
+        #         'policy': GA3CCADRLPolicy,
+        #         'checkpt_dir': 'IROS18',
+        #         'checkpt_name': 'network_01900000'
+        #     }
+        #     for ag in self.agents:
+        #         if "GA3C" in str(ag.policy):
+        #             self.policies.append(GA3CCADRLPolicy())
+        #             self.policies[-1].initialize_network(**ga3c_params)
+        #             ag.policy = self.policies[-1]
+        # else:
+        #     i = 0
+        #     for ag in self.agents:
+        #         if "GA3C" in str(ag.policy):
+        #             ag.policy = self.policies[i]
+        #             i += 1
 
         if self.prediction_model:
             self.prediction_model.reset_states(len(self.agents))
@@ -1024,6 +996,7 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_use_expert_action(self, n_algs, expert_mode, expert):
         self.dagger = False
         self.testcase_repeat = n_algs
+        self.testcase_count = 0
         if expert_mode:
             Config.PRE_TRAINING_STEPS = 1000000
             self.agents[0].ig_model.set_expert_policy(expert)
