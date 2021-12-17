@@ -534,11 +534,11 @@ class CollisionAvoidanceEnv(gym.Env):
         # if self.testcase_count == self.testcase_repeat or not Config.TEST_MODE:
         if Config.TEST_MODE:
             testcases_per_env = self.testcase_n_test // self.n_env
-            if self.testcase_repeat == 1:
-                self.testcase_count = (self.episode_number - 1)
+            # if self.testcase_repeat == 1:
+            #     self.testcase_count = (self.episode_number - 1)
             tc_start, tc_end = self.testcase_n_train + self.env_id*testcases_per_env, \
                                self.testcase_n_train + (self.env_id+1)*testcases_per_env
-            seed = np.arange(tc_start, tc_end)[self.testcase_count % testcases_per_env]
+            seed = np.arange(tc_start, tc_end)[(self.testcase_count-1) % testcases_per_env]
         else:
             np.random.seed((self.env_id + 1234) * self.episode_number)
             seed = np.random.choice(self.testcase_n_train)
@@ -553,34 +553,6 @@ class CollisionAvoidanceEnv(gym.Env):
                                            ", n_obstacles=" + str(Config.TEST_N_OBST) +
                                            ")")
         self.testcase_seed = seed
-        # if Config.TEST_MODE:
-        #     self.testcase = (copy.deepcopy(self.agents), self.obstacles)
-        #     self.testcase_count = 1
-        # else:
-        #     self.testcase_count += 1
-        #     self.agents = copy.deepcopy(self.testcase[0])
-        #     self.obstacles = self.testcase[1]
-        # np.random.seed((self.env_id + 1234) * self.episode_number)
-
-
-        # if self.episode_number == 1:
-        #     self.policies = []
-        #     ga3c_params = {
-        #         'policy': GA3CCADRLPolicy,
-        #         'checkpt_dir': 'IROS18',
-        #         'checkpt_name': 'network_01900000'
-        #     }
-        #     for ag in self.agents:
-        #         if "GA3C" in str(ag.policy):
-        #             self.policies.append(GA3CCADRLPolicy())
-        #             self.policies[-1].initialize_network(**ga3c_params)
-        #             ag.policy = self.policies[-1]
-        # else:
-        #     i = 0
-        #     for ag in self.agents:
-        #         if "GA3C" in str(ag.policy):
-        #             ag.policy = self.policies[i]
-        #             i += 1
 
         if self.prediction_model:
             self.prediction_model.reset_states(len(self.agents))
