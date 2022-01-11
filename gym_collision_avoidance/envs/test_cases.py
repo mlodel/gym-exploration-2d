@@ -20,36 +20,21 @@ import sys
 sys.path.append('/home/bdebrito/code/mpc-rl-collision-avoidance')
 from gym_collision_avoidance.envs.agent import Agent
 # from gym_collision_avoidance.envs.Obstacle import Obstacle
-# from gym_collision_avoidance.envs.utils import DataHandlerLSTM
+
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
-from gym_collision_avoidance.envs.policies.ig_greedy_old import ig_greedy
-from gym_collision_avoidance.envs.policies.ig_mcts_old import ig_mcts
 
-# from gym_collision_avoidance.envs.policies.PedestrianDatasetPolicy import PedestrianDatasetPolicy
-# from gym_collision_avoidance.envs.policies.DRLLongPolicy import DRLLongPolicy
+
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
-from gym_collision_avoidance.envs.policies.CADRLPolicy import CADRLPolicy
-from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+
 from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
-from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
-from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
 
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
+from gym_collision_avoidance.envs.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 
-# from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
-# from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SimpleNNPolicy import SimpleNNPolicy
-# from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
-# from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SafeGA3CPolicy import SafeGA3CPolicy
-# from mpc_rl_collision_avoidance.policies.ROSMPCPolicy import ROSMPCPolicy
+
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.FirstOrderDynamics import FirstOrderDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
@@ -72,23 +57,8 @@ import os
 import pickle
 import random
 
-from gym_collision_avoidance.envs.policies.CADRL.scripts.multi import gen_rand_testcases as tc
-
 test_case_filename = "{dir}/test_cases/{pref_speed_string}{num_agents}_agents_{num_test_cases}_cases.p"
 
-policy_dict = {
-    'rvo': RVOPolicy,
-    'noncoop': NonCooperativePolicy,
-    'carrl': CARRLPolicy,
-    'external': ExternalPolicy,
-    'GA3C': GA3CCADRLPolicy
-}
-
-policy_train_dict = {
-    '0': RVOPolicy,
-    '2': NonCooperativePolicy,
-    '1': GA3CCADRLPolicy
-}
 
 def IG_single_agent():
     pref_speed = 4.0  # np.random.uniform(1.0, 0.5)

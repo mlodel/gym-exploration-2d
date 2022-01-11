@@ -13,10 +13,10 @@ Minimum working example:
 Config.DT = 0.1
 Config.SAVE_EPISODE_PLOTS = True
 
-# Create single tf session for all experiments
-import tensorflow as tf
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-tf.Session().__enter__()
+# # Create single tf session for all experiments
+# import tensorflow as tf
+# tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+# tf.Session().__enter__()
 
 # Instantiate the environment
 env = gym.make("CollisionAvoidance-v0")

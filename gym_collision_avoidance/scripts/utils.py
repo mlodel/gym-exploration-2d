@@ -4,21 +4,16 @@ import numpy as np
 #from carrl.carrl_network import CARRL, MultiPolicyCARRL
 import gym
 import os
-import pandas as pd
 import glob
 from stable_baselines.common.vec_env import DummyVecEnv
 import inspect
 import argparse
-from gym_collision_avoidance.experiments.src.env_utils import run_episode, create_env, store_stats
+from gym_collision_avoidance.envs.utils.env_utils import create_env
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs import test_cases as tc
 import yaml
 #import gym_cartpole
 
-### These are only here to allow setting of seeds... hmm
-import tensorflow as tf
-
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 def generate_epsilon_vector(eps, inds, obs_shape):
@@ -244,7 +239,6 @@ def reset_env(env, gym_to_use, seed=None, test_case_fn=None, test_case_args=None
 def set_seeds(seed=0):
 	# Set the seed for every library that might use random number generators
 	np.random.seed(seed)
-	tf.compat.v1.set_random_seed(seed)
 
 class StoreDict(argparse.Action):
     """

@@ -1,14 +1,9 @@
-import gym
-
 from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines import PPO1
 from gym_collision_avoidance.envs.config import Config
-from gym_collision_avoidance.experiments.src.env_utils import run_episode, create_env
-from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
+from gym_collision_avoidance.envs.utils.env_utils import create_env
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
-from gym_collision_avoidance.envs.policies.CARRLPolicy import CARRLPolicy
 #from gym_collision_avoidance.envs.policies.PPOCADRLPolicy import PPOCADRLPolicy
 import gym_collision_avoidance.envs.test_cases as tc
 

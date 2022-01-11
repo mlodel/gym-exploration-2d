@@ -1,15 +1,12 @@
-tensorflow==1.15.0
-tensorflow_probability==0.8.0
 Pillow
 PyOpenGL
 pyyaml
-matplotlib==2.1.2
+matplotlib
 shapely
 pytz
-imageio==2.4.1
+imageio
 gym
 moviepy
-stable_baselines
 optuna
 sklearn
 quadprog
@@ -17,6 +14,5 @@ tdqm
 requests
 pypoman
 imutils
-pytorch-lightning
 pykalman
 networkx

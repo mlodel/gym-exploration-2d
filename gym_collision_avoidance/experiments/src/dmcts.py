@@ -11,15 +11,11 @@ import pstats
 
 import multiprocessing
 
-import tensorflow as tf
-
 import csv
 from datetime import datetime
 
 import matplotlib.pyplot as plt
 
-
-if type(tf.contrib) != type(tf): tf.contrib._warning = None
 
 sims = [
         # {"Ntree": 30, "mcts_cp": 0.5},

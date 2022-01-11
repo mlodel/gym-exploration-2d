@@ -35,8 +35,6 @@ class ig_agent():
 
         self.expert_policy = expert_policy(self)
 
-        self.greedy_goal = None
-
         self.agent_pos_map = None
         self.agent_pos_idc = None
 
@@ -129,6 +127,7 @@ class ig_agent():
 
         return targets
 
+"""
     def get_greedy_goal(self, pose, max_dist=4.0, min_dist=1.0, Nsamples=30):
         # Generate candidate goals in polar coordinates + yaw angle
         candidates_polar = np.random.rand(Nsamples,2)
@@ -171,3 +170,4 @@ class ig_agent():
         self.greedy_goal = candidates[best_cand_idx, :] + pose
 
         return self.greedy_goal
+"""

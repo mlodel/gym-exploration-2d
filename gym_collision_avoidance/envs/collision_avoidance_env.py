@@ -2,6 +2,7 @@
 Collision Avoidance Environment
 Author: Michael Everett
 MIT Aerospace Controls Lab
+adapted for 2D exploration by Max Lodel, TU Delft Autonomous Multi-Robot Lab
 '''
 
 import gym
@@ -15,44 +16,24 @@ import multiprocessing
 import matplotlib.pyplot as plt
 
 from gym_collision_avoidance.envs.config import Config
-# from gym_collision_avoidance.envs.utils import DataHandlerLSTM
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 from gym_collision_avoidance.envs.visualize import plot_episode, animate_episode
 from gym_collision_avoidance.envs.agent import Agent
 from gym_collision_avoidance.envs.Map import Map
 from gym_collision_avoidance.envs import test_cases as tc
+
 from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
-from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
-from gym_collision_avoidance.envs.policies.ig_greedy_old import ig_greedy
+
+from gym_collision_avoidance.envs.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
 
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import UnicycleDynamicsMaxAcc
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import UnicycleDynamicsMaxTurnRate
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import UnicycleSecondOrderEulerDynamics
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
-
-
-
-# from mpc_rl_collision_avoidance.policies.MPCPolicy import MPCPolicy
-# from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SecondOrderMPCRLPolicy import SecondOrderMPCRLPolicy
-# from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
-# from mpc_rl_collision_avoidance.policies.FirstOrderMPCRLPolicy import FirstOrderMPCRLPolicy
-# from mpc_rl_collision_avoidance.policies.MultiAgentMPCPolicy import MultiAgentMPCPolicy
-from mpc_rl_collision_avoidance.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy import MPCRLStaticObsIGPolicy
-from mpc_rl_collision_avoidance.policies.MPC_IG_Policy import MPC_IG_Policy
-from mpc_rl_collision_avoidance.policies.MPCRLStaticObsIGPolicy_fasttraining import MPCRLStaticObsIGPolicy_fasttraining
-
-# from mpc_rl_collision_avoidance.policies.SocialMPCPolicy import SocialMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SociallyGuidedMPCPolicy import SociallyGuidedMPCPolicy
-# from mpc_rl_collision_avoidance.policies.FirstOrderMPCPolicy import FirstOrderMPCPolicy
-# from mpc_rl_collision_avoidance.policies.SecondOrderMPCPolicy import SecondOrderMPCPolicy
-# from mpc_rl_collision_avoidance.policies.MPCRLPolicy import MPCRLPolicy
-# from mpc_rl_collision_avoidance.policies.LearningMPCPolicy import LearningMPCPolicy
-# from mpc_rl_collision_avoidance.policies.OtherAgentMPCPolicy import OtherAgentMPCPolicy
 
 
 class CollisionAvoidanceEnv(gym.Env):
