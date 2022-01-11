@@ -9,10 +9,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if $MAKE_VENV; then
     # Virtualenv w/ python3
-    export PYTHONPATH=/usr/bin/python3.6 # point to your python3
-    python3.6 -m pip install virtualenv
+    export PYTHONPATH=/usr/bin/python3 # point to your python3
+    python3 -m pip install virtualenv
     cd $DIR
-    virtualenv -p python3.6 venv
+    # virtualenv -p python3 venv
+    python3 -m venv venv
 fi
 
 if $SOURCE_VENV; then
@@ -26,18 +27,13 @@ python -m pip install -r $DIR/requirements.txt
 python -m pip install -e $DIR
 
 # Install RVO and its requirements
-cd $DIR/gym_collision_avoidance/envs/policies/Python-RVO2
-python -m pip install Cython
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export MACOSX_DEPLOYMENT_TARGET=10.15
-    brew install cmake
-fi
+# cd $DIR/gym_collision_avoidance/envs/policies/Python-RVO2
+# python -m pip install Cython
+# if [[ "$OSTYPE" == "darwin"* ]]; then
+#     export MACOSX_DEPLOYMENT_TARGET=10.15
+#     brew install cmake
+# fi
 python setup.py build
 python setup.py install
 
-# Install DRL Long's requirements
-python -m pip install torch torchvision
-
-# install python3-tk
-# install ffmpeg
 

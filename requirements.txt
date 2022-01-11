@@ -6,6 +6,7 @@ shapely
 pytz
 imageio
 gym
+gmpy
 moviepy
 optuna
 sklearn
