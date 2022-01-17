@@ -8,9 +8,9 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = continuous
 
-    ANIMATE_EPISODES = True
+    ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
-    SAVE_EPISODE_PLOTS = True
+    SAVE_EPISODE_PLOTS = False
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
     PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
     EVALUATE_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -85,6 +85,8 @@ class Config:
     SUBMAP_WIDTH = 40  # Pixels
     SUBMAP_HEIGHT = 40  # Pixels
     SUBMAP_RESOLUTION = 0.1  # Pixel / meter
+    SUBMAP_SCALE = True
+    SUBMAP_SCALE_TARGET = (80,80)
 
     # STATIC MAP
     MAP_WIDTH = 20  # Meters
@@ -92,8 +94,9 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
-    EGO_MAP_SIZE = (60,60)
+    EGO_MAP_SIZE = (80,80)
 
+    IG_MAP_RESOLUTION = 1.0
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
@@ -104,7 +107,7 @@ class Config:
     IG_REWARD_MODE = "entropy" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
-    IG_THRES_AVG_CELL_ENTROPY = 0.1
+    IG_THRES_AVG_CELL_ENTROPY = 0.0 # 0.1
 
     IG_CURRICULUM_LEARNING = True
     IG_CURRICULUM_LEARNING_STEPS_2_OBS = 3000000

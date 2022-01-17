@@ -22,8 +22,9 @@ from gym_collision_avoidance.envs.agent import Agent
 from gym_collision_avoidance.envs.Map import Map
 from gym_collision_avoidance.envs import test_cases as tc
 
-from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
+# from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
+from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 
 from gym_collision_avoidance.envs.policies.MPCStaticObsPolicy import MPCStaticObsPolicy
 from gym_collision_avoidance.envs.policies.MPCRLStaticObsPolicy import MPCRLStaticObsPolicy
@@ -77,7 +78,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
         # self.ego_agent_dynamics = "FirstOrderDynamics"
 
-        self.other_agents_policy = "RVOPolicy"
+        self.other_agents_policy = "StaticPolicy"
         self.other_agents_dynamics = "UnicycleDynamics"  # "UnicycleDynamics"
 
         self.max_heading_change = 4
@@ -376,7 +377,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if agent.ig_model is not None:
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
-                                          map_res=Config.SUBMAP_RESOLUTION,
+                                          map_res=Config.IG_MAP_RESOLUTION,
                                           detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS)
 
         for state in Config.STATES_IN_OBS:

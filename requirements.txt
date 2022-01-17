@@ -17,3 +17,5 @@ pypoman
 imutils
 pykalman
 networkx
+opencv-python
+pytest

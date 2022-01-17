@@ -23,7 +23,7 @@ class MPCRLStaticObsIGPolicy(Policy):
 
         # FORCES parameters
         self.M = 4
-        self.FORCES_N = 20
+        self.FORCES_N = 15
         self.FORCES_NU = 3
         self.FORCES_NX = 5
         self.FORCES_TOTAL_V = 8

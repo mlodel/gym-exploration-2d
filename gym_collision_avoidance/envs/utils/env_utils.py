@@ -16,7 +16,8 @@ def create_env(n_envs=1,eval_env=True, subproc=False):
         # doesn't handle dict observations, so these wrappers convert to arrays
         if Config.TRAIN_SINGLE_AGENT:
             # only return observations of a single agent
-            env = FlattenDictWrapper(env, dict_keys=Config.STATES_IN_OBS)
+            # env = FlattenDictWrapper(env, dict_keys=Config.STATES_IN_OBS)
+            env=env
         else:
             # return observation of all agents (as a long array)
             env = MultiagentFlattenDictWrapper(env, dict_keys=Config.STATES_IN_OBS, max_num_agents=Config.MAX_NUM_AGENTS_IN_ENVIRONMENT)

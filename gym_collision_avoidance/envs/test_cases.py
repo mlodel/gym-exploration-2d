@@ -25,7 +25,7 @@ from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
 
 
-from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
+# from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
 
 from gym_collision_avoidance.envs.policies.ExternalPolicy import ExternalPolicy
 from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy

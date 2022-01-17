@@ -283,4 +283,5 @@ class targetMap():
         rot2 = cv2.warpAffine(ext_map, rot_mat, ext_map.shape[1::-1], borderValue=0.0)
 
         final = rot2[point[1] - 30:point[1] + 30, point[0] - 30:point[0] + 30]
-        self.ego_map = cv2.flip(final,1)
+        final = cv2.flip(final, 1)
+        self.ego_map = cv2.resize(final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_CUBIC)

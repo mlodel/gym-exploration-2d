@@ -6,6 +6,8 @@ logs
 *~
 *.lprof
 *.DS_Store
+*.png
+/dist
 
 .vscode
 

@@ -51,7 +51,7 @@ class ig_agent():
 
         # Init EDF and Target Map
         edf_map_obj = edfMap(occ_map, map_res, map_size)
-        self.targetMap = targetMap(edf_map_obj, map_size, map_res * 10,
+        self.targetMap = targetMap(edf_map_obj, map_size, map_res,
                                    sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=Config.IG_SENSE_rOcc,
                                    rEmp=Config.IG_SENSE_rEmp) # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()

@@ -102,12 +102,15 @@ class OccupancyGridSensor(Sensor):
 
         # batch_grid = self.fill_invisible(batch_grid)
 
-        batch_grid = batch_grid.astype(bool)
-
         if self.plot:
             self.plot_top_down_map(top_down_map.map,ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Original')
             self.plot_top_down_map(float_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading, title='Rotated')
             self.plot_batch_grid(batch_grid)
+
+        if Config.SUBMAP_SCALE:
+            batch_grid = cv2.resize(batch_grid, Config.SUBMAP_SCALE_TARGET, interpolation=cv2.INTER_CUBIC)
+
+        batch_grid = batch_grid.astype(bool)
 
         return batch_grid
 

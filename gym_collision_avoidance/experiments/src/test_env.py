@@ -32,7 +32,7 @@ def main():
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
 
     # In case you want to save plots, choose the directory
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/experiments/results2'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/experiments/results'
     # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
     for i in range(n_envs):
         plot_save_dir = save_path + '/figs_env' + str(i) + '/'
@@ -71,7 +71,7 @@ def main():
     globalgoal = np.array([0.,9.])
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 1050
+    num_steps = 128
     max_rewards = []
     rewards = [[] for i in range(n_envs)]
     eps_reward = []
