@@ -105,8 +105,6 @@ class CollisionAvoidanceEnv(gym.Env):
                                          self.max_heading_change])
             self.action_space = gym.spaces.Box(self.low_action, self.high_action, dtype=np.float32)
 
-        # Expert goals for supervised learning (used if not network_output is passed)
-        self.use_expert_goal = True
 
         # original observation space
         # self.observation_space = gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
@@ -174,7 +172,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # TODO: MOVE THIS TO DIFERENT CLASS
         self.dagger = True
-        self.beta = 1
+        self.dagger_beta = 1
+        self.use_expert = True
+        self.pretrain_steps = Config.PRE_TRAINING_STEPS
+        self.comp_expert = True
 
         self.n_env = 1
         self.env_id = 0
@@ -224,7 +225,7 @@ class CollisionAvoidanceEnv(gym.Env):
         new_action = True
 
         # Supervisor
-        if self.total_number_of_steps < 1.6 * Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
+        if self.comp_expert:
             start_time = time.time()
             mpc_actions = self.get_expert_goal()
             expert_runtime = time.time()-start_time
@@ -233,11 +234,11 @@ class CollisionAvoidanceEnv(gym.Env):
             expert_runtime = 0
 
         # Warm-start
-        if self.total_number_of_steps < Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
+        if self.use_expert:
             if self.dagger:
                 # LINEAR DECAY
-                self.beta = np.maximum(self.beta - self.n_env / Config.PRE_TRAINING_STEPS, 0)
-                if np.random.uniform(0, 1) > self.beta:
+                # self.dagger_beta = np.maximum(self.beta - self.n_env / Config.PRE_TRAINING_STEPS, 0)
+                if np.random.uniform(0, 1) > self.dagger_beta:
                     selected_action = actions_subgoal
                 else:
                     selected_action = mpc_actions
@@ -947,15 +948,16 @@ class CollisionAvoidanceEnv(gym.Env):
         self.plot_every_n_episodes = int(np.ceil(Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
                                      / (self.n_env * Config.MAX_TIME_RATIO * 200)))
 
-    def set_use_expert_action(self, n_algs, expert_mode, expert):
-        self.dagger = False
-        self.testcase_repeat = n_algs
-        self.testcase_count = 0
-        if expert_mode:
-            Config.PRE_TRAINING_STEPS = 1000000
+    def set_use_expert_action(self, n_algs, use_expert, expert, dagger, dagger_beta, comp_expert):
+        self.use_expert = use_expert
+        self.dagger = dagger
+        self.dagger_beta = dagger_beta
+        self.comp_expert = comp_expert if not use_expert else True
+        if Config.TEST_MODE:
+            self.testcase_repeat = n_algs
+            self.testcase_count = 0
+        if use_expert:
             self.agents[0].ig_model.set_expert_policy(expert)
-        else:
-            Config.PRE_TRAINING_STEPS = 0
 
 if __name__ == '__main__':
     print("See example.py for a minimum working example.")
