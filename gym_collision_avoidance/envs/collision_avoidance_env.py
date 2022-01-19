@@ -174,8 +174,10 @@ class CollisionAvoidanceEnv(gym.Env):
         self.dagger = True
         self.dagger_beta = 1
         self.use_expert = True
-        self.pretrain_steps = Config.PRE_TRAINING_STEPS
+        self.expert_controller = 'ig_greedy'
         self.comp_expert = True
+
+        self.n_obstacles = Config.TEST_N_OBST
 
         self.n_env = 1
         self.env_id = 0
@@ -280,7 +282,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 step_rewards = self._compute_rewards()
                 rewards += step_rewards
             # a=b
-            if ( self.episode_number % self.plot_every_n_episodes == 1 or Config.EVALUATE_MODE) \
+            if ( (self.episode_number-1) % self.plot_every_n_episodes == 0 or Config.EVALUATE_MODE) \
                     and not Config.TEST_MODE and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
                     and self.episode_step_number % self.animation_period_steps == 0:
                 plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
@@ -341,7 +343,7 @@ class CollisionAvoidanceEnv(gym.Env):
     def reset(self):
 
         if (
-                (self.episode_number - 0) % self.plot_every_n_episodes == 1 or ( Config.TEST_MODE
+                (self.episode_number-1) % self.plot_every_n_episodes == 0 or ( Config.TEST_MODE
                              # and self.episode_number <= 2*self.testcase_repeat
         )) \
                 and Config.SAVE_EPISODE_PLOTS and self.episode_number >= 1 and self.episode_step_number > 0:
@@ -380,6 +382,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.IG_MAP_RESOLUTION,
                                           detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS)
+                agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -533,7 +536,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                            ", other_agents_policy=" + self.other_agents_policy +
                                            ", n_steps=" + str(self.total_number_of_steps) +
                                            ", n_env=" + str(self.n_env) +
-                                           ", n_obstacles=" + str(Config.TEST_N_OBST) +
+                                           ", n_obstacles=" + str(self.n_obstacles) +
                                            ")")
         self.testcase_seed = seed
 
@@ -923,8 +926,6 @@ class CollisionAvoidanceEnv(gym.Env):
                                    + np.max(self.possible_terminal_reward_values)
 
 
-
-
     def get_expert_goal(self):
         if (Config.TEST_MODE and not Config.USE_MPC_EXPERT_IN_TEST) or Config.ACTION_SPACE_TYPE == Config.discrete:
             goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2] # - self.agents[0].pos_global_frame
@@ -942,22 +943,30 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_plot_env(self,plot_env=True):
         self.plot_env = plot_env
 
-    def set_n_env(self,n_env, env_id):
+    def set_n_env(self,n_env, env_id, is_val_env):
         self.n_env = n_env
         self.env_id = env_id
-        self.plot_every_n_episodes = int(np.ceil(Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
-                                     / (self.n_env * Config.MAX_TIME_RATIO * 200)))
+        if not is_val_env:
+            self.plot_every_n_episodes = int(np.ceil(Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
+                                         / (self.n_env * Config.MAX_TIME_RATIO * 200)))
+        else:
+            self.plot_every_n_episodes = 1
 
     def set_use_expert_action(self, n_algs, use_expert, expert, dagger, dagger_beta, comp_expert):
         self.use_expert = use_expert
         self.dagger = dagger
         self.dagger_beta = dagger_beta
         self.comp_expert = comp_expert if not use_expert else True
+        # TODO check
         if Config.TEST_MODE:
             self.testcase_repeat = n_algs
             self.testcase_count = 0
-        if use_expert:
-            self.agents[0].ig_model.set_expert_policy(expert)
+        if use_expert and n_algs > 0:
+            self.expert_controller = expert
+            # self.agents[0].ig_model.set_expert_policy(expert)
+
+    def set_n_obstacles(self, n_obstacles):
+        self.n_obstacles = n_obstacles
 
 if __name__ == '__main__':
     print("See example.py for a minimum working example.")

@@ -104,14 +104,14 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     pos_lims_margin = Config.MAP_HEIGHT / 2 - obstacle_margin
 
 
-    if not Config.TEST_MODE:
-        if n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_2_OBS * Config.REPEAT_STEPS/n_env \
-                or not Config.IG_CURRICULUM_LEARNING:
-            n_obstacles = 1
-        elif n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_3_OBS * Config.REPEAT_STEPS/n_env:
-            n_obstacles = 2
-        else:
-            n_obstacles = 3
+    # if not Config.TEST_MODE:
+    #     if n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_2_OBS * Config.REPEAT_STEPS/n_env \
+    #             or not Config.IG_CURRICULUM_LEARNING:
+    #         n_obstacles = 1
+    #     elif n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_3_OBS * Config.REPEAT_STEPS/n_env:
+    #         n_obstacles = 2
+    #     else:
+    #         n_obstacles = 3
 
     obstacle_np = []
     obstacle_at_wall = False
