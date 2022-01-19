@@ -8,9 +8,9 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = continuous
 
-    ANIMATE_EPISODES = False
+    ANIMATE_EPISODES = True
     SHOW_EPISODE_PLOTS = False
-    SAVE_EPISODE_PLOTS = False
+    SAVE_EPISODE_PLOTS = True
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
     PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
     EVALUATE_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -34,7 +34,7 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = 0.0  # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE = 0.0  # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP = -0.1  # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP = 0.0 # -0.1  # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
 
@@ -110,8 +110,8 @@ class Config:
     IG_THRES_AVG_CELL_ENTROPY = 0.0 # 0.1
 
     IG_CURRICULUM_LEARNING = True
-    IG_CURRICULUM_LEARNING_STEPS_2_OBS = 3000000
-    IG_CURRICULUM_LEARNING_STEPS_3_OBS = 6000000
+    IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
+    IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
 
     PLOT_EVERY_N_STEPS = 500000  # for visualization
 

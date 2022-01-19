@@ -224,7 +224,7 @@ class CollisionAvoidanceEnv(gym.Env):
         new_action = True
 
         # Supervisor
-        if self.total_number_of_steps < 2.1 * Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
+        if self.total_number_of_steps < 1.6 * Config.REPEAT_STEPS * Config.PRE_TRAINING_STEPS / self.n_env:
             start_time = time.time()
             mpc_actions = self.get_expert_goal()
             expert_runtime = time.time()-start_time
@@ -352,7 +352,7 @@ class CollisionAvoidanceEnv(gym.Env):
                          fig_size=self.plt_fig_size,
                          show=Config.SHOW_EPISODE_PLOTS,
                          save=Config.SAVE_EPISODE_PLOTS)
-            if (not Config.TEST_MODE) and self.plot_env:
+            if (not Config.TEST_MODE) and self.plot_env and Config.ANIMATE_EPISODES:
                 animate_episode(num_agents=len(self.agents), plot_save_dir=self.plot_save_dir,
                                 plot_policy_name=self.plot_policy_name, test_case_index=self.episode_number,
                                 agents=self.agents)
