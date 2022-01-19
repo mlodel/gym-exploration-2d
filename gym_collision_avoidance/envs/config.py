@@ -68,7 +68,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.25
-    MAX_TIME_RATIO = 6.4 # 3.2  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.3 # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0
@@ -113,7 +113,7 @@ class Config:
     IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
     IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
 
-    PLOT_EVERY_N_STEPS = 500000  # for visualization
+    PLOT_EVERY_N_STEPS = 100000  # for visualization
 
     REWARDS_NORMALIZE = True
 
@@ -138,7 +138,7 @@ class Config:
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 10  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH/2, MAP_WIDTH/2), (-MAP_HEIGHT/2, MAP_HEIGHT/2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False

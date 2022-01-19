@@ -944,8 +944,8 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_n_env(self,n_env, env_id):
         self.n_env = n_env
         self.env_id = env_id
-        self.plot_every_n_episodes = Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
-                                     // (self.n_env * Config.MAX_TIME_RATIO * 200)
+        self.plot_every_n_episodes = int(np.ceil(Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
+                                     / (self.n_env * Config.MAX_TIME_RATIO * 200)))
 
     def set_use_expert_action(self, n_algs, expert_mode, expert):
         self.dagger = False
