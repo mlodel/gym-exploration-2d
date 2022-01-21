@@ -9,8 +9,10 @@ class ig_greedy():
     def __init__(self, ig_model):
         self.ig_model = ig_model
 
-    def get_expert_goal(self, max_dist=4.0, min_dist=0.0, Nsamples=30):
+    def get_expert_goal(self, max_dist=6.0, min_dist=0.0, Nsamples=30):
         pose = self.ig_model.host_agent.pos_global_frame
+
+        np.random.seed(self.ig_model.expert_seed)
 
         if Config.ACTION_SPACE_TYPE == Config.discrete:
             radius = Config.DISCRETE_SUBGOAL_RADII[0]
@@ -35,6 +37,7 @@ class ig_greedy():
 
         best_cand_idx = None
         max_reward = 0
+        global_goal = None
 
         # if self.greedy_goal is None:
         #     self.greedy_goal = pose
@@ -64,8 +67,9 @@ class ig_greedy():
             if reward >= max_reward:
                 max_reward = reward
                 best_cand_idx = i
+                global_goal = goal
 
         greedy_goal = candidates[best_cand_idx, :]
-        self.ig_model.expert_goal = greedy_goal
+        self.ig_model.expert_goal = global_goal
 
         return greedy_goal

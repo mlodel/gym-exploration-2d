@@ -34,6 +34,7 @@ class ig_agent():
         self.expert_goal = None
 
         self.expert_policy = expert_policy(self)
+        self.expert_seed = 1
 
         self.agent_pos_map = None
         self.agent_pos_idc = None
@@ -44,13 +45,13 @@ class ig_agent():
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
-    def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range):
+    def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range, expert_seed):
 
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
 
         # Init EDF and Target Map
-        edf_map_obj = edfMap(occ_map, map_res, map_size)
+        edf_map_obj = edfMap(occ_map, map_res/10, map_size)
         self.targetMap = targetMap(edf_map_obj, map_size, map_res,
                                    sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=Config.IG_SENSE_rOcc,
                                    rEmp=Config.IG_SENSE_rEmp) # rOcc 3.0 1.1 rEmp 0.33 0.9
@@ -58,6 +59,8 @@ class ig_agent():
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
+
+        self.expert_seed = expert_seed
 
     def set_expert_policy(self, expert):
         if expert == 'ig_greedy':

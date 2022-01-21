@@ -263,7 +263,7 @@ class Config:
         },
         'local_grid': {
             'dtype': np.float32,
-            'size': (SUBMAP_WIDTH, SUBMAP_HEIGHT),
+            'size': EGO_MAP_SIZE,
             'bounds': [-np.inf, np.inf],
             'attr': 'get_sensor_data("local_grid")',
             'std': np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.float32),

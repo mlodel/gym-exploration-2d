@@ -32,43 +32,21 @@ def main():
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
 
     # In case you want to save plots, choose the directory
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/experiments/results'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/../experiments/results'
     # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
     for i in range(n_envs):
         plot_save_dir = save_path + '/figs_env' + str(i) + '/'
         os.makedirs(plot_save_dir, exist_ok=True)
         # env.set_attr('plot_save_dir', plot_save_dir, i)
         env.env_method('set_plot_save_dir', plot_save_dir, indices=i)
-        env.env_method('set_n_env', n_envs, i, indices=i)
+        env.env_method('set_n_env', n_envs, i, True, indices=i)
         # if i != 0:
         #     env.env_method('set_plot_env', False, indices=i)
-    # env.set_plot_save_dir(
-    #     os.path.dirname(os.path.realpath(__file__)) + '/experiments/results/' + name + '/')
-
-    # prediction_model = {
-    #     # 'NNModel': NNModel,
-    #     'CV': CVModel,
-    #     # 'StochasticCVModel': StochasticCVModel,
-    #     # 'PytorchNNModel': PytorchNNModel
-    # }
-    #
-    # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
-
-    # env.set_static_map(mapPath)
-    # env.ego_policy = "MPCRLStaticObsIGPolicy"
-    # Set agent configuration (start/goal pos, radius, size, policy)
-    # agents, obstacle = tc.agent_with_crossing()
-    # [agent.policy.initialize_network() for agent in agents if hasattr(agent.policy, 'initialize_network')]
-    # env.set_agents(agents)
 
     obs = env.reset()  # Get agents' initial observations
-    # obs = env.reset()  # Get agents' initial observations
 
-    env.env_method('set_use_expert_action', 1, True, 'ig_greedy')
+    # env.env_method('set_use_expert_action', 1, True, 'ig_greedy', False, 0.0, True)
 
-    # profiler = cProfile.Profile()
-    # profiler.enable()
-    globalgoal = np.array([0.,9.])
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
     num_steps = 128

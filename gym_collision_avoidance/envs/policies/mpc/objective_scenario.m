@@ -26,7 +26,6 @@ Ws = p(9);
 % References
 Wv = p(10);
 Ww = p(11);
-W_finalOrient = p(83);
 
 c1 = p(59);
 c2 = p(60);
@@ -119,10 +118,6 @@ end
 disToGoal = sqrt(x_error^2+y_error^2);
 disToGoal   =   max(disToGoal, 0.2);      % in case arriving at goal posistion
 
-angleToGoal = atan2(-y_error, -x_error);
-absOrientErr = abs(theta - angleToGoal)/pi;
-round = 1*(absOrientErr > 1);
-fin_norm_orientErr = (1-round)*absOrientErr + round*(ceil(absOrientErr) - absOrientErr);
 
 %% New version
 
@@ -133,13 +128,13 @@ max_alpha_range=4.0;
 
 if length(u_R)>2
     if i == N
-        cost = Wx*x_error^2/disToGoal + Wy*y_error^2/disToGoal + W_finalOrient*(fin_norm_orientErr)^2 + Wv*v*v/max_v_range + Ww*w*w/max_w_range + Ws*u_R(3)*u_R(3);%+ Wv*v*v + Ww*w*w+Wrepulsive*(field1+field2+field3+field4+field5+field6);
+        cost = Wx*x_error^2/disToGoal + Wy*y_error^2/disToGoal + Wv*v*v/max_v_range + Ww*w*w/max_w_range + Ws*u_R(3)*u_R(3);%+ Wv*v*v + Ww*w*w+Wrepulsive*(field1+field2+field3+field4+field5+field6);
     else
         cost = Wa*a*a/max_acc_range +Walpha*alpha*alpha/max_alpha_range   + Wv*v*v/max_v_range + Ww*w*w/max_w_range+ Ws*u_R(3)*u_R(3);%+1/(tcc_1+0.01)+1/(tcc_2+0.01)+1/(tcc_3+0.01)+1/(tcc_4+0.01)+1/(tcc_5+0.01)+1/(tcc_6+0.01);%+ Wv*(v-vref)*(v-vref);%+Wrepulsive*(field1+field2+field3+field4+field5+field6);
     end
 else
     if i == N
-        cost = Wx*x_error^2/disToGoal + Wy*y_error^2/disToGoal + W_finalOrient*(fin_norm_orientErr)^2 + Wv*v*v/max_v_range + Ww*w*w/max_w_range +cost_coll;%+Wrepulsive*(field1+field2+field3+field4+field5+field6);
+        cost = Wx*x_error^2/disToGoal + Wy*y_error^2/disToGoal + Wv*v*v/max_v_range + Ww*w*w/max_w_range +cost_coll;%+Wrepulsive*(field1+field2+field3+field4+field5+field6);
     else
         cost = Wa*a*a/max_acc_range +Walpha*alpha*alpha/max_alpha_range + Wv*v*v + Ww*w*w +cost_coll;%++1/(tcc_1+0.01)+1/(tcc_2+0.01)+1/(tcc_3+0.01)+1/(tcc_4+0.01)+1/(tcc_5+0.01)+1/(tcc_6+0.01);%+ Wv*(v-vref)*(v-vref);%+Wrepulsive*(field1+field2+field3+field4+field5+field6);
     end

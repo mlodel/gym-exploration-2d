@@ -170,9 +170,8 @@ class CollisionAvoidanceEnv(gym.Env):
         self.run = True
         self.plot_env = True
 
-        # TODO: MOVE THIS TO DIFERENT CLASS
-        self.dagger = True
-        self.dagger_beta = 1
+        self.dagger = False
+        self.dagger_beta = 1.0
         self.use_expert = True
         self.expert_controller = 'ig_greedy'
         self.comp_expert = True
@@ -381,7 +380,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(occ_map=self.map,
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.IG_MAP_RESOLUTION,
-                                          detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS)
+                                          detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS,
+                                          expert_seed=self.testcase_seed)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:

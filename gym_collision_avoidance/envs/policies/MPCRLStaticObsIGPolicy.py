@@ -27,7 +27,7 @@ class MPCRLStaticObsIGPolicy(Policy):
         self.FORCES_NU = 3
         self.FORCES_NX = 5
         self.FORCES_TOTAL_V = 8
-        self.FORCES_NPAR = 83
+        self.FORCES_NPAR = 82
         self.FORCES_x0 = np.zeros(int(self.FORCES_TOTAL_V * self.FORCES_N), dtype="double")
         self.FORCES_xinit = np.zeros(self.FORCES_NX, dtype="double")
         self.FORCES_all_parameters = np.zeros(int(self.FORCES_N*self.FORCES_NPAR), dtype="double")
@@ -45,7 +45,7 @@ class MPCRLStaticObsIGPolicy(Policy):
         self.slack_weight_ = 10000
         self.repulsive_weight_ = 0.0
         self.n_obstacles_ = 6
-        self.final_orient_weight_ = 0.1
+        # self.final_orient_weight_ = 0.1
 
         # Cost function approximation coefficients
         self.coefs = np.zeros([6])
@@ -117,7 +117,16 @@ class MPCRLStaticObsIGPolicy(Policy):
         if exit_flag == 1:
             agent.is_infeasible = False
             self.infeas_count = 0
-            return np.array([self.FORCES_x0[0], self.FORCES_x0[1]])
+            action_output = np.array([self.FORCES_x0[0], self.FORCES_x0[1]])
+
+            # diff_policy_goal = self.policy_goal - agent.pos_global_frame
+            # angle_to_polgoal = np.arctan2(diff_policy_goal[1], diff_policy_goal[0])
+            #
+            # if (np.abs(angle_to_polgoal) >= np.pi) and \
+            #         np.linalg.norm(action_output) < 0.01:
+            #     action_output[1] += angle_to_polgoal*1.0
+
+            return action_output
         else:
             self.infeas_count += 1
             agent.is_infeasible = True
@@ -174,6 +183,9 @@ class MPCRLStaticObsIGPolicy(Policy):
         else:
             output_goal = (np.array([self.goal_[0],self.goal_[1]]) - self.current_state_[:2])
 
+        # if np.linalg.norm(output_goal - agent.pos_global_frame) <= 0.01:
+        #     output_goal = goal
+
         if self.subgoal_egocentric:
             # c, s = np.cos(agent.heading_global_frame), np.sin(agent.heading_global_frame)
             R_minus = np.array(((c, s), (-s, c)))
@@ -224,8 +236,8 @@ class MPCRLStaticObsIGPolicy(Policy):
             self.FORCES_all_parameters[k + 10] = self.angular_velocity_weight_
             self.FORCES_all_parameters[k + 26] = ego_agent.radius + 0.01  # disc radius +0.05
             self.FORCES_all_parameters[k + 27] = 0.0  # disc position
-            self.FORCES_all_parameters[k + 82] = self.final_orient_weight_ \
-                if Config.ACTION_SPACE_TYPE == Config.discrete else 0.0
+            # self.FORCES_all_parameters[k + 82] = self.final_orient_weight_ \
+            #     if Config.ACTION_SPACE_TYPE == Config.discrete else 0.0
 
             # Static Collision Avoidance Constraints
             for c in range(self.M):
