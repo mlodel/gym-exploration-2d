@@ -188,7 +188,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase_count = 0
         self.testcase_repeat = 1
         self.testcase_seed = 0
-        self.testcase_n_train = 128
+        self.testcase_n_train = 32
         self.testcase_n_test = 16
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)

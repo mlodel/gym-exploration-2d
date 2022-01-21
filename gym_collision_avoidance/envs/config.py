@@ -113,7 +113,7 @@ class Config:
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
     # IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
 
-    PLOT_EVERY_N_STEPS = 100000  # for visualization
+    PLOT_EVERY_N_STEPS = 200000  # for visualization
 
     REWARDS_NORMALIZE = True
 
@@ -149,7 +149,7 @@ class Config:
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
-    STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'ego_entropy_map']  # occupancy grid
+    STATES_IN_OBS = ['heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'ego_entropy_map']  # occupancy grid
 
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'binary_map']  # occupancy grid
