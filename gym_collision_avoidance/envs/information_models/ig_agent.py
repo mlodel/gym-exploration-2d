@@ -31,7 +31,7 @@ class ig_agent():
 
         self.host_agent = host_agent
 
-        self.expert_goal = None
+        self.expert_goal = np.zeros(2)
 
         self.expert_policy = expert_policy(self)
         self.expert_seed = 1

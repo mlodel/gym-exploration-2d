@@ -267,7 +267,8 @@ class Agent(object):
         observation = {}
         for state in Config.STATES_IN_OBS:
             if self.ig_model is None and (state == 'target_map' or state == 'agent_pos_map' or state == 'entropy_map'
-                                          or state == 'binary_map' or state == 'ego_entropy_map'):
+                                          or state == 'binary_map' or state == 'ego_entropy_map'
+                                          or state == 'ego_binary_map'):
                 continue
             observation[state] = np.array(eval("self." + Config.STATE_INFO_DICT[state]['attr']))
         return observation

@@ -102,9 +102,9 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 4.0 # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
+    REWARD_MAX_IG = 1.2 # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
-    IG_REWARD_MODE = "entropy" # entropy, binary
+    IG_REWARD_MODE = "binary" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.0 # 0.1
@@ -149,7 +149,7 @@ class Config:
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
-    STATES_IN_OBS = ['heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'ego_entropy_map']  # occupancy grid
+    STATES_IN_OBS = ['heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'ego_binary_map']  # occupancy grid
 
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'binary_map']  # occupancy grid
@@ -328,6 +328,14 @@ class Config:
             'size': EGO_MAP_SIZE,
             'bounds': [-np.inf, np.inf],
             'attr': 'ig_model.targetMap.ego_map',
+            'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+            'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
+        },
+        'ego_binary_map': {
+            'dtype': np.float32,
+            'size': EGO_MAP_SIZE,
+            'bounds': [-np.inf, np.inf],
+            'attr': 'ig_model.targetMap.bin_ego_map',
             'std': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
             'mean': np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.float32),
         }
