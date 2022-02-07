@@ -4,6 +4,7 @@ from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.policies.static_obstacles.StaticObstacleManager import StaticObstacleManager
 from gym_collision_avoidance.envs.policies.mpc import StaticMPCsolver_py
 from gym_collision_avoidance.envs.policies.static_obstacles.StaticObstacleAvoidance import StaticObstacleAvoidance
+from gym_collision_avoidance.envs.utils.block_stdout import stdout_redirected
 
 class MPCRLStaticObsIGPolicy(Policy):
     def __init__(self):
@@ -278,7 +279,9 @@ class MPCRLStaticObsIGPolicy(Policy):
                     self.FORCES_all_parameters[k + 34 + obs_id * 7] = 0.0 # vy
 
         PARAMS = {"x0": self.FORCES_x0, "xinit": self.FORCES_xinit, "all_parameters": self.FORCES_all_parameters}
-        OUTPUT, EXITFLAG, INFO = StaticMPCsolver_py.StaticMPCsolver_solve(PARAMS)
+
+        with stdout_redirected():
+            OUTPUT, EXITFLAG, INFO = StaticMPCsolver_py.StaticMPCsolver_solve(PARAMS)
 
         self.solve_time = INFO.solvetime
 

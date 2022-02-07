@@ -187,7 +187,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase_count = 0
         self.testcase_repeat = 1
         self.testcase_seed = 0
-        self.testcase_n_train = 32
+        self.testcase_n_train = 128
         self.testcase_n_test = 16
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
@@ -489,8 +489,9 @@ class CollisionAvoidanceEnv(gym.Env):
         return actions
 
     def update_top_down_map(self):
-        print("Env.: " + str(self.env_id) + " Time Step: " + str(self.episode_step_number * self.dt_nominal)
-              + " Total Step: " + str(self.total_number_of_steps *self.n_env/Config.REPEAT_STEPS))
+        # print("Env.: " + str(self.env_id) + " Time Step: " + str(self.episode_step_number * self.dt_nominal)
+        #       + " Total Step: " + str(self.total_number_of_steps *self.n_env/Config.REPEAT_STEPS))
+        pass
         # self.map.add_agents_to_map(self.agents)
         # plt.imshow(self.map.map)
         # plt.pause(0.1)
@@ -599,15 +600,15 @@ class CollisionAvoidanceEnv(gym.Env):
                 if agent.was_at_goal_already is False:
                     # agents should only receive the goal reward once
                     rewards[i] = self.reward_at_goal  # - np.linalg.norm(agent.past_actions[0,:])
-                    print("Agent %i: Arrived at goal!" % agent.id)
+                    # print("Agent %i: Arrived at goal!" % agent.id)
             else:
                 # collision with other agent
                 if agent.was_in_collision_already is False:
                     if collision_with_agent[i]:
                         rewards[i] = self.reward_collision_with_agent
                         agent.in_collision = True
-                        print("Agent %i: Collision with another agent!"
-                              % agent.id)
+                        # print("Agent %i: Collision with another agent!"
+                        #       % agent.id)
                     # collision with a static obstacle
                     elif collision_with_wall[i]:
                         rewards[i] = self.reward_collision_with_wall
@@ -631,7 +632,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 elif agent.ran_out_of_time:
                     if i == 0:
-                        print("Agent 0 is out of time.")
+                        # print("Agent 0 is out of time.")
+                        pass
                     rewards[i] += Config.REWARD_TIMEOUT
 
                 # If action is infeasible
@@ -710,7 +712,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if ego_agent.was_at_goal_already is False:
                 # agents should only receive the goal reward once
                 rewards = self.reward_at_goal  # - np.linalg.norm(agent.past_actions[0,:])
-                print("Agent %i: Is going to the goal!" % ego_agent.id)
+                # print("Agent %i: Is going to the goal!" % ego_agent.id)
         else:
             for i, agent in enumerate(other_agents):
                 # collision with other agent
@@ -718,8 +720,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     if collision_with_agent[i]:
                         rewards = self.reward_collision_with_agent
                         agent.in_collision = True
-                        print("\32 Agent %i: Collision with another agent!"
-                              % agent.id)
+                        # print("\32 Agent %i: Collision with another agent!"
+                        #       % agent.id)
                     # collision with a static obstacle
                     elif collision_with_wall[i]:
                         rewards = self.reward_collision_with_wall
@@ -773,7 +775,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     collision_with_agent[i] = True
                     collision_with_agent[j] = True
                     if i == 0 and collision_with_agent[i]:
-                        print("Ego-agent collided")
+                        # print("Ego-agent collided")
+                        pass
         if self.obstacles:
             for i in agent_inds:
                 agent = self.agents[i]
@@ -783,7 +786,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 # plt.imshow(self.map.static_map + mask)
                 # plt.pause(0.1)
                 if in_map and np.any(self.map.static_map[mask]):
-                    print("Collision with wall!")
+                    # print("Collision with wall!")
                     collision_with_wall[i] = True
         else:
             for i in agent_inds:
@@ -839,9 +842,11 @@ class CollisionAvoidanceEnv(gym.Env):
             if hasattr(self.agents[0].ig_model, 'finished'):
                 self.agents[0].coverage_finished = self.agents[0].ig_model.finished
                 if self.agents[0].coverage_finished:
-                    print("Coverage Finished")
+                    # print("Coverage Finished")
+                    pass
                 elif self.agents[0].ran_out_of_time:
-                    print("Timeout")
+                    # print("Timeout")
+                    pass
 
         finished_coverage = np.array(
             [a.coverage_finished for a in self.agents])

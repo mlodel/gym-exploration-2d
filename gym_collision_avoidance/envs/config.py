@@ -34,7 +34,7 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.25  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = 0.0  # reward when agent gets close to another agent (unused?)
     REWARD_ENTERED_NORM_ZONE = 0.0  # reward when agent enters another agent's social zone
-    REWARD_TIME_STEP = 0.0 # -0.1  # default reward given if none of the others apply (encourage speed)
+    REWARD_TIME_STEP = -0.1 # -0.1  # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = 0.0  # default reward given if none of the others apply (encourage speed)
     REWARD_WIGGLY_BEHAVIOR = 0.0
 
@@ -68,7 +68,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.25
-    MAX_TIME_RATIO = 3.3 # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 6.4 # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0
@@ -107,7 +107,7 @@ class Config:
     IG_REWARD_MODE = "binary" # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
-    IG_THRES_AVG_CELL_ENTROPY = 0.0 # 0.1
+    IG_THRES_AVG_CELL_ENTROPY = 0.1 # 0.1
 
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
