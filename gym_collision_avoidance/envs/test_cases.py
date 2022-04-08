@@ -77,15 +77,15 @@ def IG_single_agent():
 def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObsIGPolicy,
                              other_agents_policy=NonCooperativePolicy, ego_agent_dynamics=FirstOrderDynamics,
                              other_agents_dynamics=UnicycleDynamics, agents_sensors=[], seed=None, obstacle=None,
-                             n_steps=0, n_env=1, n_obstacles=1):
+                             n_steps=0, n_env=1, n_obstacles=1, rng=None):
     pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
     radius = 0.5  # np.random.uniform(0.5, 0.5)
     agents = []
     n_targets = 3
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
-
+    if seed is not None and rng is None:
+        rng = np.random.default_rng(seed)
+    elif seed is None and rng is None:
+        rng = np.random.default_rng(1)
 
     # Corridor scenario
     obstacle = []
@@ -117,15 +117,15 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     obstacle_at_wall = False
 
     while len(obstacle) < n_obstacles:
-        obst_width = 1.0 * np.random.randint(6, 15)
-        obst_height = 1.0 * np.random.randint(1, 8)
-        obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
+        obst_width = 1.0 * rng.integers(6, 15)
+        obst_height = 1.0 * rng.integers(1, 8)
+        obst_heading = 0.5 * np.pi * rng.integers(0, 2)
         # if obstacle_at_wall:
         #     obst_center = (2*pos_lims_margin - obst_width) \
         #                   * np.random.rand(2) - pos_lims_margin + obst_width / 2
         # else:
-        obst_center = (2*pos_lims_map - obst_width/2) * np.random.rand(2) - pos_lims_map + obst_width/4
-        obst_heading = 0.5 * np.pi * np.random.randint(0, 2)
+        obst_center = (2*pos_lims_map - obst_width/2) * rng.random(2) - pos_lims_map + obst_width/4
+        obst_heading = 0.5 * np.pi * rng.integers(0, 2)
 
 
         obstacle_dummy = np.array([[obst_width/2, obst_height/2], [-obst_width/2, obst_height/2],
@@ -181,8 +181,8 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # Get random initial position
     pos_infeasible = True
     while pos_infeasible:
-        init_pos = (2*pos_lims_margin) * np.random.rand(2) - pos_lims_margin
-        init_heading = 2*np.pi * np.random.rand() - np.pi
+        init_pos = (2*pos_lims_margin) * rng.random(2) - pos_lims_margin
+        init_heading = 2*np.pi * rng.random() - np.pi
         pos_infeasible_list = []
         for k in range(n_obstacles):
             obstacle_limits = [[np.min(obstacle_np[k][:,0]), np.max(obstacle_np[k][:,0])],
@@ -205,7 +205,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     for i in range(n_targets):
         pos_infeasible = True
         while pos_infeasible:
-            init_pos = (2*pos_lims_margin) * np.random.rand(2) - pos_lims_margin
+            init_pos = (2*pos_lims_margin) * rng.random(2) - pos_lims_margin
             pos_infeasible_list = []
             for k in range(n_obstacles):
                 obstacle_limits = [[np.min(obstacle_np[k][:, 0]), np.max(obstacle_np[k][:, 0])],

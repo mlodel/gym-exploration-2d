@@ -12,8 +12,6 @@ class ig_greedy():
     def get_expert_goal(self, max_dist=6.0, min_dist=0.0, Nsamples=30):
         pose = self.ig_model.host_agent.pos_global_frame
 
-        np.random.seed(self.ig_model.expert_seed)
-
         if Config.ACTION_SPACE_TYPE == Config.discrete:
             radius = Config.DISCRETE_SUBGOAL_RADII[0]
             discrete_angles = np.arange(-np.pi, np.pi, 2 * np.pi / Config.DISCRETE_SUBGOAL_ANGLES)
@@ -21,7 +19,7 @@ class ig_greedy():
                 [[radius * np.cos(angle), radius * np.sin(angle)] for angle in discrete_angles])
         else:
             # Generate candidate goals in polar coordinates + yaw angle
-            candidates_polar = np.random.rand(Nsamples, 2)
+            candidates_polar = self.ig_model.rng.random(Nsamples, 2)
             # Scale radius
             candidates_polar[:, 0] = (max_dist - min_dist) * candidates_polar[:, 0] + min_dist
             # Scale angle

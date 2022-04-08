@@ -93,8 +93,9 @@ class CollisionAvoidanceEnv(gym.Env):
             if len(Config.DISCRETE_SUBGOAL_RADII) == 1:
                 self.action_space = gym.spaces.Discrete(Config.DISCRETE_SUBGOAL_ANGLES)
                 radius = Config.DISCRETE_SUBGOAL_RADII[0]
-                discrete_angles = np.arange(-np.pi, np.pi, 2*np.pi/Config.DISCRETE_SUBGOAL_ANGLES)
-                self.discrete_subgoals = np.asarray([[radius*np.cos(angle), radius*np.sin(angle)] for angle in discrete_angles])
+                discrete_angles = np.arange(-np.pi, np.pi, 2 * np.pi / Config.DISCRETE_SUBGOAL_ANGLES)
+                self.discrete_subgoals = np.asarray(
+                    [[radius * np.cos(angle), radius * np.sin(angle)] for angle in discrete_angles])
             # else:
             #     self.action_space = gym.spaces.MultiDiscrete([])
 
@@ -104,7 +105,6 @@ class CollisionAvoidanceEnv(gym.Env):
             self.high_action = np.array([self.max_speed,
                                          self.max_heading_change])
             self.action_space = gym.spaces.Box(self.low_action, self.high_action, dtype=np.float32)
-
 
         # original observation space
         # self.observation_space = gym.spaces.Box(self.low_state, self.high_state, dtype=np.float32)
@@ -187,6 +187,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase_count = 0
         self.testcase_repeat = 1
         self.testcase_seed = 0
+        self.testcase_rng = np.random.default_rng(0)
         self.testcase_n_train = 128
         self.testcase_n_test = 16
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
@@ -229,7 +230,7 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.comp_expert:
             start_time = time.time()
             mpc_actions = self.get_expert_goal()
-            expert_runtime = time.time()-start_time
+            expert_runtime = time.time() - start_time
         else:
             mpc_actions = np.array([0.0, 0.0])
             expert_runtime = 0
@@ -281,7 +282,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 step_rewards = self._compute_rewards()
                 rewards += step_rewards
             # a=b
-            if ( (self.episode_number-1) % self.plot_every_n_episodes == 0 or Config.EVALUATE_MODE) \
+            if ((self.episode_number - 1) % self.plot_every_n_episodes == 0 or Config.EVALUATE_MODE) \
                     and not Config.TEST_MODE and Config.ANIMATE_EPISODES and self.episode_number >= 1 and self.plot_env \
                     and self.episode_step_number % self.animation_period_steps == 0:
                 plot_episode(self.agents, self.obstacles, False, self.map, self.episode_number,
@@ -342,8 +343,8 @@ class CollisionAvoidanceEnv(gym.Env):
     def reset(self):
 
         if (
-                (self.episode_number-1) % self.plot_every_n_episodes == 0 or ( Config.TEST_MODE
-                             # and self.episode_number <= 2*self.testcase_repeat
+                (self.episode_number - 1) % self.plot_every_n_episodes == 0 or (Config.TEST_MODE
+                # and self.episode_number <= 2*self.testcase_repeat
         )) \
                 and Config.SAVE_EPISODE_PLOTS and self.episode_number >= 1 and self.episode_step_number > 0:
             plot_episode(self.agents, self.obstacles, Config.TRAIN_MODE, self.map, self.episode_number,
@@ -381,7 +382,7 @@ class CollisionAvoidanceEnv(gym.Env):
                                           map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.IG_MAP_RESOLUTION,
                                           detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS,
-                                          expert_seed=self.testcase_seed)
+                                          rng=self.testcase_rng)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:
@@ -428,12 +429,14 @@ class CollisionAvoidanceEnv(gym.Env):
             if agent.policy.is_external:
                 all_actions[agent_index, :] = agent.policy.convert_to_action(actions[agent_index])
             elif agent.policy.is_still_learning:
-                all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index, self.agents, actions, new_action)
+                all_actions[agent_index, :] = agent.policy.network_output_to_action(agent_index, self.agents, actions,
+                                                                                    new_action)
             elif "ig_mcts" in str(agent.policy):
                 dmcts_agents.append(agent_index)
             else:
                 dict_obs = self.observation[agent_index]
-                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index, self.obstacles)
+                all_actions[agent_index, :] = agent.policy.find_next_action(dict_obs, self.agents, agent_index,
+                                                                            self.obstacles)
 
         if len(dmcts_agents) > 0:
             dmcts_actions = self._take_action_dmcts(dmcts_agents)
@@ -516,30 +519,44 @@ class CollisionAvoidanceEnv(gym.Env):
         # if self.agents is not None:
         #     self.prev_episode_agents = copy.deepcopy(self.agents)
 
-
         # scenario_index = np.random.randint(0,len(self.scenario))
         # if self.testcase_count == self.testcase_repeat or not Config.TEST_MODE:
         if Config.TEST_MODE:
             testcases_per_env = self.testcase_n_test // self.n_env
             # if self.testcase_repeat == 1:
             #     self.testcase_count = (self.episode_number - 1)
-            tc_start, tc_end = self.testcase_n_train + self.env_id*testcases_per_env, \
-                               self.testcase_n_train + (self.env_id+1)*testcases_per_env
-            seed = np.arange(tc_start, tc_end)[(self.testcase_count-1) % testcases_per_env]
+            tc_start, tc_end = self.testcase_n_train + self.env_id * testcases_per_env, \
+                               self.testcase_n_train + (self.env_id + 1) * testcases_per_env
+            seed = np.arange(tc_start, tc_end)[(self.testcase_count - 1) % testcases_per_env]
         else:
             np.random.seed((self.env_id + 1234) * self.episode_number)
             seed = np.random.choice(self.testcase_n_train)
-        self.agents, self.obstacles = eval("tc." + self.scenario[0] + "(number_of_agents=" + str(
-            self.number_of_agents) + ", seed=" + str(seed) +
-                                           ", ego_agent_policy=" + self.ego_policy +
-                                           ", ego_agent_dynamics=" + self.ego_agent_dynamics +
-                                           ", other_agents_dynamics=" + self.other_agents_dynamics +
-                                           ", other_agents_policy=" + self.other_agents_policy +
-                                           ", n_steps=" + str(self.total_number_of_steps) +
-                                           ", n_env=" + str(self.n_env) +
-                                           ", n_obstacles=" + str(self.n_obstacles) +
-                                           ")")
+
         self.testcase_seed = seed
+        self.testcase_rng = np.random.default_rng(seed)
+
+        # self.agents, self.obstacles = eval("tc." + self.scenario[0] + "(number_of_agents=" + str(
+        #     self.number_of_agents) + ", seed=" + str(seed) +
+        #                                    ", ego_agent_policy=" + self.ego_policy +
+        #                                    ", ego_agent_dynamics=" + self.ego_agent_dynamics +
+        #                                    ", other_agents_dynamics=" + self.other_agents_dynamics +
+        #                                    ", other_agents_policy=" + self.other_agents_policy +
+        #                                    ", n_steps=" + str(self.total_number_of_steps) +
+        #                                    ", n_env=" + str(self.n_env) +
+        #                                    ", n_obstacles=" + str(self.n_obstacles) +
+        #                                    ")")
+
+        self.agents, self.obstacles = getattr(tc, self.scenario[0])(
+            number_of_agents=self.number_of_agents,
+            rng=self.testcase_rng,
+            ego_agent_policy=globals()[self.ego_policy],
+            ego_agent_dynamics=globals()[self.ego_agent_dynamics],
+            other_agents_dynamics=globals()[self.other_agents_dynamics],
+            other_agents_policy=globals()[self.other_agents_policy],
+            n_steps=self.total_number_of_steps,
+            n_env=self.n_env,
+            n_obstacles=self.n_obstacles
+        )
 
         if self.prediction_model:
             self.prediction_model.reset_states(len(self.agents))
@@ -669,12 +686,11 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 # Penalize Deadlock
                 if self.episode_step_number > 20 and (agent.speed_global_frame < 0.01 and
-                                          np.abs(agent.angular_speed_global_frame) < 0.01):
+                                                      np.abs(agent.angular_speed_global_frame) < 0.01):
                     rewards[i] += Config.REWARD_DEADLOCKED
                     agent.deadlock_count += 1
                     if agent.deadlock_count > 20:
                         agent.is_deadlocked = True
-
 
                 # Incentivize Moving
                 # rewards[i] += 0.01 * agent.speed_global_frame
@@ -921,19 +937,18 @@ class CollisionAvoidanceEnv(gym.Env):
 
         repeat_steps = Config.REPEAT_STEPS if Config.IG_ACCUMULATE_REWARDS else 1
         self.min_possible_reward = repeat_steps * self.reward_time_step \
-                                                          + sum(
-                    [r if r < 0 else 0 for r in self.possible_step_reward_values]) \
+                                   + sum(
+            [r if r < 0 else 0 for r in self.possible_step_reward_values]) \
                                    + np.min(self.possible_terminal_reward_values)
 
         self.max_possible_reward = repeat_steps * self.reward_time_step \
-                                                          + sum(
-                    [r if r > 0 else 0 for r in self.possible_step_reward_values]) \
+                                   + sum(
+            [r if r > 0 else 0 for r in self.possible_step_reward_values]) \
                                    + np.max(self.possible_terminal_reward_values)
-
 
     def get_expert_goal(self):
         if (Config.TEST_MODE and not Config.USE_MPC_EXPERT_IN_TEST) or Config.ACTION_SPACE_TYPE == Config.discrete:
-            goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2] # - self.agents[0].pos_global_frame
+            goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[0:2]  # - self.agents[0].pos_global_frame
         else:
             goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
         return goal
@@ -945,15 +960,15 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_perturbed_info(self, perturbed_obs):
         self.perturbed_obs = perturbed_obs
 
-    def set_plot_env(self,plot_env=True):
+    def set_plot_env(self, plot_env=True):
         self.plot_env = plot_env
 
-    def set_n_env(self,n_env, env_id, is_val_env):
+    def set_n_env(self, n_env, env_id, is_val_env):
         self.n_env = n_env
         self.env_id = env_id
         if not is_val_env:
             self.plot_every_n_episodes = int(np.ceil(Config.PLOT_EVERY_N_STEPS * Config.REPEAT_STEPS \
-                                         / (self.n_env * Config.MAX_TIME_RATIO * 200)))
+                                                     / (self.n_env * Config.MAX_TIME_RATIO * 200)))
         else:
             self.plot_every_n_episodes = 1
 
@@ -972,6 +987,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def set_n_obstacles(self, n_obstacles):
         self.n_obstacles = n_obstacles
+
 
 if __name__ == '__main__':
     print("See example.py for a minimum working example.")

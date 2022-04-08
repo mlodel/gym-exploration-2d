@@ -42,10 +42,11 @@ class ig_agent():
         self.finished_entropy = False
         self.finished_binary = False
         self.finished = False
+        self.rng = None
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
-    def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range, expert_seed):
+    def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range, rng):
 
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
@@ -60,7 +61,9 @@ class ig_agent():
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
-        self.expert_seed = expert_seed
+        # self.expert_seed = expert_seed
+        self.rng = rng
+
 
     def set_expert_policy(self, expert):
         if expert == 'ig_greedy':
