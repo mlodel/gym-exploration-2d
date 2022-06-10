@@ -13,18 +13,19 @@ from gym_collision_avoidance.envs.config import Config
 
 import time
 
+
 def current_milli_time():
     return int(round(time.time() * 1000))
 
+
 class ig_agent():
-    def __init__(self, host_agent, expert_policy):
+    def __init__(self, host_agent, expert_policy=None):
 
         self.targetMap = None
         self.detect_fov = None
         self.detect_range = None
 
         self.obsvd_targets = None
-        self.global_pose = None
 
         self.team_obsv_cells = None
         self.team_reward = None
@@ -33,8 +34,11 @@ class ig_agent():
 
         self.expert_goal = np.zeros(2)
 
-        self.expert_policy = expert_policy(self)
-        self.expert_seed = 1
+        if expert_policy is not None:
+            self.expert_policy = expert_policy(self)
+            self.expert_seed = 1
+        else:
+            self.expert_policy = None
 
         self.agent_pos_map = None
         self.agent_pos_idc = None
@@ -46,16 +50,15 @@ class ig_agent():
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
-    def init_model(self, occ_map, map_size, map_res, detect_fov, detect_range, rng):
+    def init_model(self, map_size, map_res, detect_fov, detect_range, rng):
 
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
 
         # Init EDF and Target Map
-        edf_map_obj = edfMap(occ_map, map_res/10, map_size)
-        self.targetMap = targetMap(edf_map_obj, map_size, map_res,
+        self.targetMap = targetMap(map_size, map_res,
                                    sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=Config.IG_SENSE_rOcc,
-                                   rEmp=Config.IG_SENSE_rEmp) # rOcc 3.0 1.1 rEmp 0.33 0.9
+                                   rEmp=Config.IG_SENSE_rEmp)  # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
@@ -64,6 +67,8 @@ class ig_agent():
         # self.expert_seed = expert_seed
         self.rng = rng
 
+    def update_map(self, occ_map=None, edf_map=None):
+        self.targetMap.update_map(occ_map, edf_map)
 
     def set_expert_policy(self, expert):
         if expert == 'ig_greedy':
@@ -73,65 +78,18 @@ class ig_agent():
         elif expert == 'ig_random':
             self.expert_policy = ig_random(self)
 
-    def update(self, agents):
-
-        pos_global_frame = self.host_agent.get_agent_data('pos_global_frame')
-        heading_global_frame = self.host_agent.get_agent_data('heading_global_frame')
-
-        global_pose = np.append(pos_global_frame, heading_global_frame)
-
-        ig_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != self.host_agent.id]
-        self.update_belief(ig_agents, global_pose, agents)
-
-        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
-        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
-        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
-
-        self.finished = self.targetMap.finished
+    def update(self, *args, **kwargs):
+        raise NotImplementedError
 
     def get_reward(self, agent_pos, agent_heading):
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
 
-    def update_belief(self, ig_agents, global_pose, agents):
-        targets = []
-        poses = []
-        # Find Targets in Range and FOV (Detector Emulation)
-        self.obsvd_targets = self.find_targets_in_obs(agents, global_pose)
-        targets.append(self.obsvd_targets)
-        poses.append(global_pose)
-        # Get observations of other agens
-        for j in ig_agents:
-            other_agent_targets = agents[j].policy.obsvd_targets if agents[j].policy.obsvd_targets is not None else []
-            targets.append(other_agent_targets)
-            other_agent_pose = np.append(agents[j].pos_global_frame, agents[j].heading_global_frame)
-            poses.append(other_agent_pose)
+    def update_agent_pos_map(self, global_pose):
+        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
+        self.agent_pos_idc = self.targetMap.getCellsFromPose(global_pose)
+        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
-        # Update Target Map
-        self.team_obsv_cells, self.team_reward = self.targetMap.update(poses, targets, frame='global')
-        # self.team_reward = self.targetMap.get_reward_from_cells(self.team_obsv_cells)
 
-    def find_targets_in_obs(self, agents, global_pose):
-
-        # Find Targets in Range and FOV (Detector Emulation)
-        c, s = np.cos(global_pose[2]), np.sin(global_pose[2])
-        R = np.array(((c, s), (-s, c)))
-        targets = []
-        for agent in agents:
-            if agent.policy.str == "StaticPolicy":
-                # Static Agent = Target
-                r = agent.pos_global_frame - global_pose[0:2]
-                r_norm = np.sqrt(r[0] ** 2 + r[1] ** 2)
-                in_range = r_norm <= self.detect_range
-                if in_range:
-                    r_rot = np.dot(R, r)
-                    dphi = (np.arctan2(r_rot[1], r_rot[0]))
-                    in_fov = abs(dphi) <= self.detect_fov / 2.0
-                    if in_fov:
-                        targets.append(agent.pos_global_frame)
-                    else:
-                        what=1
-
-        return targets
 
 """
     def get_greedy_goal(self, pose, max_dist=4.0, min_dist=1.0, Nsamples=30):

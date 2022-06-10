@@ -19,7 +19,7 @@ class ig_greedy():
                 [[radius * np.cos(angle), radius * np.sin(angle)] for angle in discrete_angles])
         else:
             # Generate candidate goals in polar coordinates + yaw angle
-            candidates_polar = self.ig_model.rng.random(Nsamples, 2)
+            candidates_polar = self.ig_model.rng.random((Nsamples, 2))
             # Scale radius
             candidates_polar[:, 0] = (max_dist - min_dist) * candidates_polar[:, 0] + min_dist
             # Scale angle

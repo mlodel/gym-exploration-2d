@@ -2,14 +2,16 @@ import numpy as np
 from scipy import ndimage
 
 class edfMap():
-    def __init__(self, obstMap, cellSize, mapSize):
+    def __init__(self, cellSize, mapSize):
         self.cellSize = cellSize
         self.mapSize = mapSize
         self.map = None
-        self.update(obstMap)
-    
-    def update(self, obstMap):
+
+    def update_from_occmap(self, obstMap):
         self.map = ndimage.distance_transform_edt((~obstMap.map).astype(int)) * self.cellSize
+
+    def update_from_edfmap(self, edf_map):
+        self.map = edf_map
     
     def get_edf_value_from_pose(self,pose):
         if len(pose) > 2:

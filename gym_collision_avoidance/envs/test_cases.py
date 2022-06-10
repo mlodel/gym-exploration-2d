@@ -49,7 +49,7 @@ from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.utils import end_conditions as ec
 # from gym_collision_avoidance.envs.dataset import Dataset
 
-from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
+from gym_collision_avoidance.envs.information_models.ig_agent_gym import IG_agent_gym
 from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
 from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
 
@@ -196,7 +196,7 @@ def IG_single_agent_crossing(number_of_agents=1, ego_agent_policy=MPCRLStaticObs
     # ego agent
     agents.append(Agent(init_pos[0], init_pos[1], init_pos[0], init_pos[1]+100.0, radius, pref_speed, init_heading,
                         ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
+                        [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=IG_agent_gym, ig_expert=ig_greedy))
     # agents.append(Agent(4, 3, 12, 12 + 100.0, radius, pref_speed, - 1*np.pi,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
     #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
