@@ -1,14 +1,29 @@
 import numpy as np
 import cv2
+
 # import scipy
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 from gym_collision_avoidance.envs.config import Config
 
 
-class targetMap():
-    def __init__(self, mapSize, cellSize, sensFOV, sensRange, rOcc, rEmp, tolerance=0.01, prior=0.0,
-                 p_false_neg=0.1, p_false_pos=0.05, logmap_bound=30.0):
-        self.edfMapObj = edfMap(cellSize / 10, mapSize)
+class targetMap:
+    def __init__(
+        self,
+        mapSize,
+        cellSize,
+        sensFOV,
+        sensRange,
+        rOcc,
+        rEmp,
+        edfmap_res_factor,
+        tolerance=0.01,
+        prior=0.0,
+        p_false_neg=0.1,
+        p_false_pos=0.05,
+        logmap_bound=30.0,
+    ):
+
+        self.edfMapObj = edfMap(cellSize / edfmap_res_factor, mapSize)
 
         self.cellSize = cellSize
         self.mapSize = np.asarray(mapSize)
@@ -24,7 +39,10 @@ class targetMap():
         self.p_false_neg = p_false_neg
         self.p_false_pos = p_false_pos
 
-        shape = (int(self.mapSize[1] / self.cellSize), int(self.mapSize[0] / self.cellSize))
+        shape = (
+            int(self.mapSize[1] / self.cellSize),
+            int(self.mapSize[0] / self.cellSize),
+        )
         self.map = np.ones(shape) * prior
 
         p_prior = np.exp(prior) / (np.exp(prior) + 1)
@@ -33,7 +51,9 @@ class targetMap():
 
         self.logMap_bound = logmap_bound
 
-        cell_entropy_prior = (-p_prior * np.log(p_prior) - (1 - p_prior) * np.log(1 - p_prior)) / np.log(2)
+        cell_entropy_prior = (
+            -p_prior * np.log(p_prior) - (1 - p_prior) * np.log(1 - p_prior)
+        ) / np.log(2)
         self.entropyMap = np.ones(shape) * cell_entropy_prior
 
         self.binaryMap = np.zeros(shape).astype(bool)
@@ -42,7 +62,9 @@ class targetMap():
         self.free_cells = set()
         self._init_free_cells()
         self.n_free_cells = len(self.free_cells)
-        self.entropy_free_space = cell_entropy_prior * self.n_free_cells  # * shape[0] * shape [1]
+        self.entropy_free_space = (
+            cell_entropy_prior * self.n_free_cells
+        )  # * shape[0] * shape [1]
 
         self.visitedCells = set()
         self.visited_share = 0.0
@@ -56,7 +78,9 @@ class targetMap():
 
         # ego centric entropy map
         self.ego_map = self.create_ego_map(np.zeros(3), self.entropyMap)
-        self.bin_ego_map = self.create_ego_map(np.zeros(3), self.binaryMap.astype(float), True)
+        self.bin_ego_map = self.create_ego_map(
+            np.zeros(3), self.binaryMap.astype(float), True
+        )
 
     def _init_free_cells(self):
 
@@ -88,6 +112,8 @@ class targetMap():
             pose = pose[0:2]
         xIdc = np.floor((pose[0] + self.mapSize[0] / 2) / self.cellSize)
         yIdc = np.floor((pose[1] + self.mapSize[1] / 2) / self.cellSize)
+        xIdc = np.clip(xIdc, 0, self.map.shape[0] - 1)
+        yIdc = np.clip(yIdc, 0, self.map.shape[1] - 1)
         return (xIdc.astype(int), yIdc.astype(int))
 
     def getPoseFromCell(self, cell):
@@ -98,7 +124,12 @@ class targetMap():
     def get_pos_in_map_lims(self, pose):
         if len(pose) > 2:
             pose = pose[0:2]
-        return np.max(np.array([np.min(np.array([pose, self.mapSize / 2]), axis=0), -self.mapSize / 2]), axis=0)
+        return np.max(
+            np.array(
+                [np.min(np.array([pose, self.mapSize / 2]), axis=0), -self.mapSize / 2]
+            ),
+            axis=0,
+        )
 
     def getVisibleCells(self, pose):
 
@@ -108,9 +139,11 @@ class targetMap():
         # FOV center, left, right limiting point
         if self.sensFOV <= np.pi:
             left = pose[0:2] + self.sensRange * np.array(
-                [np.cos(phi + self.sensFOV / 2), np.sin(phi + self.sensFOV / 2)])
+                [np.cos(phi + self.sensFOV / 2), np.sin(phi + self.sensFOV / 2)]
+            )
             right = pose[0:2] + self.sensRange * np.array(
-                [np.cos(phi - self.sensFOV / 2), np.sin(phi - self.sensFOV / 2)])
+                [np.cos(phi - self.sensFOV / 2), np.sin(phi - self.sensFOV / 2)]
+            )
             center = pose[0:2] + self.sensRange * np.array([np.cos(phi), np.sin(phi)])
             posepos = pose[0:2]
         else:
@@ -153,7 +186,7 @@ class targetMap():
 
         return visible_cells
 
-    def update(self, poses, observations, frame='global'):
+    def update(self, poses, observations, frame="global"):
         obsvdCells = set()
         reward = 0
         # Update for all agents observations
@@ -165,9 +198,9 @@ class targetMap():
             n_detected = len(obs)
             detections = []
             for target in obs:
-                if frame == 'global':
+                if frame == "global":
                     ego_pose = np.dot(R_minus, (target - pose[0:2]))
-                elif frame == 'ego':
+                elif frame == "ego":
                     ego_pose = target
                 else:
                     raise Exception("Unsupported Frame for Target Map Update")
@@ -183,7 +216,9 @@ class targetMap():
                     for r_target in detections:
                         r_diff = r_target - r
                         r_diff_norm = np.sqrt(r_diff[0] ** 2 + r_diff[1] ** 2)
-                        if r_diff_norm < (np.sqrt(0.5) * self.cellSize + self.tolerance):
+                        if r_diff_norm < (
+                            np.sqrt(0.5) * self.cellSize + self.tolerance
+                        ):
                             in_current_cell = True
                             break
 
@@ -196,14 +231,20 @@ class targetMap():
 
                 # REWARD computation
                 if Config.IG_REWARD_MODE == "binary":
-                    reward += Config.IG_REWARD_BINARY_CELL if not self.binaryMap[j, i] else 0.0
+                    reward += (
+                        Config.IG_REWARD_BINARY_CELL
+                        if not self.binaryMap[j, i]
+                        else 0.0
+                    )
                 else:
                     reward += self.get_reward_from_cells([(i, j)])
 
                 self.binaryMap[j, i] = True
 
                 self.map[j, i] += lSens
-                self.map[j, i] = np.clip(self.map[j, i], -self.logMap_bound, self.logMap_bound)
+                self.map[j, i] = np.clip(
+                    self.map[j, i], -self.logMap_bound, self.logMap_bound
+                )
 
                 # Update probabilities
 
@@ -212,10 +253,14 @@ class targetMap():
                 self.probMap[j, i] = p_cell
 
                 # Update Entropies and obtain reward
-                cell_entropy = (-p_cell * np.log(p_cell) - (1 - p_cell) * np.log(1 - p_cell)) / np.log(2)
+                cell_entropy = (
+                    -p_cell * np.log(p_cell) - (1 - p_cell) * np.log(1 - p_cell)
+                ) / np.log(2)
 
                 # reward += self.entropyMap[j,i] - cell_entropy
-                self.entropy_free_space = self.entropy_free_space - self.entropyMap[j, i] + cell_entropy
+                self.entropy_free_space = (
+                    self.entropy_free_space - self.entropyMap[j, i] + cell_entropy
+                )
                 self.entropyMap[j, i] = cell_entropy
 
             obsvdCells.update(visibleCells)
@@ -223,7 +268,9 @@ class targetMap():
             self.visited_share = len(self.visitedCells) / len(self.free_cells)
 
             self.ego_map = self.create_ego_map(pose, self.entropyMap)
-            self.bin_ego_map = self.create_ego_map(pose, self.binaryMap.astype(float), True)
+            self.bin_ego_map = self.create_ego_map(
+                pose, self.binaryMap.astype(float), True
+            )
             # Check Termination
         if self.entropy_free_space <= self.thres_entropy:
             self.finished_entropy = True
@@ -250,8 +297,12 @@ class targetMap():
             else:
                 r = np.exp(self.map[j, i])
                 p = r / (r + 1)
-                f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (r * self.rOcc + 1)
-                f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (r * self.rEmp + 1)
+                f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (
+                    r * self.rOcc + 1
+                )
+                f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (
+                    r * self.rEmp + 1
+                )
 
                 P_p = p * (1 - self.p_false_neg) + (1 - p) * self.p_false_pos
                 P_n = p * self.p_false_neg + (1 - p) * (1 - self.p_false_pos)
@@ -266,7 +317,12 @@ class targetMap():
 
     def create_ego_map(self, pose, map, bin=False):
 
-        map_cell = self.getCellsFromPose(pose[0:2])
+        # # Clip position to be inside map bounds
+        # position = np.clip(
+        #     pose[:2], -self.mapSize * np.ones(2), self.mapSize * np.ones(2)
+        # )
+
+        map_cell = self.getCellsFromPose(pose[:2])
         # map_cell = (map_cell[0], 20-map_cell[1])
         angle = pose[2] * 180 / np.pi
 
@@ -291,20 +347,38 @@ class targetMap():
         # Now, we will perform actual image rotation
         bordervalue = 1.0 if bin else 0.0
         rotatingimage = cv2.warpAffine(
-            map, rotationMatrix, (newImageWidth, newImageHeight), borderValue=bordervalue)
+            map,
+            rotationMatrix,
+            (newImageWidth, newImageHeight),
+            borderValue=bordervalue,
+        )
 
         ext_map = np.ones((90, 90), dtype=np.float32)
         exp_map = ext_map * 0.0 if not bin else ext_map
         ext_map[30:60, 30:60] = rotatingimage
 
-        transform_point = cv2.transform(np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix)[0][0]
+        transform_point = cv2.transform(
+            np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix
+        )[0][0]
 
         point = transform_point + np.array([30, 30], dtype=int)
 
-        rot_mat = cv2.getRotationMatrix2D((int(point[0]), int(point[1])), 45 + angle, 1.0)
-        rot2 = cv2.warpAffine(ext_map, rot_mat, ext_map.shape[1::-1], borderValue=bordervalue)
+        rot_mat = cv2.getRotationMatrix2D(
+            (int(point[0]), int(point[1])), 45 + angle, 1.0
+        )
+        rot2 = cv2.warpAffine(
+            ext_map, rot_mat, ext_map.shape[1::-1], borderValue=bordervalue
+        )
 
-        final = rot2[point[1] - 30:point[1] + 30, point[0] - 30:point[0] + 30]
+        final = rot2[point[1] - 30 : point[1] + 30, point[0] - 30 : point[0] + 30]
         final = cv2.flip(final, 1)
-
-        return cv2.resize(final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_CUBIC)
+        try:
+            final_resize = cv2.resize(
+                final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_CUBIC
+            )
+        except Exception as e:
+            print(str([map_cell]))
+            print(str(rot2.shape))
+            print(str(final.shape))
+            print(str(e))
+        return final_resize

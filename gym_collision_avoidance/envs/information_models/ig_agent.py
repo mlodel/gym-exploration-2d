@@ -9,8 +9,6 @@ from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
 from gym_collision_avoidance.envs.information_models.ig_mcts import ig_mcts
 from gym_collision_avoidance.envs.information_models.ig_random import ig_random
 
-from gym_collision_avoidance.envs.config import Config
-
 import time
 
 
@@ -19,7 +17,7 @@ def current_milli_time():
 
 
 class ig_agent():
-    def __init__(self, host_agent, expert_policy=None):
+    def __init__(self, expert_policy=None):
 
         self.targetMap = None
         self.detect_fov = None
@@ -29,8 +27,6 @@ class ig_agent():
 
         self.team_obsv_cells = None
         self.team_reward = None
-
-        self.host_agent = host_agent
 
         self.expert_goal = np.zeros(2)
 
@@ -47,21 +43,23 @@ class ig_agent():
         self.finished_binary = False
         self.finished = False
         self.rng = None
+        
+        self.global_pose = np.zeros(3)
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
-    def init_model(self, map_size, map_res, detect_fov, detect_range, rng):
+    def init_model(self, map_size, map_res, detect_fov, detect_range, rng, rOcc, rEmp, edfmap_res_factor=10):
 
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
 
         # Init EDF and Target Map
         self.targetMap = targetMap(map_size, map_res,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=Config.IG_SENSE_rOcc,
-                                   rEmp=Config.IG_SENSE_rEmp)  # rOcc 3.0 1.1 rEmp 0.33 0.9
+                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=rOcc,
+                                   rEmp=rEmp, edfmap_res_factor=edfmap_res_factor)  # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
-        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.host_agent.pos_global_frame)
+        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.global_pose)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
         # self.expert_seed = expert_seed
@@ -84,9 +82,9 @@ class ig_agent():
     def get_reward(self, agent_pos, agent_heading):
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
 
-    def update_agent_pos_map(self, global_pose):
+    def update_agent_pos_map(self):
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
-        self.agent_pos_idc = self.targetMap.getCellsFromPose(global_pose)
+        self.agent_pos_idc = self.targetMap.getCellsFromPose(self.global_pose)
         self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
 
 

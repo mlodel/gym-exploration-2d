@@ -4,29 +4,33 @@ from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 
 
 class IG_agent_gym(ig_agent):
-    def __int__(self, *args, **kwargs):
+    def __int__(self, host_agent, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        self.host_agent = host_agent
+        
+        self.global_pose = np.append(self.host_agent.pos_global_frame, self.host_agent.heading_global_frame)
 
     def update(self, agents):
 
         pos_global_frame = self.host_agent.get_agent_data('pos_global_frame')
         heading_global_frame = self.host_agent.get_agent_data('heading_global_frame')
 
-        global_pose = np.append(pos_global_frame, heading_global_frame)
+        self.global_pose = np.append(pos_global_frame, heading_global_frame)
 
-        self._update_belief(global_pose, agents)
+        self._update_belief(agents)
 
-        self.update_agent_pos_map(global_pose)
+        self.update_agent_pos_map()
 
         self.finished = self.targetMap.finished
 
-    def _update_belief(self, global_pose, agents):
+    def _update_belief(self, agents):
         targets = []
         poses = []
         # Find Targets in Range and FOV (Detector Emulation)
-        self.obsvd_targets = self._find_targets_in_obs(agents, global_pose)
+        self.obsvd_targets = self._find_targets_in_obs(agents, self.global_pose)
         targets.append(self.obsvd_targets)
-        poses.append(global_pose)
+        poses.append(self.global_pose)
         # Get observations of other agens
         ig_agents = [i for i in range(len(agents)) if "ig_" in str(type(agents[i].policy)) and i != self.host_agent.id]
         for j in ig_agents:

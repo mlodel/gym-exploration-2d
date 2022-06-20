@@ -381,7 +381,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.ig_model.init_model(map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
                                           map_res=Config.IG_MAP_RESOLUTION,
                                           detect_fov=Config.IG_SENSE_FOV, detect_range=Config.IG_SENSE_RADIUS,
-                                          rng=self.testcase_rng)
+                                          rng=self.testcase_rng,
+                                          rOcc=Config.IG_SENSE_rOcc, rEmp=Config.IG_SENSE_rEmp)
                 agent.ig_model.update_map(occ_map=self.map)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
