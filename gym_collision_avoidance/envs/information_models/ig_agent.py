@@ -16,7 +16,7 @@ def current_milli_time():
     return int(round(time.time() * 1000))
 
 
-class ig_agent():
+class ig_agent:
     def __init__(self, expert_policy=None):
 
         self.targetMap = None
@@ -43,20 +43,36 @@ class ig_agent():
         self.finished_binary = False
         self.finished = False
         self.rng = None
-        
+
         self.global_pose = np.zeros(3)
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
-    def init_model(self, map_size, map_res, detect_fov, detect_range, rng, rOcc, rEmp, edfmap_res_factor=10):
+    def init_model(
+        self,
+        map_size,
+        map_res,
+        detect_fov,
+        detect_range,
+        rng,
+        rOcc,
+        rEmp,
+        edfmap_res_factor=10,
+    ):
 
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
 
         # Init EDF and Target Map
-        self.targetMap = targetMap(map_size, map_res,
-                                   sensFOV=self.detect_fov, sensRange=self.detect_range, rOcc=rOcc,
-                                   rEmp=rEmp, edfmap_res_factor=edfmap_res_factor)  # rOcc 3.0 1.1 rEmp 0.33 0.9
+        self.targetMap = targetMap(
+            map_size,
+            map_res,
+            sensFOV=self.detect_fov,
+            sensRange=self.detect_range,
+            rOcc=rOcc,
+            rEmp=rEmp,
+            edfmap_res_factor=edfmap_res_factor,
+        )  # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.global_pose)
@@ -69,11 +85,11 @@ class ig_agent():
         self.targetMap.update_map(occ_map, edf_map)
 
     def set_expert_policy(self, expert):
-        if expert == 'ig_greedy':
+        if expert == "ig_greedy":
             self.expert_policy = ig_greedy(self)
-        elif expert == 'ig_mcts':
+        elif expert == "ig_mcts":
             self.expert_policy = ig_mcts(self)
-        elif expert == 'ig_random':
+        elif expert == "ig_random":
             self.expert_policy = ig_random(self)
 
     def update(self, *args, **kwargs):
@@ -83,10 +99,9 @@ class ig_agent():
         return self.targetMap.get_reward_from_pose(np.append(agent_pos, agent_heading))
 
     def update_agent_pos_map(self):
-        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 0.0
+        self.agent_pos_map[self.agent_pos_idc[0], self.agent_pos_idc[1]] = 0.0
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.global_pose)
-        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
-
+        self.agent_pos_map[self.agent_pos_idc[0], self.agent_pos_idc[1]] = 1.0
 
 
 """

@@ -12,17 +12,13 @@ import pstats
 
 import multiprocessing
 
-
 import csv
 from datetime import datetime
 
 import matplotlib.pyplot as plt
 
 
-
-
 def main():
-
     # Instantiate the environment
     # env = gym.make("CollisionAvoidance-v0")
     n_envs = 1
@@ -32,20 +28,20 @@ def main():
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
 
     # In case you want to save plots, choose the directory
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/../experiments/results'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + "/../experiments/results"
     # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
     for i in range(n_envs):
-        plot_save_dir = save_path + '/figs_env' + str(i) + '/'
+        plot_save_dir = save_path + "/figs_env" + str(i) + "/"
         os.makedirs(plot_save_dir, exist_ok=True)
         # env.set_attr('plot_save_dir', plot_save_dir, i)
-        env.env_method('set_plot_save_dir', plot_save_dir, indices=i)
-        env.env_method('set_n_env', n_envs, i, True, indices=i)
+        env.env_method("set_plot_save_dir", plot_save_dir, indices=i)
+        env.env_method("set_n_env", n_envs, i, True, indices=i)
         # if i != 0:
         #     env.env_method('set_plot_env', False, indices=i)
 
     obs = env.reset()  # Get agents' initial observations
 
-    # env.env_method('set_use_expert_action', 1, True, 'ig_greedy', False, 0.0, True)
+    env.env_method("set_use_expert_action", 1, True, "ig_greedy", False, 0.0, True)
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
@@ -59,8 +55,11 @@ def main():
     env_ids = []
     n_free_cells_eps = []
     eps_ids = np.zeros(n_envs)
-    dummy_action = np.zeros((n_envs, 2)) if Config.ACTION_SPACE_TYPE == Config.continuous \
+    dummy_action = (
+        np.zeros((n_envs, 2))
+        if Config.ACTION_SPACE_TYPE == Config.continuous
         else np.zeros(n_envs, dtype=np.uint64)
+    )
 
     for j in range(num_steps * n_eps):
 
@@ -75,13 +74,15 @@ def main():
                 #     break
                 if info[i]["finished_coverage"]:
                     coverage_finished += 1
-            #     print("All agents finished!")
-            #     # break
+                #     print("All agents finished!")
+                #     # break
                 n_eps_steps.append(info[i]["step_num"])
                 n_free_cells_eps.append(info[i]["n_free_cells"])
                 max_rewards.append(np.max(rewards[i]))
                 eps_reward.append(np.sum(rewards[i]))
-                status.append(0 if info[i]["ran_out_of_time"] or info[i]["in_collision"] else 1)
+                status.append(
+                    0 if info[i]["ran_out_of_time"] or info[i]["in_collision"] else 1
+                )
                 eps_ids[i] += 1
                 env_ids.append([i, eps_ids[i]])
                 rewards[i] = []
@@ -96,19 +97,29 @@ def main():
     print("N finished: " + str(coverage_finished))
     print("Avg Steps per Eps: " + str(np.mean(n_eps_steps)))
 
-    output = np.c_[np.asarray(eps_reward), np.asarray(n_eps_steps), np.asarray(n_free_cells_eps),
-                   np.asarray(status), np.asarray(env_ids)]
-    np.savetxt(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/experiments/results' +
-                            '/rewards.csv'), output, delimiter=",")
-
+    output = np.c_[
+        np.asarray(eps_reward),
+        np.asarray(n_eps_steps),
+        np.asarray(n_free_cells_eps),
+        np.asarray(status),
+        np.asarray(env_ids),
+    ]
+    np.savetxt(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__))
+            + "/experiments/results"
+            + "/rewards.csv"
+        ),
+        output,
+        delimiter=",",
+    )
 
     # profiler.disable()
     # stats = pstats.Stats(profiler)
     # stats.dump_stats(os.path.dirname(os.path.realpath(__file__)) + '/experiments/results/' + name + '/stats.prof')
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     profiler = cProfile.Profile()
     profiler.enable()
 
@@ -116,4 +127,6 @@ if __name__ == '__main__':
 
     profiler.disable()
     stats = pstats.Stats(profiler)
-    stats.dump_stats(os.path.dirname(os.path.realpath(__file__)) + '/experiments/results/stats.prof')
+    stats.dump_stats(
+        os.path.dirname(os.path.realpath(__file__)) + "/experiments/results/stats.prof"
+    )

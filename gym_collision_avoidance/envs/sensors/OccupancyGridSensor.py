@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
 
+from gym_collision_avoidance.envs.sensors.ego_submap_from_map import ego_submap_from_map
+
 
 class OccupancyGridSensor(Sensor):
     def __init__(self):
@@ -16,12 +18,35 @@ class OccupancyGridSensor(Sensor):
         self.y_width = Config.SUBMAP_HEIGHT
         self.grid_cell_size = Config.SUBMAP_RESOLUTION
         self.plot = False
-        self.name = 'local_grid'
+        self.name = "local_grid"
         self.floatmap_rot = None
         self.map = None
         self.agent_idx = None
 
     def sense(self, agents, agent_index, top_down_map):
+
+        # Get position of ego agent
+        ego_agent = agents[agent_index]
+        ego_agent_pos = ego_agent.pos_global_frame
+        ego_agent_heading = ego_agent.heading_global_frame
+
+        # Get map indices of ego agent
+        agent_idx, _ = top_down_map.world_coordinates_to_map_indices(ego_agent_pos)
+        agent_idx = np.flip(agent_idx)
+
+        submap = ego_submap_from_map(
+            top_down_map.map.astype(np.uint8),
+            pos_pxl=agent_idx,
+            angle_deg=180 * ego_agent_heading / np.pi,
+            submap_size=[Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT],
+            scale_size=list(Config.SUBMAP_SCALE_TARGET),
+        )
+
+        submap = submap.astype(bool)
+
+        return submap
+
+    def sense_old(self, agents, agent_index, top_down_map):
 
         """
         # Grab (i,j) coordinates of the upper right and lower left corner of the desired OG map, within the entire map
@@ -38,7 +63,7 @@ class OccupancyGridSensor(Sensor):
             print("*** map dims:", map_i_low, map_i_high, map_j_low, map_j_high)
             return og_map
 
-        # super crappy logic to handle when the OG map partially overlaps with the map 
+        # super crappy logic to handle when the OG map partially overlaps with the map
         if map_i_low < 0:
             og_i_low = -map_i_low
             og_i_high = og_map.shape[0]
@@ -88,7 +113,9 @@ class OccupancyGridSensor(Sensor):
         self.expand_map()
 
         # Get submap indices around ego agent
-        start_idx_x, start_idx_y, end_idx_x, end_idx_y = self.getSubmapByIndices(span_x, span_y)
+        start_idx_x, start_idx_y, end_idx_x, end_idx_y = self.getSubmapByIndices(
+            span_x, span_y
+        )
 
         # Get the batch_grid with filled in values
         # float_map = self.map.astype(float)
@@ -99,14 +126,28 @@ class OccupancyGridSensor(Sensor):
         # batch_grid = self.fill_invisible(batch_grid)
 
         if self.plot:
-            self.plot_top_down_map(top_down_map.map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading,
-                                   title='Original')
-            self.plot_top_down_map(float_map, ego_agent_pos_idx, start_idx_x, start_idx_y, ego_agent_heading,
-                                   title='Rotated')
+            self.plot_top_down_map(
+                top_down_map.map,
+                ego_agent_pos_idx,
+                start_idx_x,
+                start_idx_y,
+                ego_agent_heading,
+                title="Original",
+            )
+            self.plot_top_down_map(
+                float_map,
+                ego_agent_pos_idx,
+                start_idx_x,
+                start_idx_y,
+                ego_agent_heading,
+                title="Rotated",
+            )
             self.plot_batch_grid(batch_grid)
 
         if Config.SUBMAP_SCALE:
-            batch_grid = cv2.resize(batch_grid, Config.SUBMAP_SCALE_TARGET, interpolation=cv2.INTER_CUBIC)
+            batch_grid = cv2.resize(
+                batch_grid, Config.SUBMAP_SCALE_TARGET, interpolation=cv2.INTER_CUBIC
+            )
 
         batch_grid = batch_grid.astype(bool)
 
@@ -126,32 +167,64 @@ class OccupancyGridSensor(Sensor):
     #     return 1 - np.array(im / 255)
 
     # Plot
-    def plot_top_down_map(self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title):
+    def plot_top_down_map(
+        self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title
+    ):
         fig = plt.figure(title)
         ax = fig.subplots(1)
-        ax.imshow(top_down_map, aspect='equal')
-        ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c='red', marker='o')
-        rect = patches.Rectangle((start_idx_y, start_idx_x), self.x_width, self.y_width, linewidth=1, edgecolor='r',
-                                 facecolor='none')
+        ax.imshow(top_down_map, aspect="equal")
+        ax.scatter(ego_agent_idx[1], ego_agent_idx[0], s=100, c="red", marker="o")
+        rect = patches.Rectangle(
+            (start_idx_y, start_idx_x),
+            self.x_width,
+            self.y_width,
+            linewidth=1,
+            edgecolor="r",
+            facecolor="none",
+        )
         ax.add_patch(rect)
         aanliggend = 20 * math.cos(heading)
         overstaand = -20 * math.sin(heading)
-        if 'Rotated' == str(title):
-            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], 20, 0, width=3, head_width=10,
-                     head_length=10, fc='yellow')  # agent poiting direction
+        if "Rotated" == str(title):
+            ax.arrow(
+                ego_agent_idx[1],
+                ego_agent_idx[0],
+                20,
+                0,
+                width=3,
+                head_width=10,
+                head_length=10,
+                fc="yellow",
+            )  # agent poiting direction
         else:
-            ax.arrow(ego_agent_idx[1], ego_agent_idx[0], aanliggend, overstaand, width=3, fc='yellow', head_width=10,
-                     head_length=10)  # agent poiting direction
+            ax.arrow(
+                ego_agent_idx[1],
+                ego_agent_idx[0],
+                aanliggend,
+                overstaand,
+                width=3,
+                fc="yellow",
+                head_width=10,
+                head_length=10,
+            )  # agent poiting direction
 
         plt.show()
 
     def plot_batch_grid(self, batch_grid):
         fig = plt.figure("batch_grid")
         ax = fig.subplots(1)
-        ax.imshow(batch_grid, aspect='equal')
-        ax.scatter(self.x_width / 2, self.y_width / 2, s=100, c='red', marker='o')
-        ax.arrow(self.x_width / 2, self.y_width / 2, 10, 0, width=1, head_width=3, head_length=3,
-                 fc='yellow')  # agent poiting direction
+        ax.imshow(batch_grid, aspect="equal")
+        ax.scatter(self.x_width / 2, self.y_width / 2, s=100, c="red", marker="o")
+        ax.arrow(
+            self.x_width / 2,
+            self.y_width / 2,
+            10,
+            0,
+            width=1,
+            head_width=3,
+            head_length=3,
+            fc="yellow",
+        )  # agent poiting direction
 
         plt.show()
 
@@ -169,15 +242,23 @@ class OccupancyGridSensor(Sensor):
 
         # Rotate grid into direction of initial heading
         rows, cols = self.map.shape
-        M = cv2.getRotationMatrix2D(center=(float(agent_pos[1]), float(agent_pos[0])), angle=angle, scale=1)
-        self.floatmap_rot = cv2.warpAffine(self.map.astype(float), M, (cols, rows), borderValue=1.0)
+        M = cv2.getRotationMatrix2D(
+            center=(float(agent_pos[1]), float(agent_pos[0])), angle=angle, scale=1
+        )
+        self.floatmap_rot = cv2.warpAffine(
+            self.map.astype(float), M, (cols, rows), borderValue=1.0
+        )
 
     def expand_map(self):
 
         # submap_size = [Config.SUBMAP_WIDTH / Config.SUBMAP_RESOLUTION, Config.SUBMAP_HEIGHT / Config.SUBMAP_RESOLUTION]
-        submap_size = (np.array([Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT])).astype(int)
+        submap_size = (np.array([Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT])).astype(
+            int
+        )
         # map_size = [Config.MAP_WIDTH / Config.SUBMAP_RESOLUTION, Config.MAP_HEIGHT / Config.SUBMAP_RESOLUTION]
-        map_size = (np.array([Config.MAP_WIDTH, Config.MAP_HEIGHT]) / Config.SUBMAP_RESOLUTION).astype(int)
+        map_size = (
+            np.array([Config.MAP_WIDTH, Config.MAP_HEIGHT]) / Config.SUBMAP_RESOLUTION
+        ).astype(int)
 
         if self.agent_idx[1] + submap_size[0] / 2 > map_size[1]:
             trues_v = np.ones([map_size[0], submap_size[1] // 2], bool)
@@ -228,10 +309,12 @@ class OccupancyGridSensor(Sensor):
         return start_idx_x, start_idx_y, end_idx_x, end_idx_y
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from gym_collision_avoidance.envs.Map import Map
     from gym_collision_avoidance.envs.agent import Agent
-    from gym_collision_avoidance.envs.policies.NonCooperativePolicy import NonCooperativePolicy
+    from gym_collision_avoidance.envs.policies.NonCooperativePolicy import (
+        NonCooperativePolicy,
+    )
     from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 
     obstacle_1 = [(10, 10), (-6, 10), (-6, -6), (10, -6)]
@@ -242,8 +325,24 @@ if __name__ == '__main__':
     obstacle = []
     obstacle.extend([obstacle_1, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
-    top_down_map = Map(x_width=30, y_width=30, grid_cell_size=0.1, map_filename=obstacle)
-    agents = [Agent(11, 11, 10, 10, 0.5, 1.0, 0 * np.pi / 180, NonCooperativePolicy, UnicycleDynamics, [], 0)]
+    top_down_map = Map(
+        x_width=30, y_width=30, grid_cell_size=0.1, map_filename=obstacle
+    )
+    agents = [
+        Agent(
+            11,
+            11,
+            10,
+            10,
+            0.5,
+            1.0,
+            0 * np.pi / 180,
+            NonCooperativePolicy,
+            UnicycleDynamics,
+            [],
+            0,
+        )
+    ]
     # top_down_map.add_agents_to_map(agents)
     og = OccupancyGridSensor()
     og_map = og.sense(agents, 0, top_down_map)
@@ -253,13 +352,14 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(1, 3, 1)
     ax.imshow(og_map, extent=[-30, 30, -30, 30])
-    ax.scatter(0, 0, s=100, c='red', marker='o')
-    ax.arrow(0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5,
-             fc='yellow')  # agent poiting direction
+    ax.scatter(0, 0, s=100, c="red", marker="o")
+    ax.arrow(
+        0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5, fc="yellow"
+    )  # agent poiting direction
     pos = og.agent_idx
     ax2 = fig.add_subplot(1, 3, 2)
     ax2.imshow(og.floatmap_rot)
-    ax2.scatter(pos[1], pos[0], s=10, c='red', marker='o')
+    ax2.scatter(pos[1], pos[0], s=10, c="red", marker="o")
 
     ax3 = fig.add_subplot(1, 3, 3)
     ax3.imshow(top_down_map.map)

@@ -4,12 +4,12 @@ from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 
 
 class IG_agent_gym(ig_agent):
-    def __int__(self, host_agent, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, host_agent, expert_policy=None):
+        super().__init__(expert_policy)
         
         self.host_agent = host_agent
         
-        self.global_pose = np.append(self.host_agent.pos_global_frame, self.host_agent.heading_global_frame)
+        self.global_pose = np.array([0., 0.])
 
     def update(self, agents):
 

@@ -20,7 +20,7 @@ class Agent(object):
         self.sensors = [sensor() for sensor in sensors]
 
         if ig_model is not None:
-            self.ig_model = ig_model(self, ig_expert)
+            self.ig_model = ig_model(self, expert_policy=ig_expert)
         else:
             self.ig_model = None
 
