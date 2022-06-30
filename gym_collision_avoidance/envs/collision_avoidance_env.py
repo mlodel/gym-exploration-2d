@@ -44,6 +44,11 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import (
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import (
     UnicycleSecondOrderEulerDynamics,
 )
+
+from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
+    PtMassSecondOrderDynamics,
+)
+
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
 
 
@@ -85,7 +90,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.ego_policy = "MPCRLStaticObsIGPolicy"
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
-        self.ego_agent_dynamics = "UnicycleSecondOrderEulerDynamics"
+        self.ego_agent_dynamics = PtMassSecondOrderDynamics
         # self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "StaticPolicy"
@@ -658,7 +663,7 @@ class CollisionAvoidanceEnv(gym.Env):
             number_of_agents=self.number_of_agents,
             rng=self.testcase_rng,
             ego_agent_policy=globals()[self.ego_policy],
-            ego_agent_dynamics=globals()[self.ego_agent_dynamics],
+            ego_agent_dynamics=self.ego_agent_dynamics,
             other_agents_dynamics=globals()[self.other_agents_dynamics],
             other_agents_policy=globals()[self.other_agents_policy],
             n_steps=self.total_number_of_steps,

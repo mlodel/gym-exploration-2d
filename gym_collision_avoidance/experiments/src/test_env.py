@@ -42,6 +42,7 @@ def main():
     obs = env.reset()  # Get agents' initial observations
 
     env.env_method("set_use_expert_action", 1, True, "ig_greedy", False, 0.0, True)
+    # env.env_method("set_use_expert_action", 1, False, "ig_greedy", False, 0.0, False)
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
@@ -62,6 +63,8 @@ def main():
     )
 
     for j in range(num_steps * n_eps):
+
+        # dummy_action = 3 * np.array([[-1.0, -0.0]])
 
         obs, reward, game_over, info = env.step(dummy_action)
 

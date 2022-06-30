@@ -79,7 +79,7 @@ test_case_filename = (
 
 def IG_single_agent(
     number_of_agents=1,
-    ego_agent_policy=StaticPolicy,
+    ego_agent_policy=MPCRLStaticObsIGPolicy,
     other_agents_policy=NonCooperativePolicy,
     ego_agent_dynamics=FirstOrderDynamics,
     other_agents_dynamics=UnicycleDynamics,
@@ -98,21 +98,21 @@ def IG_single_agent(
     # Corridor scenario
     obstacle = []
 
-    obstacle_1 = [(10, 10), (1, 10), (1, 1), (10, 1)]
-    obstacle.extend([obstacle_1])
+    obstacle_1 = [(9, 9), (2, 9), (2, 2), (9, 2)]
+    obstacle.append(obstacle_1)
 
     # ego agent
     agents.append(
         Agent(
             0,
-            5,
+            0,
             0,
             10,
             radius,
             pref_speed,
-            1 * np.pi / 4,
+            0 * np.pi / 4,
             ego_agent_policy,
-            UnicycleSecondOrderEulerDynamics,
+            ego_agent_dynamics,
             [OtherAgentsStatesSensor, OccupancyGridSensor],
             0,
             ig_model=IG_agent_gym,
