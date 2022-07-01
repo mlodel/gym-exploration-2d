@@ -35,6 +35,9 @@ from gym_collision_avoidance.envs.policies.LearningPolicy import LearningPolicy
 from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy import (
     MPCRLStaticObsIGPolicy,
 )
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy_Drone import (
+    MPCRLStaticObsIGPolicy_Drone,
+)
 from gym_collision_avoidance.envs.policies.MPCRLStaticObsPolicy import (
     MPCRLStaticObsPolicy,
 )
@@ -97,17 +100,23 @@ def IG_single_agent(
 
     # Corridor scenario
     obstacle = []
+    obstacle_1 = [(8, 8), (2, 8), (2, 2), (8, 2)]
+    obstacle_2 = [(-2, 8), (-8, 8), (-8, 2), (-2, 2)]
+    obstacle.extend([obstacle_1, obstacle_2])
 
-    obstacle_1 = [(9, 9), (2, 9), (2, 2), (9, 2)]
-    obstacle.append(obstacle_1)
+    obstacle_5 = [(-9.8, 10), (-10, 10), (-10, -10), (-9.8, -10)]
+    obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
+    obstacle_7 = [(-10, 9.8), (-10, 10), (10, 10), (10, 9.8)]
+    obstacle_8 = [(10, -9.8), (-10, -9.8), (-10, -10), (10, -10)]
+    obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     # ego agent
     agents.append(
         Agent(
             0,
+            -2,
+            100,
             0,
-            0,
-            10,
             radius,
             pref_speed,
             0 * np.pi / 4,
@@ -120,12 +129,21 @@ def IG_single_agent(
         )
     )
 
+    if (
+        "MPCRLStaticObsPolicy" == str(agents[0].policy)
+        or "MPCStaticObsPolicy" == str(agents[0].policy)
+        or "MPC_IG_Policy" == str(agents[0].policy)
+        or "MPCRLStaticObsIGPolicy" == str(agents[0].policy)
+        or "MPCRLStaticObsIGPolicy_Drone" == str(agents[0].policy)
+    ):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+
     return agents, obstacle
 
 
 def IG_single_agent_crossing(
     number_of_agents=1,
-    ego_agent_policy=MPCRLStaticObsIGPolicy,
+    ego_agent_policy=MPCRLStaticObsIGPolicy_Drone,
     other_agents_policy=NonCooperativePolicy,
     ego_agent_dynamics=FirstOrderDynamics,
     other_agents_dynamics=UnicycleDynamics,
@@ -312,7 +330,7 @@ def IG_single_agent_crossing(
             pref_speed,
             init_heading,
             ego_agent_policy,
-            UnicycleSecondOrderEulerDynamics,
+            ego_agent_dynamics,
             [OtherAgentsStatesSensor, OccupancyGridSensor],
             0,
             ig_model=IG_agent_gym,
@@ -368,7 +386,7 @@ def IG_single_agent_crossing(
         or "MPCStaticObsPolicy" == str(agents[0].policy)
         or "MPC_IG_Policy" == str(agents[0].policy)
         or "MPCRLStaticObsIGPolicy" == str(agents[0].policy)
-        or "MPCRLStaticObsIGPolicy_fasttraining" == str(agents[0].policy)
+        or "MPCRLStaticObsIGPolicy_Drone" == str(agents[0].policy)
     ):
         agents[0].policy.static_obstacles_manager.obstacle = obstacle
 

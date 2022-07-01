@@ -23,13 +23,15 @@ class PtMassSecondOrderDynamics(Dynamics):
             self.agent.angular_speed_global_frame * dt + self.agent.heading_global_frame
         )
 
-        self.agent.vel_global_frame[0] = (
-            selected_vels[0] * np.cos(selected_heading)
-        ) - (selected_vels[1] * np.sin(selected_heading))
+        # self.agent.vel_global_frame[0] = (
+        #     selected_vels[0] * np.cos(selected_heading)
+        # ) - (selected_vels[1] * np.sin(selected_heading))
+        #
+        # self.agent.vel_global_frame[1] = (
+        #     selected_vels[0] * np.sin(selected_heading)
+        # ) + (selected_vels[1] * np.cos(selected_heading))
 
-        self.agent.vel_global_frame[1] = (
-            selected_vels[0] * np.sin(selected_heading)
-        ) + (selected_vels[1] * np.cos(selected_heading))
+        self.agent.vel_global_frame = selected_vels
 
         self.agent.speed_global_frame = np.linalg.norm(selected_vels)
 

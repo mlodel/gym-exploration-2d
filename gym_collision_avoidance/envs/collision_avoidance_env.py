@@ -33,6 +33,9 @@ from gym_collision_avoidance.envs.policies.MPCRLStaticObsPolicy import (
 from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy import (
     MPCRLStaticObsIGPolicy,
 )
+from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy_Drone import (
+    MPCRLStaticObsIGPolicy_Drone,
+)
 
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
 from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxAcc import (
@@ -87,7 +90,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.number_of_agents = 2
         self.scenario = Config.SCENARIOS_FOR_TRAINING
 
-        self.ego_policy = "MPCRLStaticObsIGPolicy"
+        self.ego_policy = MPCRLStaticObsIGPolicy_Drone
 
         # self.ego_policy = "MPCRLStaticObsPolicy"
         self.ego_agent_dynamics = PtMassSecondOrderDynamics
@@ -662,7 +665,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.agents, self.obstacles = getattr(tc, self.scenario[0])(
             number_of_agents=self.number_of_agents,
             rng=self.testcase_rng,
-            ego_agent_policy=globals()[self.ego_policy],
+            ego_agent_policy=self.ego_policy,
             ego_agent_dynamics=self.ego_agent_dynamics,
             other_agents_dynamics=globals()[self.other_agents_dynamics],
             other_agents_policy=globals()[self.other_agents_policy],

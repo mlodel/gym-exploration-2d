@@ -64,7 +64,7 @@ def main():
 
     for j in range(num_steps * n_eps):
 
-        # dummy_action = 3 * np.array([[-1.0, -0.0]])
+        # dummy_action = 1 * np.array([[2.0, 2.0]])
 
         obs, reward, game_over, info = env.step(dummy_action)
 

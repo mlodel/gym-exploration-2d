@@ -762,6 +762,18 @@ def draw_agent_ig(agent, i, ax):
             fill=True,
         )
     )
+    ax.add_patch(
+        Arrow(
+            x=currentPose[0],
+            y=currentPose[1],
+            dx=0.5 * np.cos(agent.heading_global_frame),
+            dy=0.5 * np.sin(agent.heading_global_frame),
+            width=0.1,
+            facecolor=plt_color,
+            fill=True,
+            edgecolor=plt_color,
+        )
+    )
 
 
 def plot_Angular_map_vector(ax2, Angular_Map, ag, max_range=6):

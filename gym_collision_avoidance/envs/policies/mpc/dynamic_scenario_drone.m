@@ -12,8 +12,8 @@ function xdot = continuous_dynamics_R ( x, u )
     theta =  x(3);
     v_x = x(4);
     v_y = x(5);
-    xdot = [v_x * cos(theta) - v_y * sin(theta);
-            v_x * sin(theta) + v_y * cos(theta);
+    xdot = [v_x; % * cos(theta) - v_y * sin(theta);
+            v_y; % v_x * sin(theta) + v_y * cos(theta);
             0;
             a_x;
             a_y];
