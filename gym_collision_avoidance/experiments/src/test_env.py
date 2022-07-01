@@ -59,7 +59,7 @@ def main():
     dummy_action = (
         np.zeros((n_envs, 2))
         if Config.ACTION_SPACE_TYPE == Config.continuous
-        else np.zeros(n_envs, dtype=np.uint64)
+        else np.zeros((n_envs, 1), dtype=np.uint64)
     )
 
     for j in range(num_steps * n_eps):
