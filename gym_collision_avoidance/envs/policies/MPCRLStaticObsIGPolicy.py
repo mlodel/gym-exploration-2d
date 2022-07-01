@@ -5,10 +5,10 @@ from gym_collision_avoidance.envs.policies.static_obstacles.StaticObstacleManage
     StaticObstacleManager,
 )
 
-# from gym_collision_avoidance.envs.policies.mpc.StaticMPCsolver_py import StaticMPCsolver_solve as MPCSolver
-from gym_collision_avoidance.envs.policies.mpc.StaticMPCsolver_drone_py import (
-    StaticMPCsolver_drone_solve as MPCSolver,
-)
+from gym_collision_avoidance.envs.policies.mpc.StaticMPCsolver_py import StaticMPCsolver_solve as MPCSolver
+# from gym_collision_avoidance.envs.policies.mpc.StaticMPCsolver_drone_py import (
+#     StaticMPCsolver_drone_solve as MPCSolver,
+# )
 from gym_collision_avoidance.envs.policies.static_obstacles.StaticObstacleAvoidance import (
     StaticObstacleAvoidance,
 )

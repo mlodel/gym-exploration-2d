@@ -3,12 +3,12 @@ import numpy as np
 
 
 def ego_submap_from_map(
-    map: cv2.Mat,
-    pos_pxl: list(),
+    map: np.ndarray,
+    pos_pxl: list,
     angle_deg: float,
-    submap_size: list(),
-    scale_size: list() = None,
-) -> cv2.Mat:
+    submap_size: list,
+    scale_size: list = None,
+) -> np.ndarray:
     """Creates an egocentric submap from a global map (map),
     the submap is centered in the agent's position (pos_pxl) and rotated according to its orientation (angle_deg)
 
