@@ -145,11 +145,21 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.observation_space = gym.spaces.Dict({})
         for state in Config.STATES_IN_OBS:
+            if Config.STATE_INFO_DICT[state]["size"] == 1:
+                shape = (1,)
+            elif isinstance(Config.STATE_INFO_DICT[state]["size"], tuple):
+                shape = (
+                    1,
+                    Config.STATE_INFO_DICT[state]["size"][0],
+                    Config.STATE_INFO_DICT[state]["size"][1],
+                )
+            else:
+                shape = (1, Config.STATE_INFO_DICT[state]["size"])
+
             self.observation_space.spaces[state] = gym.spaces.Box(
-                Config.STATE_INFO_DICT[state]["bounds"][0]
-                * np.ones((Config.STATE_INFO_DICT[state]["size"])),
-                Config.STATE_INFO_DICT[state]["bounds"][1]
-                * np.ones((Config.STATE_INFO_DICT[state]["size"])),
+                low=Config.STATE_INFO_DICT[state]["bounds"][0] * np.ones(shape),
+                high=Config.STATE_INFO_DICT[state]["bounds"][1] * np.ones(shape),
+                shape=shape,
                 dtype=Config.STATE_INFO_DICT[state]["dtype"],
             )
             for agent in range(Config.MAX_NUM_AGENTS_IN_ENVIRONMENT):
@@ -1081,7 +1091,7 @@ class CollisionAvoidanceEnv(gym.Env):
             ]
             game_over = np.all(which_agents_done[learning_agent_inds])
 
-        return which_agents_done, game_over
+        return which_agents_done, bool(game_over)
 
     def _get_obs(self):
 
@@ -1096,7 +1106,10 @@ class CollisionAvoidanceEnv(gym.Env):
         for i, agent in enumerate(self.agents):
             self.observation[i] = agent.get_observation_dict(self.agents)
 
-        return self.observation
+        if Config.TRAIN_SINGLE_AGENT:
+            return self.observation[0]
+        else:
+            return self.observation
 
     def _initialize_rewards(self):
         self.reward_at_goal = Config.REWARD_AT_GOAL

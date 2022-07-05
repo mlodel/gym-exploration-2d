@@ -193,14 +193,16 @@ def plot_episode(
         #     origin="upper",
         # )
         ax3.imshow(
-            agents[0].ig_model.targetMap.bin_ego_map, cmap=plt.cm.binary, origin="upper"
+            agents[0].ig_model.targetMap.bin_ego_map.squeeze(),
+            cmap=plt.cm.binary,
+            origin="upper",
         )
         ax3.set_yticklabels([])
         ax3.set_xticklabels([])
 
     if "local_grid" in agents[0].sensor_data:
         ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
-        occupancy_grid = agents[0].sensor_data["local_grid"]
+        occupancy_grid = agents[0].sensor_data["local_grid"].squeeze()
         # ax2.clear()
         ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
         ax4.scatter(0, 0, s=100, c="red", marker="o")

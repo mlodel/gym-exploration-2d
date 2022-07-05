@@ -393,4 +393,5 @@ class targetMap:
             print(str(final.shape))
             print(str(e))
 
-        return final_resize
+        # return np.expand_dims((final_resize * 255).astype(np.uint8), axis=0)
+        return (final_resize * 255).astype(np.uint8)

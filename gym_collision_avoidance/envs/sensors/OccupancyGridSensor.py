@@ -42,8 +42,8 @@ class OccupancyGridSensor(Sensor):
             scale_size=list(Config.SUBMAP_SCALE_TARGET),
         )
 
-        submap = submap.astype(bool)
-
+        # submap = np.expand_dims((submap * 255).astype(np.uint8), axis=0)
+        submap = (submap * 255).astype(np.uint8)
         return submap
 
     def sense_old(self, agents, agent_index, top_down_map):

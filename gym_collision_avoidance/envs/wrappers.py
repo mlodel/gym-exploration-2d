@@ -2,13 +2,18 @@ import gym
 import numpy as np
 from gym_collision_avoidance.envs.utils.vec_env.dummy_vec_env import DummyVecEnv
 
+__all__ = [
+    "FlattenDictWrapper",
+    "MultiagentFlattenDictWrapper",
+    "MultiagentDummyVecEnv",
+]
 
-__all__ = ['FlattenDictWrapper', 'MultiagentFlattenDictWrapper', 'MultiagentDummyVecEnv']
 
 class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
     """Flattens selected keys of a Dict observation space into
     an array.
     """
+
     def __init__(self, env, dict_keys, max_num_agents):
         super(MultiagentFlattenDictWrapper, self).__init__(env)
         self.dict_keys = dict_keys
@@ -26,12 +31,19 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
                 size += np.prod(shape)
                 self.observation_indices[agent][key] = [prev_size, size]
             agent_upper_ind = size
-            self.observation_indices[agent]['BOUNDS'] = [agent_lower_ind, agent_upper_ind]
+            self.observation_indices[agent]["BOUNDS"] = [
+                agent_lower_ind,
+                agent_upper_ind,
+            ]
 
-        self.observation_space = gym.spaces.Box(-np.inf, np.inf, shape=(size,), dtype='float32')
+        self.observation_space = gym.spaces.Box(
+            -np.inf, np.inf, shape=(size,), dtype="float32"
+        )
 
-        single_agent_size = agent_upper_ind-agent_lower_ind
-        self.single_agent_observation_space = gym.spaces.Box(-np.inf, np.inf, shape=(single_agent_size,), dtype='float32')
+        single_agent_size = agent_upper_ind - agent_lower_ind
+        self.single_agent_observation_space = gym.spaces.Box(
+            -np.inf, np.inf, shape=(single_agent_size,), dtype="float32"
+        )
 
         self.dict_observation_space = self.env.observation_space
 
@@ -40,9 +52,14 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
         # with all agents & states concatenated
         assert isinstance(observation, dict)
         obs = []
-        for agent in range(self.max_num_agents):
+
+        if isinstance(list(observation.values())[0], dict):
+            for agent in range(self.max_num_agents):
+                for key in self.dict_keys:
+                    obs.append(observation[agent][key].ravel())
+        else:
             for key in self.dict_keys:
-                obs.append(observation[agent][key].ravel())
+                obs.append(observation[key].ravel())
         return np.concatenate(obs)
 
     def observationArrayToDict(self, observation_array):
@@ -52,7 +69,11 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
         for agent in range(self.max_num_agents):
             obs[agent] = {}
             for key in self.dict_keys:
-                obs[agent][key] = observation_array[self.observation_indices[agent][key][0]: self.observation_indices[agent][key][1]]
+                obs[agent][key] = observation_array[
+                    self.observation_indices[agent][key][0] : self.observation_indices[
+                        agent
+                    ][key][1]
+                ]
         return obs
 
     def multiEnvObservationArrayToDict(self, observation_array):
@@ -62,13 +83,21 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
         dict_obs = np.empty((num_envs, self.max_num_agents), dtype=dict)
         for env in range(num_envs):
             for agent in range(self.max_num_agents):
-                key = 'use_ppo'
-                ppo = observation_array[env][self.observation_indices[agent][key][0]: self.observation_indices[agent][key][1]]
+                key = "use_ppo"
+                ppo = observation_array[env][
+                    self.observation_indices[agent][key][0] : self.observation_indices[
+                        agent
+                    ][key][1]
+                ]
                 if ppo == False:
                     continue
                 dict_obs[env][agent] = {}
                 for key in self.dict_keys:
-                    dict_obs[env][agent][key] = observation_array[env][self.observation_indices[agent][key][0]: self.observation_indices[agent][key][1]].reshape(self.env.observation_space.spaces[key].shape)
+                    dict_obs[env][agent][key] = observation_array[env][
+                        self.observation_indices[agent][key][
+                            0
+                        ] : self.observation_indices[agent][key][1]
+                    ].reshape(self.env.observation_space.spaces[key].shape)
         return dict_obs
 
     def singleAgentObservationArrayToDict(self, observation_array, agent):
@@ -79,7 +108,12 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
         for env in range(observation_array.shape[0]):
             obs.append({})
             for key in self.dict_keys:
-                obs[env][key] = observation_array[env, self.observation_indices[agent][key][0]: self.observation_indices[agent][key][1]].reshape(self.env.observation_space.spaces[key].shape)
+                obs[env][key] = observation_array[
+                    env,
+                    self.observation_indices[agent][key][0] : self.observation_indices[
+                        agent
+                    ][key][1],
+                ].reshape(self.env.observation_space.spaces[key].shape)
         return obs
 
     def keyToArrayInds(self, key):
@@ -89,18 +123,24 @@ class MultiagentFlattenDictWrapper(gym.ObservationWrapper):
         return inds
 
     def singleAgentObservationArray(self, observation_array, agent):
-        return observation_array[self.observation_indices[agent]['BOUNDS'][0]:self.observation_indices[agent]['BOUNDS'][1]]
+        return observation_array[
+            self.observation_indices[agent]["BOUNDS"][0] : self.observation_indices[
+                agent
+            ]["BOUNDS"][1]
+        ]
 
     def singleAgentObservationInds(self, agent):
-        return self.observation_indices[agent]['BOUNDS']
+        return self.observation_indices[agent]["BOUNDS"]
+
 
 class FlattenDictWrapper(MultiagentFlattenDictWrapper):
     def __init__(self, env, dict_keys):
         super(FlattenDictWrapper, self).__init__(env, dict_keys, max_num_agents=1)
+
 
 class MultiagentDummyVecEnv(DummyVecEnv):
     def __init__(self, env_fns):
         DummyVecEnv.__init__(self, env_fns)
 
         self.buf_dones = np.zeros((self.num_envs,), dtype=np.ndarray)
-        self.buf_rews  = np.zeros((self.num_envs,), dtype=np.ndarray)
+        self.buf_rews = np.zeros((self.num_envs,), dtype=np.ndarray)

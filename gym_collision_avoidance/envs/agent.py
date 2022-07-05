@@ -6,12 +6,27 @@ from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 import operator
 import math
 
-class Agent(object):
-    def __init__(self, start_x, start_y, goal_x, goal_y, radius,
-                 pref_speed, initial_heading, policy, dynamics_model, sensors, id, cooperation_coef = 1.0,
-                 ig_model=None, ig_expert=None):
 
-        if policy =="GA3CCADRLPolicy":
+class Agent(object):
+    def __init__(
+        self,
+        start_x,
+        start_y,
+        goal_x,
+        goal_y,
+        radius,
+        pref_speed,
+        initial_heading,
+        policy,
+        dynamics_model,
+        sensors,
+        id,
+        cooperation_coef=1.0,
+        ig_model=None,
+        ig_expert=None,
+    ):
+
+        if policy == "GA3CCADRLPolicy":
             self.policy = "GA3CCADRLPolicy"
         else:
             self.policy = policy()
@@ -25,11 +40,11 @@ class Agent(object):
             self.ig_model = None
 
         # Global Frame states
-        self.pos_global_frame = np.array([start_x, start_y], dtype='float64')
-        self.goal_global_frame = np.array([goal_x, goal_y], dtype='float64')
-        self.next_goal = np.array([goal_x, goal_y], dtype='float64')
+        self.pos_global_frame = np.array([start_x, start_y], dtype="float64")
+        self.goal_global_frame = np.array([goal_x, goal_y], dtype="float64")
+        self.next_goal = np.array([goal_x, goal_y], dtype="float64")
         self.rel_goal = self.goal_global_frame - self.pos_global_frame
-        self.vel_global_frame = np.array([0.0, 0.0], dtype='float64')
+        self.vel_global_frame = np.array([0.0, 0.0], dtype="float64")
         self.speed_global_frame = 0.0
         self.angular_speed_global_frame = 0.0
 
@@ -50,8 +65,7 @@ class Agent(object):
 
         self.num_actions_to_store = 2
         self.action_dim = self.dynamics_model.num_actions
-        self.past_actions = np.zeros((self.num_actions_to_store,
-                                      self.action_dim))
+        self.past_actions = np.zeros((self.num_actions_to_store, self.action_dim))
         self.next_state = []
         self.sensor_data_history = []
         # Other parameters
@@ -63,11 +77,18 @@ class Agent(object):
 
         self.end_condition = ec._check_if_at_goal
 
-        self.straight_line_time_to_reach_goal = (np.linalg.norm(self.pos_global_frame - self.goal_global_frame) - self.near_goal_threshold)/self.pref_speed
+        self.straight_line_time_to_reach_goal = (
+            np.linalg.norm(self.pos_global_frame - self.goal_global_frame)
+            - self.near_goal_threshold
+        ) / self.pref_speed
         if Config.EVALUATE_MODE or Config.PLAY_MODE:
-            self.time_remaining_to_reach_goal = Config.MAX_TIME_RATIO*self.straight_line_time_to_reach_goal
+            self.time_remaining_to_reach_goal = (
+                Config.MAX_TIME_RATIO * self.straight_line_time_to_reach_goal
+            )
         else:
-            self.time_remaining_to_reach_goal = Config.MAX_TIME_RATIO*self.straight_line_time_to_reach_goal
+            self.time_remaining_to_reach_goal = (
+                Config.MAX_TIME_RATIO * self.straight_line_time_to_reach_goal
+            )
         self.t = 0.0
         self.t_offset = None
         self.step_num = 0
@@ -86,13 +107,19 @@ class Agent(object):
 
         self.num_states_in_history = 10000
         self.global_state_dim = 13
-        self.global_state_history = np.zeros((self.num_states_in_history, self.global_state_dim))
+        self.global_state_history = np.zeros(
+            (self.num_states_in_history, self.global_state_dim)
+        )
         self.ego_state_dim = 3
-        self.ego_state_history = np.empty((self.num_states_in_history, self.ego_state_dim))
+        self.ego_state_history = np.empty(
+            (self.num_states_in_history, self.ego_state_dim)
+        )
 
         # self.past_actions = np.zeros((self.num_actions_to_store,2))
-        self.past_global_velocities = np.zeros((self.num_actions_to_store,2))
-        self.past_global_velocities = self.vel_global_frame * np.ones((self.num_actions_to_store,2))
+        self.past_global_velocities = np.zeros((self.num_actions_to_store, 2))
+        self.past_global_velocities = self.vel_global_frame * np.ones(
+            (self.num_actions_to_store, 2)
+        )
 
         self.other_agent_states = np.zeros((10,))
 
@@ -130,18 +157,20 @@ class Agent(object):
     #     return obj
 
     def _check_if_at_goal(self):
-        #is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2
-        #self.is_at_goal = is_near_goal
+        # is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2
+        # self.is_at_goal = is_near_goal
         self.end_condition(self)
 
     def set_state(self, px, py, vx=None, vy=None, heading=None, ang_speed=None):
         if vx is None or vy is None:
             if self.step_num == 0:
                 # On first timestep, just set to zero
-                self.vel_global_frame = np.array([0,0])
+                self.vel_global_frame = np.array([0, 0])
             else:
                 # Interpolate velocity from last pos
-                self.vel_global_frame = (np.array([px, py]) - self.pos_global_frame) / self.dt_nominal
+                self.vel_global_frame = (
+                    np.array([px, py]) - self.pos_global_frame
+                ) / self.dt_nominal
         else:
             self.vel_global_frame = np.array([vx, vy])
 
@@ -151,7 +180,9 @@ class Agent(object):
                 self.angular_speed_global_frame = 0.0
             else:
                 # Interpolate ang velocity from last pos
-                self.angular_speed_global_frame = (heading - self.heading_global_frame) / self.dt_nominal
+                self.angular_speed_global_frame = (
+                    heading - self.heading_global_frame
+                ) / self.dt_nominal
         else:
             self.angular_speed_global_frame = ang_speed
 
@@ -175,7 +206,7 @@ class Agent(object):
             self._update_state_history()
             if not self.is_at_goal:
                 self.t += dt
-            #self.step_num += 1
+            # self.step_num += 1
             self.vel_global_frame = np.array([0.0, 0.0])
             self._store_past_velocities()
             return
@@ -185,9 +216,15 @@ class Agent(object):
         self.past_actions[0, :] = action
 
         # Store info about the TF btwn the ego frame and global frame before moving agent
-        goal_direction = self.goal_global_frame - self.pos_global_frame 
+        goal_direction = self.goal_global_frame - self.pos_global_frame
         theta = np.arctan2(goal_direction[1], goal_direction[0])
-        self.T_global_ego = np.array([[np.cos(theta), -np.sin(theta), self.pos_global_frame[0]], [np.sin(theta), np.cos(theta), self.pos_global_frame[1]], [0,0,1]])
+        self.T_global_ego = np.array(
+            [
+                [np.cos(theta), -np.sin(theta), self.pos_global_frame[0]],
+                [np.sin(theta), np.cos(theta), self.pos_global_frame[1]],
+                [0, 0, 1],
+            ]
+        )
         self.ego_to_global_theta = theta
 
         # In the case of ExternalDynamics, this call does nothing,
@@ -201,7 +238,7 @@ class Agent(object):
         self._check_if_at_goal()
 
         self._store_past_velocities()
-        
+
         # Update time left so agent does not run around forever
         self.time_remaining_to_reach_goal -= dt
         self.t += dt
@@ -221,35 +258,39 @@ class Agent(object):
         global_state, ego_state = self.to_vector()
         self.global_state_history[self.step_num, :] = global_state
         self.ego_state_history[self.step_num, :] = ego_state
-        if ('local_grid' in self.sensor_data) :
-            self.sensor_data_history.append(self.sensor_data['local_grid'])
+        if "local_grid" in self.sensor_data:
+            self.sensor_data_history.append(self.sensor_data["local_grid"])
 
     def print_agent_info(self):
-        print('----------')
-        print('Global Frame:')
-        print('(px,py):', self.pos_global_frame)
-        print('(vx,vy):', self.vel_global_frame)
-        print('speed:', self.speed_global_frame)
-        print('heading:', self.heading_global_frame)
-        print('Body Frame:')
-        print('(vx,vy):', self.vel_ego_frame)
-        print('heading:', self.heading_ego_frame)
-        print('----------')
+        print("----------")
+        print("Global Frame:")
+        print("(px,py):", self.pos_global_frame)
+        print("(vx,vy):", self.vel_global_frame)
+        print("speed:", self.speed_global_frame)
+        print("heading:", self.heading_global_frame)
+        print("Body Frame:")
+        print("(vx,vy):", self.vel_ego_frame)
+        print("heading:", self.heading_ego_frame)
+        print("----------")
 
     def to_vector(self):
-        global_state = np.array([self.t,
-                                 self.pos_global_frame[0],
-                                 self.pos_global_frame[1],
-                                 self.goal_global_frame[0],
-                                 self.goal_global_frame[1],
-                                 self.radius,
-                                 self.pref_speed,
-                                 self.vel_global_frame[0],
-                                 self.vel_global_frame[1],
-                                 self.speed_global_frame,
-                                 self.heading_global_frame,
-                                 self.past_actions[0, 0],
-                                 self.past_actions[0, 1]])
+        global_state = np.array(
+            [
+                self.t,
+                self.pos_global_frame[0],
+                self.pos_global_frame[1],
+                self.goal_global_frame[0],
+                self.goal_global_frame[1],
+                self.radius,
+                self.pref_speed,
+                self.vel_global_frame[0],
+                self.vel_global_frame[1],
+                self.speed_global_frame,
+                self.heading_global_frame,
+                self.past_actions[0, 0],
+                self.past_actions[0, 1],
+            ]
+        )
         ego_state = np.array([self.t, self.dist_to_goal, self.heading_ego_frame])
         return global_state, ego_state
 
@@ -261,16 +302,23 @@ class Agent(object):
         return getattr(self, attribute)
 
     def get_agent_data_equiv(self, attribute, value):
-        return eval("self."+attribute) == value
+        return eval("self." + attribute) == value
 
     def get_observation_dict(self, agents):
         observation = {}
         for state in Config.STATES_IN_OBS:
-            if self.ig_model is None and (state == 'target_map' or state == 'agent_pos_map' or state == 'entropy_map'
-                                          or state == 'binary_map' or state == 'ego_entropy_map'
-                                          or state == 'ego_binary_map'):
+            if self.ig_model is None and (
+                state == "target_map"
+                or state == "agent_pos_map"
+                or state == "entropy_map"
+                or state == "binary_map"
+                or state == "ego_entropy_map"
+                or state == "ego_binary_map"
+            ):
                 continue
-            observation[state] = np.array(eval("self." + Config.STATE_INFO_DICT[state]['attr']))
+            observation[state] = np.array(
+                [eval("self." + Config.STATE_INFO_DICT[state]["attr"])]
+            )
         return observation
 
     def get_ref(self):
@@ -284,7 +332,7 @@ class Agent(object):
         #
         goal_direction = self.goal_global_frame - self.pos_global_frame
         self.past_dist_to_goal = self.dist_to_goal
-        self.dist_to_goal = math.sqrt(goal_direction[0]**2 + goal_direction[1]**2)
+        self.dist_to_goal = math.sqrt(goal_direction[0] ** 2 + goal_direction[1] ** 2)
         if self.t == 0:
             self.past_dist_to_goal = self.dist_to_goal
         if self.dist_to_goal > 1e-8:
@@ -295,11 +343,11 @@ class Agent(object):
         return ref_prll, ref_orth
 
     def _store_past_velocities(self):
-        self.past_global_velocities = np.roll(self.past_global_velocities,1,axis=0)
-        self.past_global_velocities[0,:] = self.vel_global_frame
+        self.past_global_velocities = np.roll(self.past_global_velocities, 1, axis=0)
+        self.past_global_velocities[0, :] = self.vel_global_frame
 
     def ego_pos_to_global_pos(self, ego_pos):
-        # goal_direction = self.goal_global_frame - self.pos_global_frame 
+        # goal_direction = self.goal_global_frame - self.pos_global_frame
         # theta = np.arctan2(goal_direction[1], goal_direction[0])
         # T_global_ego = np.array([[np.cos(theta), -np.sin(theta), self.pos_global_frame[0]], [np.sin(theta), np.cos(theta), self.pos_global_frame[1]], [0,0,1]])
         if ego_pos.ndim == 1:
@@ -307,18 +355,22 @@ class Agent(object):
             global_pos = np.dot(self.T_global_ego, ego_pos_)
             return global_pos[:2]
         else:
-            ego_pos_ = np.hstack([ego_pos, np.ones((ego_pos.shape[0],1))])
+            ego_pos_ = np.hstack([ego_pos, np.ones((ego_pos.shape[0], 1))])
             global_pos = np.dot(self.T_global_ego, ego_pos_.T).T
-            return global_pos[:,:2]
+            return global_pos[:, :2]
 
     def global_pos_to_ego_pos(self, global_pos):
-        # goal_direction = self.goal_global_frame - self.pos_global_frame 
+        # goal_direction = self.goal_global_frame - self.pos_global_frame
         # theta = np.arctan2(goal_direction[1], goal_direction[0])
         # T_ego_global = np.linalg.inv(np.array([[np.cos(theta), -np.sin(theta), self.pos_global_frame[0]], [np.sin(theta), np.cos(theta), self.pos_global_frame[1]], [0,0,1]]))
-        ego_pos = np.dot(np.linalg.inv(self.T_global_ego), np.array([global_pos[0], global_pos[1], 1]))
+        ego_pos = np.dot(
+            np.linalg.inv(self.T_global_ego),
+            np.array([global_pos[0], global_pos[1], 1]),
+        )
         return ego_pos[:2]
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     start_x = -3
     start_y = 1
     goal_x = 3
@@ -328,13 +380,25 @@ if __name__ == '__main__':
     initial_heading = 0.0
     from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
     from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
+
     policy = GA3CCADRLPolicy
     dynamics_model = UnicycleDynamics
     sensors = []
     id = 0
-    agent = Agent(start_x, start_y, goal_x, goal_y, radius,
-                 pref_speed, initial_heading, policy, dynamics_model, sensors, id)
-    print(agent.ego_pos_to_global_pos(np.array([1,0.5])))
+    agent = Agent(
+        start_x,
+        start_y,
+        goal_x,
+        goal_y,
+        radius,
+        pref_speed,
+        initial_heading,
+        policy,
+        dynamics_model,
+        sensors,
+        id,
+    )
+    print(agent.ego_pos_to_global_pos(np.array([1, 0.5])))
     print(agent.global_pos_to_ego_pos(np.array([-1.93140658, 1.32879797])))
     # agents = [Agent(start_x, start_y, goal_x, goal_y, radius,
     #              pref_speed, initial_heading, i) for i in range(4)]
