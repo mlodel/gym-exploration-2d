@@ -257,7 +257,9 @@ class CollisionAvoidanceEnv(gym.Env):
             dt = self.dt_nominal
 
         if self.action_space_type == Config.discrete:
-            actions_subgoal = self.discrete_subgoals[actions[0]]
+            action_idx = int(actions)
+            # action_idx = actions if isinstance(actions, int) else actions[0]
+            actions_subgoal = self.discrete_subgoals[action_idx]
         else:
             actions_subgoal = 4.0 * actions
 
