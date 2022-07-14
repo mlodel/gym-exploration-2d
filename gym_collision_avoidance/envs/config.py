@@ -6,7 +6,7 @@ class Config:
     # GENERAL PARAMETERS
     COLLISION_AVOIDANCE = True
     continuous, discrete = range(2)  # Initialize game types as enum
-    ACTION_SPACE_TYPE = continuous
+    ACTION_SPACE_TYPE = discrete
 
     ANIMATE_EPISODES = True
     SHOW_EPISODE_PLOTS = False
@@ -122,7 +122,7 @@ class Config:
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
     # IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
 
-    PLOT_EVERY_N_STEPS = 200000  # for visualization
+    PLOT_EVERY_N_STEPS = 500000  # for visualization
 
     REWARDS_NORMALIZE = True
 
