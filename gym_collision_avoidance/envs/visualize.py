@@ -194,7 +194,9 @@ def plot_episode(
         # )
         ax3.imshow(
             agents[0].ig_model.targetMap.bin_ego_map.squeeze(),
-            cmap=plt.cm.binary,
+            cmap="gray",
+            vmin=0,
+            vmax=255,
             origin="upper",
         )
         ax3.set_yticklabels([])
