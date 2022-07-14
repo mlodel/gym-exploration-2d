@@ -194,7 +194,10 @@ def plot_episode(
         # )
         ax3.imshow(
             agents[0].ig_model.targetMap.bin_ego_map.squeeze(),
-            cmap=plt.cm.binary,
+            # agents[0].ig_model.targetMap.binaryMap,
+            cmap="gray",
+            vmin=0,
+            vmax=255,
             origin="upper",
         )
         ax3.set_yticklabels([])
@@ -202,16 +205,24 @@ def plot_episode(
 
     if "local_grid" in agents[0].sensor_data:
         ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
-        occupancy_grid = agents[0].sensor_data["local_grid"].squeeze()
+        # occupancy_grid = agents[0].sensor_data["local_grid"].squeeze()
         # ax2.clear()
-        ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
-        ax4.scatter(0, 0, s=100, c="red", marker="o")
+        # ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
+        ax4.imshow(
+            # agents[0].ig_model.targetMap.goal_ego_map.squeeze(),
+            agents[0].ig_model.targetMap.goal_map,
+            cmap="gray",
+            vmin=0,
+            vmax=1,
+            origin="upper",
+        )
+        # ax4.scatter(0, 0, s=100, c="red", marker="o")
         ax4.axis("off")
-        aanliggend = 1 * math.cos(agents[0].heading_global_frame)
-        overstaand = 1 * math.sin(agents[0].heading_global_frame)
-        ax4.arrow(
-            0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5, fc="yellow"
-        )  # agent poiting direction
+        # aanliggend = 1 * math.cos(agents[0].heading_global_frame)
+        # overstaand = 1 * math.sin(agents[0].heading_global_frame)
+        # ax4.arrow(
+        #     0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5, fc="yellow"
+        # )  # agent poiting direction
 
     # Label the axes
     ax.set_xlabel("x (m)")
