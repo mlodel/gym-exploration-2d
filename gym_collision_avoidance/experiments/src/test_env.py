@@ -28,7 +28,7 @@ def main():
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
 
     # In case you want to save plots, choose the directory
-    save_path = os.path.dirname(os.path.realpath(__file__)) + "/../experiments/results"
+    save_path = os.path.dirname(os.path.realpath(__file__)) + "/../results"
     # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
     for i in range(n_envs):
         plot_save_dir = save_path + "/figs_env" + str(i) + "/"
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     profiler.disable()
     stats = pstats.Stats(profiler)
     stats.dump_stats(
-        os.path.dirname(os.path.realpath(__file__)) + "/experiments/results/stats.prof"
+        os.path.dirname(os.path.realpath(__file__)) + "/../results/stats.prof"
     )
