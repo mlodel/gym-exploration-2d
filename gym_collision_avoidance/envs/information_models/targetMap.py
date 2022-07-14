@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import cv2
 
@@ -84,6 +86,15 @@ class targetMap:
         )
         self.bin_ego_map = self.create_ego_map(
             np.zeros(3), self.binaryMap.astype(float), self.ego_map_inner_size, True
+        )
+
+        # Goal Map init
+        # self.goal_map = np.zeros(Config.EGO_MAP_SIZE)
+        self.current_goals = []
+        self.goal_map = np.zeros(shape)
+        self.goal_cells = []
+        self.goal_ego_map = self.create_ego_map(
+            np.zeros(3), self.goal_map.astype(float), self.ego_map_inner_size, True
         )
 
     def _init_free_cells(self):
@@ -244,7 +255,7 @@ class targetMap:
                         else 0.0
                     )
                 else:
-                    reward += self.get_reward_from_cells([(i, j)])
+                    reward += self.get_reward_from_cells([(i, j)], force_mi=True)
 
                 self.binaryMap[i, j] = True
 
@@ -270,59 +281,126 @@ class targetMap:
                 )
                 self.entropyMap[i, j] = cell_entropy
 
+                # Update Goal map and get goal rewards
+                for goal_k in range(len(self.goal_cells)):
+                    if (i, j) in self.goal_cells[goal_k]:
+                        reward += (
+                            Config.IG_REWARD_BINARY_CELL
+                            * Config.IG_REWARD_GOAL_CELL_FACTOR
+                        )
+                        self.goal_map[i, j] -= 1.0
+                        self.goal_cells[goal_k].remove((i, j))
+
             obsvdCells.update(visibleCells)
             self.visitedCells.update(obsvdCells)
             self.visited_share = len(self.visitedCells) / len(self.free_cells)
 
-            self.ego_map = self.create_ego_map(
-                pose, self.entropyMap, self.ego_map_inner_size
-            )
-            self.bin_ego_map = self.create_ego_map(
-                pose, self.binaryMap.astype(float), self.ego_map_inner_size, True
-            )
-            # Check Termination
-        if self.entropy_free_space <= self.thres_entropy:
-            self.finished_entropy = True
-        else:
-            self.finished_entropy = False
+        self.ego_map = self.create_ego_map(
+            poses[0], self.entropyMap, self.ego_map_inner_size
+        )
+        self.bin_ego_map = self.create_ego_map(
+            poses[0], self.binaryMap.astype(float), self.ego_map_inner_size, True
+        )
+        self.goal_ego_map = self.create_ego_map(
+            poses[0], self.goal_map.astype(float), self.ego_map_inner_size, True
+        )
 
-        if self.visited_share >= self.thres_share_vis_cells:
-            self.finished_binary = True
-        else:
-            self.finished_binary = False
+        # Check Termination
+        if Config.IG_THRES_ACTIVE:
+            if self.entropy_free_space <= self.thres_entropy:
+                self.finished_entropy = True
+            else:
+                self.finished_entropy = False
 
-        if Config.IG_REWARD_MODE == "binary":
-            self.finished = self.finished_binary
-        else:
-            self.finished = self.finished_entropy
+            if self.visited_share >= self.thres_share_vis_cells:
+                self.finished_binary = True
+            else:
+                self.finished_binary = False
+
+            if Config.IG_REWARD_MODE == "binary":
+                self.finished = self.finished_binary
+            else:
+                self.finished = self.finished_entropy
+
+        # Check for completed goals
+        self.check_goal_completion()
 
         return obsvdCells, reward
 
-    def get_reward_from_cells(self, cells):
+    def get_reward_from_cells(self, cells, force_mi=False):
         cell_mi = []
         for i, j in cells:
-            if np.abs(self.map[i, j]) >= self.logMap_bound:
-                mi = 0.0
+            if Config.IG_REWARD_MODE == "binary" and not force_mi:
+                reward = (
+                    Config.IG_REWARD_BINARY_CELL if not self.binaryMap[i, j] else 0.0
+                )
             else:
-                r = np.exp(self.map[i, j])
-                p = r / (r + 1)
-                f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(self.rOcc) / (
-                    r * self.rOcc + 1
-                )
-                f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(self.rEmp) / (
-                    r * self.rEmp + 1
-                )
+                if np.abs(self.map[i, j]) >= self.logMap_bound:
+                    reward = 0.0
+                else:
+                    r = np.exp(self.map[i, j])
+                    p = r / (r + 1)
+                    f_p = np.log((r + 1) / (r + (1 / self.rOcc))) - np.log(
+                        self.rOcc
+                    ) / (r * self.rOcc + 1)
+                    f_n = np.log((r + 1) / (r + (1 / self.rEmp))) - np.log(
+                        self.rEmp
+                    ) / (r * self.rEmp + 1)
 
-                P_p = p * (1 - self.p_false_neg) + (1 - p) * self.p_false_pos
-                P_n = p * self.p_false_neg + (1 - p) * (1 - self.p_false_pos)
+                    P_p = p * (1 - self.p_false_neg) + (1 - p) * self.p_false_pos
+                    P_n = p * self.p_false_neg + (1 - p) * (1 - self.p_false_pos)
 
-                mi = P_p * f_p + P_n * f_n
-            cell_mi.append(mi)
+                    reward = P_p * f_p + P_n * f_n
+
+            # Get goal rewards
+            for goal_k in range(len(self.goal_cells)):
+                if (i, j) in self.goal_cells[goal_k]:
+                    reward += (
+                        Config.IG_REWARD_BINARY_CELL * Config.IG_REWARD_GOAL_CELL_FACTOR
+                    )
+
+            cell_mi.append(reward)
         return sum(cell_mi)
 
-    def get_reward_from_pose(self, pose):
+    def get_reward_from_pose(self, pose, force_mi=False):
         visibleCells = self.getVisibleCells(pose)
-        return self.get_reward_from_cells(visibleCells)
+        return self.get_reward_from_cells(visibleCells, force_mi)
+
+    def update_goal_map(self, new_goal, radius=2):
+
+        self.current_goals.append(new_goal)
+
+        (i, j) = self.getCellsFromPose(new_goal)
+
+        old_goal_map = copy.copy(self.goal_map)
+
+        cv2.circle(self.goal_map, center=(j, i), radius=radius, color=1, thickness=-1)
+
+        rows, cols = np.where(self.goal_map != old_goal_map)
+
+        cells = list(zip(rows.tolist(), cols.tolist()))
+        for cell in cells:
+            if cell not in self.free_cells:
+                cells.remove(cell)
+
+        self.goal_cells.append(cells)
+
+    def check_goal_completion(self):
+
+        # Check if goal completed
+        completed_goal_idc = []
+        for goal_idx in range(len(self.goal_cells)):
+            if len(self.goal_cells[goal_idx]) == 0:
+                completed_goal_idc.append(goal_idx)
+        # Save completed goals and delete from buffers
+        completed_goals = []
+        completed_goal_idc.sort()
+        for goal_idx in reversed(completed_goal_idc):
+            completed_goals.append(self.current_goals[goal_idx])
+            del self.current_goals[goal_idx]
+            del self.goal_cells[goal_idx]
+
+        return completed_goals
 
     def create_ego_map(self, pose, map, newImageWidth, bin=False):
 
@@ -383,15 +461,9 @@ class targetMap:
             point[0] - newImageWidth : point[0] + newImageWidth,
         ]
         # final = cv2.flip(final, 1)
-        try:
-            final_resize = cv2.resize(
-                final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_LINEAR
-            )
-        except Exception as e:
-            print(str([map_cell]))
-            print(str(rot2.shape))
-            print(str(final.shape))
-            print(str(e))
+        final_resize = cv2.resize(
+            final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_LINEAR
+        )
 
         # return np.expand_dims((final_resize * 255).astype(np.uint8), axis=0)
         return (final_resize * 255).astype(np.uint8)

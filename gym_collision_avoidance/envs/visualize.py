@@ -723,22 +723,24 @@ def draw_agent_ig(agent, i, ax):
             )
         )
 
-    if hasattr(agent.ig_model, "expert_policy"):
-        pose = agent.ig_model.expert_goal
-        alpha = 1.0
-        c = rgba2rgb(plt_color + [float(alpha)])
+    if hasattr(agent.ig_model.targetMap, "goal_map"):
+        poses = agent.ig_model.targetMap.current_goals
+        alpha = 0.5
+        plt_color2 = plt_colors[2]
+        fc = rgba2rgb(plt_color2 + [float(alpha)])
         heading = 0.0
-        ax.add_patch(
-            Wedge(
-                center=pose[0:2],
-                r=0.2,
-                theta1=(heading - fov / 2),
-                theta2=(heading + fov / 2),
-                fc=c,
-                ec=c,
-                fill=True,
+        for pose in poses:
+            ax.add_patch(
+                Wedge(
+                    center=pose[0:2],
+                    r=2.0,
+                    theta1=(heading - fov / 2),
+                    theta2=(heading + fov / 2),
+                    fc=fc,
+                    ec=plt_colors[2],
+                    fill=True,
+                )
             )
-        )
 
     if hasattr(agent.policy, "predicted_traj"):
         ax.plot(

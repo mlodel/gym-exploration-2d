@@ -6,7 +6,7 @@ class Config:
     # GENERAL PARAMETERS
     COLLISION_AVOIDANCE = True
     continuous, discrete = range(2)  # Initialize game types as enum
-    ACTION_SPACE_TYPE = continuous
+    ACTION_SPACE_TYPE = discrete
 
     ANIMATE_EPISODES = True
     SHOW_EPISODE_PLOTS = False
@@ -76,7 +76,7 @@ class Config:
     NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.25
-    MAX_TIME_RATIO = 6.4  # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
+    MAX_TIME_RATIO = 3.2  # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
     # SENSING_HORIZON  = 3.0
@@ -105,6 +105,7 @@ class Config:
     EGO_MAP_SIZE = (80, 80)
 
     IG_MAP_RESOLUTION = 1.0
+    IG_EDF_RESOLUTION_FACTOR = 10
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
@@ -116,6 +117,11 @@ class Config:
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
+    IG_THRES_ACTIVE = False  # When False fixed episode length by timeout
+
+    IG_REWARD_GOAL_CELL_FACTOR = 10.0
+
+    IG_GOALS_SETTINGS = {"max_steps": 128}
 
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
@@ -144,7 +150,7 @@ class Config:
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 10  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 25  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH / 2, MAP_WIDTH / 2), (-MAP_HEIGHT / 2, MAP_HEIGHT / 2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False

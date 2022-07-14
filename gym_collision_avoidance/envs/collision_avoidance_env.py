@@ -328,7 +328,9 @@ class CollisionAvoidanceEnv(gym.Env):
                 # IG Agents update their models
                 for i, agent in enumerate(self.agents):
                     if agent.ig_model is not None:
-                        agent.ig_model.update(self.agents)
+                        agent.ig_model.update(
+                            self.agents, self.episode_step_number // Config.REPEAT_STEPS
+                        )
 
                 # Collect rewards
                 step_rewards = self._compute_rewards()
@@ -480,8 +482,11 @@ class CollisionAvoidanceEnv(gym.Env):
                     rng=self.testcase_rng,
                     rOcc=Config.IG_SENSE_rOcc,
                     rEmp=Config.IG_SENSE_rEmp,
+                    occ_map=self.map,
+                    edfmap_res_factor=Config.IG_EDF_RESOLUTION_FACTOR,
+                    init_kwargs=Config.IG_GOALS_SETTINGS,
                 )
-                agent.ig_model.update_map(occ_map=self.map)
+                # agent.ig_model.update_map(occ_map=self.map)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:
@@ -494,7 +499,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # IG Agents update their models
         for i, agent in enumerate(self.agents):
             if agent.ig_model is not None:
-                agent.ig_model.update(self.agents)
+                agent.ig_model.update(self.agents, 0)
 
         return self._get_obs()
 
