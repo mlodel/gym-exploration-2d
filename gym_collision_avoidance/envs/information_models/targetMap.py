@@ -99,6 +99,9 @@ class targetMap:
             self.ego_map_inner_size,
         )
 
+        # Multi-Channel Map
+        self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
+
     def _init_free_cells(self):
 
         self.free_cells.clear()
@@ -309,6 +312,9 @@ class targetMap:
             self.ego_map_inner_size,
         )
 
+        # Multi-Channel Map
+        self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
+
         # Check Termination
         if Config.IG_THRES_ACTIVE:
             if self.entropy_free_space <= self.thres_entropy:
@@ -327,7 +333,7 @@ class targetMap:
                 self.finished = self.finished_entropy
 
         # Check for completed goals
-        self.check_goal_completion()
+        reward += self.check_goal_completion()
 
         return obsvdCells, reward
 
@@ -391,6 +397,8 @@ class targetMap:
 
     def check_goal_completion(self):
 
+        reward = 0
+
         # Check if goal completed
         completed_goal_idc = []
         for goal_idx in range(len(self.goal_cells)):
@@ -400,11 +408,12 @@ class targetMap:
         completed_goals = []
         completed_goal_idc.sort()
         for goal_idx in reversed(completed_goal_idc):
+            reward += Config.IG_REWARD_GOAL_COMPLETION
             completed_goals.append(self.current_goals[goal_idx])
             del self.current_goals[goal_idx]
             del self.goal_cells[goal_idx]
 
-        return completed_goals
+        return reward
 
     def create_ego_map(self, pose, map, newImageWidth, border_value=0.0):
 

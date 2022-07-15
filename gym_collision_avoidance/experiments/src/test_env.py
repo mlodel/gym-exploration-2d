@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 def main():
     # Instantiate the environment
     # env = gym.make("CollisionAvoidance-v0")
-    n_envs = 1
+    n_envs = 16
     env, _ = create_env(n_envs=n_envs, subproc=(n_envs > 1))
     # Path to Map
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"
@@ -46,8 +46,10 @@ def main():
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 128
+    num_steps = 512
     max_rewards = []
+    max_ig_rewards = []
+    ig_rewards = [[] for i in range(n_envs)]
     rewards = [[] for i in range(n_envs)]
     eps_reward = []
     coverage_finished = 0
@@ -71,6 +73,7 @@ def main():
         for i in range(n_envs):
 
             rewards[i].append(np.squeeze(reward[i]))
+            ig_rewards[i].append(np.squeeze(info[i]['ig_reward']))
 
             if game_over[i].any():
                 # if info[i]["in_collision"]:
@@ -82,6 +85,7 @@ def main():
                 n_eps_steps.append(info[i]["step_num"])
                 n_free_cells_eps.append(info[i]["n_free_cells"])
                 max_rewards.append(np.max(rewards[i]))
+                max_ig_rewards.append(np.max(ig_rewards[i]))
                 eps_reward.append(np.sum(rewards[i]))
                 status.append(
                     0 if info[i]["ran_out_of_time"] or info[i]["in_collision"] else 1
@@ -89,6 +93,7 @@ def main():
                 eps_ids[i] += 1
                 env_ids.append([i, eps_ids[i]])
                 rewards[i] = []
+                ig_rewards[i] = []
             #     rewards = []
             #     print("Avg Episode Reward: " + str(eps_reward))
     env.reset()
@@ -96,6 +101,7 @@ def main():
     # eps_reward = np.sum(np.asarray(rewards)) / n_envs / n_eps
     print("Avg Episode Reward: " + str(np.mean(eps_reward)))
     print("Max Step Rewards: " + str(np.max(max_rewards)))
+    print("Max IG Step Rewards: " + str(np.max(max_ig_rewards)))
     print("N episodes: " + str(len(eps_reward)))
     print("N finished: " + str(coverage_finished))
     print("Avg Steps per Eps: " + str(np.mean(n_eps_steps)))

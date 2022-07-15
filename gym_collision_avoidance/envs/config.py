@@ -8,7 +8,7 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = discrete
 
-    ANIMATE_EPISODES = True
+    ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
     SAVE_EPISODE_PLOTS = True
     TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
@@ -33,7 +33,7 @@ class Config:
     )
     REWARD_TIMEOUT = 0.0  # reward given for not reaching the goal
     REWARD_INFEASIBLE = 0.0
-    REWARD_COLLISION_WITH_WALL = -0.25  # reward given when agent collides with wall
+    REWARD_COLLISION_WITH_WALL = -0.0  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = (
         0.0  # reward when agent gets close to another agent (unused?)
     )
@@ -41,7 +41,7 @@ class Config:
         0.0  # reward when agent enters another agent's social zone
     )
     REWARD_TIME_STEP = (
-        -0.1
+        -0.0
     )  # -0.1  # default reward given if none of the others apply (encourage speed)
     REWARD_DISTANCE_TO_GOAL = (
         0.0  # default reward given if none of the others apply (encourage speed)
@@ -111,7 +111,6 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 1.2  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
@@ -119,9 +118,18 @@ class Config:
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = False  # When False fixed episode length by timeout
 
-    IG_REWARD_GOAL_CELL_FACTOR = 10.0
+    IG_REWARD_GOAL_CELL_FACTOR = 3.0
+    IG_REWARD_GOAL_COMPLETION = 0.0
 
     IG_GOALS_SETTINGS = {"max_steps": 128}
+
+    REWARD_MAX_IG = (
+        1.2
+        + 13 * IG_REWARD_GOAL_CELL_FACTOR * IG_REWARD_BINARY_CELL
+        + IG_REWARD_GOAL_COMPLETION
+        if IG_REWARD_MODE == "binary"
+        else 4.0
+    )  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
 
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
@@ -169,7 +177,7 @@ class Config:
         "pos_global_frame",
         "vel_global_frame",
         "local_grid",
-        "ego_binary_map",
+        "mc_ego_binary_goal",
     ]  # occupancy grid
 
     # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
@@ -368,6 +376,14 @@ class Config:
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
             "attr": "ig_model.targetMap.bin_ego_map",
+            "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+            "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+        },
+        "mc_ego_binary_goal": {
+            "dtype": np.uint8,
+            "size": (2, EGO_MAP_SIZE[0], EGO_MAP_SIZE[1]),
+            "bounds": [0, 255],
+            "attr": "ig_model.targetMap.mc_ego_binary_goal",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
