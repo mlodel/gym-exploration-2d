@@ -23,3 +23,4 @@ gym_collision_avoidance/envs/test_cases/2_agents_500_cases_carrl_seed*.p
 
 /gym_collision_avoidance/envs/policies/mpc/*solver*
 /gym_collision_avoidance/envs/policies/mpc/archive/*solver*
+*.forces
