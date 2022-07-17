@@ -404,6 +404,8 @@ class targetMap:
         for goal_idx in range(len(self.goal_cells)):
             if len(self.goal_cells[goal_idx]) == 0:
                 completed_goal_idc.append(goal_idx)
+            else:
+                reward += Config.IG_REWARD_GOAL_PENALTY
         # Save completed goals and delete from buffers
         completed_goals = []
         completed_goal_idc.sort()

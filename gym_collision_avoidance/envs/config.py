@@ -119,6 +119,7 @@ class Config:
     IG_THRES_ACTIVE = False  # When False fixed episode length by timeout
 
     IG_REWARD_GOAL_CELL_FACTOR = 3.0
+    IG_REWARD_GOAL_PENALTY = -0.1
     IG_REWARD_GOAL_COMPLETION = 0.0
 
     IG_GOALS_SETTINGS = {"max_steps": 128}
