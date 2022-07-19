@@ -111,6 +111,7 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
+    REWARD_MAX_IG = 1.2  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
@@ -132,11 +133,14 @@ class Config:
         else 4.0
     )  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
 
+    REWARD_MIN_IG = IG_REWARD_GOAL_PENALTY
+
+
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
     # IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
 
-    PLOT_EVERY_N_STEPS = 500000  # for visualization
+    PLOT_EVERY_N_STEPS = 200000  # for visualization
 
     REWARDS_NORMALIZE = True
 
@@ -377,6 +381,14 @@ class Config:
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
             "attr": "ig_model.targetMap.bin_ego_map",
+            "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+            "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+        },
+        "mc_ego_binary_goal": {
+            "dtype": np.uint8,
+            "size": (2, EGO_MAP_SIZE[0], EGO_MAP_SIZE[1]),
+            "bounds": [0, 255],
+            "attr": "ig_model.targetMap.mc_ego_binary_goal",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },

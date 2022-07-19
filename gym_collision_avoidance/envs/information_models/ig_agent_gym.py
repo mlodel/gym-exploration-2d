@@ -1,6 +1,7 @@
 import numpy as np
 
 from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
+from gym_collision_avoidance.envs.information_models.goal_generator import GoalGenerator
 
 
 class IG_agent_gym(ig_agent):
@@ -9,10 +10,29 @@ class IG_agent_gym(ig_agent):
 
         self.host_agent = host_agent
 
-        self.global_pose = np.array([0., 0.])
+        self.global_pose = np.array([0.0, 0.0])
 
-    def _init_model(self, **kwargs):
-        pass
+        self.goal_generator = None
+        self.goal_radius = None
+
+    def _init_model(
+        self,
+        max_steps: int,
+        max_num_goals: int = 3,
+        min_steps_between_goals: int = 10,
+        goal_radius: int = 2,
+    ):
+        self.goal_radius = goal_radius
+
+        self.goal_generator = GoalGenerator(
+            map_size=self.map_size,
+            max_steps=max_steps,
+            max_num_goals=max_num_goals,
+            min_steps_between_goals=min_steps_between_goals,
+            goal_radius=goal_radius,
+            rng=self.rng,
+            edf_obj=self.targetMap.edfMapObj,
+        )
 
     def update(self, agents, num_steps):
 
@@ -24,6 +44,11 @@ class IG_agent_gym(ig_agent):
         self._update_belief(agents)
 
         self.update_agent_pos_map()
+
+        # Check for new goal
+        if self.goal_generator.next_goal(num_steps):
+            new_goal = self.goal_generator.get_goal()
+            self.targetMap.update_goal_map(new_goal, self.goal_radius)
 
         self.finished = self.targetMap.finished
 
@@ -72,7 +97,7 @@ class IG_agent_gym(ig_agent):
                 in_range = r_norm <= self.detect_range
                 if in_range:
                     r_rot = np.dot(R, r)
-                    dphi = (np.arctan2(r_rot[1], r_rot[0]))
+                    dphi = np.arctan2(r_rot[1], r_rot[0])
                     in_fov = abs(dphi) <= self.detect_fov / 2.0
                     if in_fov:
                         targets.append(agent.pos_global_frame)

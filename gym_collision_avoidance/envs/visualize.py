@@ -205,12 +205,17 @@ def plot_episode(
     if "local_grid" in agents[0].sensor_data:
         ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
         occupancy_grid = agents[0].sensor_data["local_grid"].squeeze()
-        # ax2.clear()
         ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
+        # ax4.imshow(
+        #     # agents[0].ig_model.targetMap.goal_ego_map.squeeze(),
+        #     agents[0].ig_model.targetMap.goal_map,
+        #     cmap="gray",
+        #     vmin=0,
+        #     vmax=1,
+        #     origin="upper",
+        # )
         ax4.scatter(0, 0, s=100, c="red", marker="o")
         ax4.axis("off")
-        aanliggend = 1 * math.cos(agents[0].heading_global_frame)
-        overstaand = 1 * math.sin(agents[0].heading_global_frame)
         ax4.arrow(
             0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5, fc="yellow"
         )  # agent poiting direction
@@ -725,22 +730,24 @@ def draw_agent_ig(agent, i, ax):
             )
         )
 
-    if hasattr(agent.ig_model, "expert_policy"):
-        pose = agent.ig_model.expert_goal
-        alpha = 1.0
-        c = rgba2rgb(plt_color + [float(alpha)])
+    if hasattr(agent.ig_model.targetMap, "goal_map"):
+        poses = agent.ig_model.targetMap.current_goals
+        alpha = 0.5
+        plt_color2 = plt_colors[2]
+        fc = rgba2rgb(plt_color2 + [float(alpha)])
         heading = 0.0
-        ax.add_patch(
-            Wedge(
-                center=pose[0:2],
-                r=0.2,
-                theta1=(heading - fov / 2),
-                theta2=(heading + fov / 2),
-                fc=c,
-                ec=c,
-                fill=True,
+        for pose in poses:
+            ax.add_patch(
+                Wedge(
+                    center=pose[0:2],
+                    r=2.0,
+                    theta1=(heading - fov / 2),
+                    theta2=(heading + fov / 2),
+                    fc=fc,
+                    ec=plt_colors[2],
+                    fill=True,
+                )
             )
-        )
 
     if hasattr(agent.policy, "predicted_traj"):
         ax.plot(
