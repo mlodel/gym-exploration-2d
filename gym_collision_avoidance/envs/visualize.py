@@ -129,7 +129,6 @@ def animate_episode(
 def plot_episode(
     agents,
     obstacles,
-    in_evaluate_mode,
     env_map=None,
     test_case_index=0,
     env_id=0,
@@ -387,9 +386,6 @@ def draw_agents(agents, obstacle, circles_along_traj, ax, ax2=None, last_index=-
             plt_color = plt_colors[1]
         else:
             plt_color = plt_colors[8]
-
-        if Config.HOMOGENEOUS_TESTING:
-            plt_color = plt_colors[i]
 
         t_final = agent.global_state_history[agent.step_num - 1, 0]
         if circles_along_traj:

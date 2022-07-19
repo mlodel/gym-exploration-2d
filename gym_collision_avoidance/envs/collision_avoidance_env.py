@@ -77,9 +77,6 @@ class CollisionAvoidanceEnv(gym.Env):
         self.collision_dist = Config.COLLISION_DIST
         self.getting_close_range = Config.GETTING_CLOSE_RANGE
 
-        # Plotting Parameters
-        self.evaluate = Config.EVALUATE_MODE
-
         self.plot_episodes = Config.SHOW_EPISODE_PLOTS or Config.SAVE_EPISODE_PLOTS
         self.plt_limits = Config.PLT_LIMITS
         self.plt_fig_size = Config.PLT_FIG_SIZE
@@ -348,7 +345,6 @@ class CollisionAvoidanceEnv(gym.Env):
                 plot_episode(
                     self.agents,
                     self.obstacles,
-                    False,
                     self.map,
                     self.episode_number,
                     circles_along_traj=Config.PLOT_CIRCLES_ALONG_TRAJ,
@@ -433,7 +429,6 @@ class CollisionAvoidanceEnv(gym.Env):
             plot_episode(
                 self.agents,
                 self.obstacles,
-                Config.TRAIN_MODE,
                 self.map,
                 self.episode_number,
                 self.id,
@@ -1076,15 +1071,7 @@ class CollisionAvoidanceEnv(gym.Env):
         for agent_index, agent in enumerate(self.agents):
             agent.is_done = which_agents_done[agent_index]
 
-        if Config.EVALUATE_MODE:
-            # Episode ends when every agent is done
-            if Config.HOMOGENEOUS_TESTING:
-                game_over = np.all(which_agents_done)
-            else:
-                game_over = which_agents_done[0]
-                # hack just to get the plots with all agents finishing at same time
-                # game_over = np.all(which_agents_done)
-        elif Config.TRAIN_SINGLE_AGENT:
+        if Config.TRAIN_SINGLE_AGENT:
             # Episode ends when ego agent is done
             game_over = which_agents_done[0]
         else:
@@ -1121,7 +1108,6 @@ class CollisionAvoidanceEnv(gym.Env):
         self.reward_collision_with_agent = Config.REWARD_COLLISION_WITH_AGENT
         self.reward_collision_with_wall = Config.REWARD_COLLISION_WITH_WALL
         self.reward_getting_close = Config.REWARD_GETTING_CLOSE
-        self.reward_entered_norm_zone = Config.REWARD_ENTERED_NORM_ZONE
         self.reward_time_step = Config.REWARD_TIME_STEP
         self.reward_timeout = Config.REWARD_TIMEOUT
         self.reward_deadlocked = Config.REWARD_DEADLOCKED

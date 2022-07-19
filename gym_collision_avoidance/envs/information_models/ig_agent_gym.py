@@ -3,6 +3,7 @@ import numpy as np
 from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 from gym_collision_avoidance.envs.information_models.goal_generator import GoalGenerator
 
+from gym_collision_avoidance.envs.config import Config
 
 class IG_agent_gym(ig_agent):
     def __init__(self, host_agent, expert_policy=None):
@@ -22,17 +23,20 @@ class IG_agent_gym(ig_agent):
         min_steps_between_goals: int = 10,
         goal_radius: int = 2,
     ):
-        self.goal_radius = goal_radius
+        if Config.IG_GOALS_ACTIVE:
+            self.goal_radius = goal_radius
 
-        self.goal_generator = GoalGenerator(
-            map_size=self.map_size,
-            max_steps=max_steps,
-            max_num_goals=max_num_goals,
-            min_steps_between_goals=min_steps_between_goals,
-            goal_radius=goal_radius,
-            rng=self.rng,
-            edf_obj=self.targetMap.edfMapObj,
-        )
+            self.goal_generator = GoalGenerator(
+                map_size=self.map_size,
+                max_steps=max_steps,
+                max_num_goals=max_num_goals,
+                min_steps_between_goals=min_steps_between_goals,
+                goal_radius=goal_radius,
+                rng=self.rng,
+                edf_obj=self.targetMap.edfMapObj,
+            )
+        else:
+            pass
 
     def update(self, agents, num_steps):
 
@@ -46,9 +50,10 @@ class IG_agent_gym(ig_agent):
         self.update_agent_pos_map()
 
         # Check for new goal
-        if self.goal_generator.next_goal(num_steps):
-            new_goal = self.goal_generator.get_goal()
-            self.targetMap.update_goal_map(new_goal, self.goal_radius)
+        if Config.IG_GOALS_ACTIVE:
+            if self.goal_generator.next_goal(num_steps):
+                new_goal = self.goal_generator.get_goal()
+                self.targetMap.update_goal_map(new_goal, self.goal_radius)
 
         self.finished = self.targetMap.finished
 

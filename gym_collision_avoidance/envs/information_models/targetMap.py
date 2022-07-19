@@ -287,14 +287,15 @@ class targetMap:
                 self.entropyMap[i, j] = cell_entropy
 
                 # Update Goal map and get goal rewards
-                for goal_k in range(len(self.goal_cells)):
-                    if (i, j) in self.goal_cells[goal_k]:
-                        reward += (
-                            Config.IG_REWARD_BINARY_CELL
-                            * Config.IG_REWARD_GOAL_CELL_FACTOR
-                        )
-                        self.goal_map[i, j] -= 1.0
-                        self.goal_cells[goal_k].remove((i, j))
+                if Config.IG_GOALS_ACTIVE:
+                    for goal_k in range(len(self.goal_cells)):
+                        if (i, j) in self.goal_cells[goal_k]:
+                            reward += (
+                                Config.IG_REWARD_BINARY_CELL
+                                * Config.IG_REWARD_GOAL_CELL_FACTOR
+                            )
+                            self.goal_map[i, j] -= 1.0
+                            self.goal_cells[goal_k].remove((i, j))
 
             obsvdCells.update(visibleCells)
             self.visitedCells.update(obsvdCells)
@@ -306,14 +307,12 @@ class targetMap:
         self.bin_ego_map = self.create_ego_map(
             poses[0], (~self.binaryMap).astype(float), self.ego_map_inner_size
         )
-        self.goal_ego_map = self.create_ego_map(
-            poses[0],
-            self.goal_map.astype(float),
-            self.ego_map_inner_size,
-        )
-
-        # Multi-Channel Map
-        self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
+        if Config.IG_GOALS_ACTIVE:
+            self.goal_ego_map = self.create_ego_map(
+                poses[0],
+                self.goal_map.astype(float),
+                self.ego_map_inner_size,
+            )
 
         # Check Termination
         if Config.IG_THRES_ACTIVE:
@@ -332,8 +331,12 @@ class targetMap:
             else:
                 self.finished = self.finished_entropy
 
-        # Check for completed goals
-        reward += self.check_goal_completion()
+        if Config.IG_GOALS_ACTIVE:
+            # Check for completed goals
+            reward += self.check_goal_completion()
+
+            # Update Multi-Channel Map
+            self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
 
         return obsvdCells, reward
 

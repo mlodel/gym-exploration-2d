@@ -11,21 +11,10 @@ class Config:
     ANIMATE_EPISODES = True
     SHOW_EPISODE_PLOTS = False
     SAVE_EPISODE_PLOTS = True
-    TRAIN_MODE = False  # Enable to see the trained agent in action (for testing)
-    PLAY_MODE = False  # Enable to see the trained agent in action (for testing)
-    EVALUATE_MODE = False  # Enable to see the trained agent in action (for testing)
     TRAIN_SINGLE_AGENT = True
-
-    LSTM_HIDDEN_SIZE = 16
-    NUM_LAYERS = 2
-    NUM_HIDDEN_UNITS = 64
-    NETWORK = "mfe_network"
-    GAMMA = 0.99
-    LEARNING_RATE = 1e-3
 
     #########################################################################
     # COLLISION AVOIDANCE PARAMETER
-    NUM_TEST_CASES = 50
     DT = 0.1  # seconds between simulation time steps
     REWARD_AT_GOAL = 0.0  # reward given when agent reaches goal position
     REWARD_COLLISION_WITH_AGENT = (
@@ -36,9 +25,6 @@ class Config:
     REWARD_COLLISION_WITH_WALL = -0.0  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = (
         0.0  # reward when agent gets close to another agent (unused?)
-    )
-    REWARD_ENTERED_NORM_ZONE = (
-        0.0  # reward when agent enters another agent's social zone
     )
     REWARD_TIME_STEP = (
         -0.1
@@ -58,13 +44,8 @@ class Config:
     COLLISION_DIST = 0.5  # meters between agents' boundaries for collision
     GETTING_CLOSE_RANGE = 0.2  # meters between agents' boundaries for collision
     JOINT_MPC_RL_TRAINING = False  # select the action that has highets reward (mpc/rl)
-    CURRICULUM_LEARNING = False
-    HOMOGENEOUS_TESTING = False
-    PERFORMANCE_TEST = False
-    PLOT_PREDICTIONS = True
+
     COLLISION_AV_W_STATIC_AGENT = False
-    EWC = False
-    MODEL_DESCRIPTION = " DAGGER MULTITHREAD test occupancy grid network network SPARSE REWARD BC cloning with warmstart dt=0.2 and k=2 COLL OFF"
 
     # MPC
     FORCES_N = 15
@@ -72,18 +53,11 @@ class Config:
     REPEAT_STEPS = 5
 
     LASERSCAN_LENGTH = 16  # num range readings in one scan
-    NUM_STEPS_IN_OBS_HISTORY = 1  # number of time steps to store in observation vector
-    NUM_PAST_ACTIONS_IN_STATE = 0
 
     NEAR_GOAL_THRESHOLD = 0.25
     MAX_TIME_RATIO = 6.4  # 6.4  # agent has this number times the straight-line-time to reach its goal before "timing out"
 
     SENSING_HORIZON = np.inf
-    # SENSING_HORIZON  = 3.0
-
-    RVO_TIME_HORIZON = 5.0
-    RVO_COLLAB_COEFF = 0.5
-    RVO_ANTI_COLLAB_T = 1.0
 
     MAX_NUM_AGENTS_IN_ENVIRONMENT = 10
     MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
@@ -123,6 +97,7 @@ class Config:
     IG_REWARD_GOAL_PENALTY = -0.0
     IG_REWARD_GOAL_COMPLETION = 0.0
 
+    IG_GOALS_ACTIVE = False
     IG_GOALS_SETTINGS = {"max_steps": 128}
 
     REWARD_MAX_IG = (
@@ -163,7 +138,7 @@ class Config:
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 10  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH / 2, MAP_WIDTH / 2), (-MAP_HEIGHT / 2, MAP_HEIGHT / 2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False
@@ -171,11 +146,6 @@ class Config:
     PLT_SUBPLT_TARGMAP = True
     PLT_FREE_SPACE = True
 
-    # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states']
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'pos_global_frame', 'local_grid', 'target_map']  # occupancy grid
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'target_map']  # occupancy grid
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'target_map']  # occupancy grid
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'entropy_map']  # occupancy grid
     STATES_IN_OBS = [
         "heading_global_frame",
         "angvel_global_frame",
@@ -185,15 +155,6 @@ class Config:
         "ego_binary_map",
     ]  # occupancy grid
 
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'binary_map']  # occupancy grid
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'local_grid', 'agent_pos_map', 'binary_map']  # occupancy grid
-
-    # STATES_IN_OBS = ['radius', 'heading_global_frame', 'angvel_global_frame', 'pos_global_frame', 'vel_global_frame', 'binary_map']  # occupancy grid
-
-    # STATES_IN_OBS = ['dist_to_goal', 'rel_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'angular_map'] #angular map
-    # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo', 'laserscan']
-    # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agent_states', 'use_ppo'] # 2-agent net
-    # STATES_IN_OBS = ['dist_to_goal', 'radius', 'heading_ego_frame', 'pref_speed', 'other_agents_states', 'use_ppo', 'num_other_agents', 'laserscan'] # LSTM
     STATES_NOT_USED_IN_POLICY = ["use_ppo", "num_other_agents"]
     STATE_INFO_DICT = {
         "dist_to_goal": {
