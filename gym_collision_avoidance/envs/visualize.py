@@ -184,7 +184,7 @@ def plot_episode(
         plot_perturbed_observation(agents, ax, perturbed_obs)
 
     if agents[0].ig_model is not None:
-        ax3 = fig.add_axes([0.72, 0.2, 0.3, 0.3])
+        ax3 = fig.add_axes([0.72, 0.15, 0.3, 0.3])
         # ax3.imshow(
         #     agents[0].ig_model.targetMap.entropyMap,
         #     vmin=0,

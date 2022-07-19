@@ -148,11 +148,9 @@ class CollisionAvoidanceEnv(gym.Env):
             if Config.STATE_INFO_DICT[state]["size"] == 1:
                 shape = (1,)
             elif isinstance(Config.STATE_INFO_DICT[state]["size"], tuple):
-                shape = (
-                    1,
-                    Config.STATE_INFO_DICT[state]["size"][0],
-                    Config.STATE_INFO_DICT[state]["size"][1],
-                )
+                shape = [1] if len(Config.STATE_INFO_DICT[state]["size"]) < 3 else []
+                shape.extend(Config.STATE_INFO_DICT[state]["size"])
+                shape = tuple(shape)
             else:
                 shape = (1, Config.STATE_INFO_DICT[state]["size"])
 
@@ -480,8 +478,10 @@ class CollisionAvoidanceEnv(gym.Env):
                     rng=self.testcase_rng,
                     rOcc=Config.IG_SENSE_rOcc,
                     rEmp=Config.IG_SENSE_rEmp,
+                    occ_map=self.map,
+                    edfmap_res_factor=Config.IG_EDF_RESOLUTION_FACTOR,
                 )
-                agent.ig_model.update_map(occ_map=self.map)
+                # agent.ig_model.update_map(occ_map=self.map)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:

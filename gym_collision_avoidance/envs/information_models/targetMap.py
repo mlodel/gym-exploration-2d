@@ -8,19 +8,19 @@ from gym_collision_avoidance.envs.config import Config
 
 class targetMap:
     def __init__(
-            self,
-            mapSize,
-            cellSize,
-            sensFOV,
-            sensRange,
-            rOcc,
-            rEmp,
-            edfmap_res_factor,
-            tolerance=0.01,
-            prior=0.0,
-            p_false_neg=0.1,
-            p_false_pos=0.05,
-            logmap_bound=30.0,
+        self,
+        mapSize,
+        cellSize,
+        sensFOV,
+        sensRange,
+        rOcc,
+        rEmp,
+        edfmap_res_factor,
+        tolerance=0.01,
+        prior=0.0,
+        p_false_neg=0.1,
+        p_false_pos=0.05,
+        logmap_bound=30.0,
     ):
 
         self.edfMapObj = edfMap(cellSize / edfmap_res_factor, mapSize)
@@ -52,8 +52,8 @@ class targetMap:
         self.logMap_bound = logmap_bound
 
         cell_entropy_prior = (
-                                     -p_prior * np.log(p_prior) - (1 - p_prior) * np.log(1 - p_prior)
-                             ) / np.log(2)
+            -p_prior * np.log(p_prior) - (1 - p_prior) * np.log(1 - p_prior)
+        ) / np.log(2)
         self.entropyMap = np.ones(shape) * cell_entropy_prior
 
         self.binaryMap = np.zeros(shape).astype(bool)
@@ -63,7 +63,7 @@ class targetMap:
         self._init_free_cells()
         self.n_free_cells = len(self.free_cells)
         self.entropy_free_space = (
-                cell_entropy_prior * self.n_free_cells
+            cell_entropy_prior * self.n_free_cells
         )  # * shape[0] * shape [1]
 
         self.visitedCells = set()
@@ -224,7 +224,7 @@ class targetMap:
                         r_diff = r_target - r
                         r_diff_norm = np.sqrt(r_diff[0] ** 2 + r_diff[1] ** 2)
                         if r_diff_norm < (
-                                np.sqrt(0.5) * self.cellSize + self.tolerance
+                            np.sqrt(0.5) * self.cellSize + self.tolerance
                         ):
                             in_current_cell = True
                             break
@@ -261,12 +261,12 @@ class targetMap:
 
                 # Update Entropies and obtain reward
                 cell_entropy = (
-                                       -p_cell * np.log(p_cell) - (1 - p_cell) * np.log(1 - p_cell)
-                               ) / np.log(2)
+                    -p_cell * np.log(p_cell) - (1 - p_cell) * np.log(1 - p_cell)
+                ) / np.log(2)
 
                 # reward += self.entropyMap[j,i] - cell_entropy
                 self.entropy_free_space = (
-                        self.entropy_free_space - self.entropyMap[i, j] + cell_entropy
+                    self.entropy_free_space - self.entropyMap[i, j] + cell_entropy
                 )
                 self.entropyMap[i, j] = cell_entropy
 
@@ -369,11 +369,11 @@ class targetMap:
 
         ext_map = np.zeros((3 * newImageWidth, 3 * newImageWidth), dtype=np.float32)
         ext_map[
-        newImageWidth: 2 * newImageWidth, newImageWidth: 2 * newImageWidth
+            newImageWidth : 2 * newImageWidth, newImageWidth : 2 * newImageWidth
         ] = rotatingimage
 
         transform_point = cv2.transform(
-            np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix
+            np.asarray(np.flip(map_cell)).reshape((1, 1, 2)), rotationMatrix
         )[0][0]
 
         point = transform_point + np.array([newImageWidth, newImageWidth], dtype=int)
@@ -386,9 +386,9 @@ class targetMap:
         )
 
         final = rot2[
-                point[1] - newImageWidth: point[1] + newImageWidth,
-                point[0] - newImageWidth: point[0] + newImageWidth,
-                ]
+            point[1] - newImageWidth : point[1] + newImageWidth,
+            point[0] - newImageWidth : point[0] + newImageWidth,
+        ]
         # final = cv2.flip(final, 1)
         final_resize = cv2.resize(
             final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_LINEAR
