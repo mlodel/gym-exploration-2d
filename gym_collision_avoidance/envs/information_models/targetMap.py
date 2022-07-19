@@ -458,7 +458,7 @@ class targetMap:
         ] = rotatingimage
 
         transform_point = cv2.transform(
-            np.asarray(map_cell).reshape((1, 1, 2)), rotationMatrix
+            np.asarray(np.flip(map_cell)).reshape((1, 1, 2)), rotationMatrix
         )[0][0]
 
         point = transform_point + np.array([newImageWidth, newImageWidth], dtype=int)
