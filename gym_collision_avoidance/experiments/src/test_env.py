@@ -116,7 +116,7 @@ def main():
     np.savetxt(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__))
-            + "/experiments/results"
+            + "/../results"
             + "/rewards.csv"
         ),
         output,

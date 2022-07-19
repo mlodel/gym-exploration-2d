@@ -332,10 +332,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards += step_rewards
             # a=b
             if (
-                (
-                    (self.episode_number - 1) % self.plot_every_n_episodes == 0
-                    or Config.EVALUATE_MODE
-                )
+                ((self.episode_number - 1) % self.plot_every_n_episodes == 0)
                 and not Config.TEST_MODE
                 and Config.ANIMATE_EPISODES
                 and self.episode_number >= 1

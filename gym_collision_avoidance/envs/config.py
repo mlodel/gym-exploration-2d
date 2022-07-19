@@ -85,7 +85,6 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 1.2  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
@@ -110,7 +109,6 @@ class Config:
 
     REWARD_MIN_IG = IG_REWARD_GOAL_PENALTY
 
-
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
     # IG_CURRICULUM_LEARNING_STEPS_3_OBS = 4000000
@@ -129,16 +127,14 @@ class Config:
     CLIP_ACTION = True
     USE_MPC_EXPERT_IN_TEST = False
 
-    SCENARIOS_FOR_TRAINING = [
-        "IG_single_agent_crossing"
-    ]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["IG_single_agent_crossing"]
 
     # Angular Map
     NUM_OF_SLICES = 16
     MAX_RANGE = 6
 
     PLOT_CIRCLES_ALONG_TRAJ = False
-    ANIMATION_PERIOD_STEPS = 1  # plot every n-th DT step (if animate mode on)
+    ANIMATION_PERIOD_STEPS = 10  # plot every n-th DT step (if animate mode on)
     PLT_LIMITS = ((-MAP_WIDTH / 2, MAP_WIDTH / 2), (-MAP_HEIGHT / 2, MAP_HEIGHT / 2))
     PLT_FIG_SIZE = (12, 8)
     PLT_SHOW_LEGEND = False
@@ -153,7 +149,7 @@ class Config:
         "vel_global_frame",
         "local_grid",
         "ego_binary_map",
-    ]  # occupancy grid
+    ]
 
     STATES_NOT_USED_IN_POLICY = ["use_ppo", "num_other_agents"]
     STATE_INFO_DICT = {
