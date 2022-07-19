@@ -148,11 +148,9 @@ class CollisionAvoidanceEnv(gym.Env):
             if Config.STATE_INFO_DICT[state]["size"] == 1:
                 shape = (1,)
             elif isinstance(Config.STATE_INFO_DICT[state]["size"], tuple):
-                shape = (
-                    1,
-                    Config.STATE_INFO_DICT[state]["size"][0],
-                    Config.STATE_INFO_DICT[state]["size"][1],
-                )
+                shape = [1] if len(Config.STATE_INFO_DICT[state]["size"]) < 3 else []
+                shape.extend(Config.STATE_INFO_DICT[state]["size"])
+                shape = tuple(shape)
             else:
                 shape = (1, Config.STATE_INFO_DICT[state]["size"])
 
@@ -328,7 +326,9 @@ class CollisionAvoidanceEnv(gym.Env):
                 # IG Agents update their models
                 for i, agent in enumerate(self.agents):
                     if agent.ig_model is not None:
-                        agent.ig_model.update(self.agents)
+                        agent.ig_model.update(
+                            self.agents, self.episode_step_number // Config.REPEAT_STEPS
+                        )
 
                 # Collect rewards
                 step_rewards = self._compute_rewards()
@@ -480,8 +480,11 @@ class CollisionAvoidanceEnv(gym.Env):
                     rng=self.testcase_rng,
                     rOcc=Config.IG_SENSE_rOcc,
                     rEmp=Config.IG_SENSE_rEmp,
+                    occ_map=self.map,
+                    edfmap_res_factor=Config.IG_EDF_RESOLUTION_FACTOR,
+                    init_kwargs=Config.IG_GOALS_SETTINGS,
                 )
-                agent.ig_model.update_map(occ_map=self.map)
+                # agent.ig_model.update_map(occ_map=self.map)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:
@@ -494,7 +497,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # IG Agents update their models
         for i, agent in enumerate(self.agents):
             if agent.ig_model is not None:
-                agent.ig_model.update(self.agents)
+                agent.ig_model.update(self.agents, 0)
 
         return self._get_obs()
 
@@ -1127,6 +1130,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.reward_wiggly_behavior = Config.REWARD_WIGGLY_BEHAVIOR
         self.wiggly_behavior_threshold = Config.WIGGLY_BEHAVIOR_THRESHOLD
         self.reward_max_ig = Config.REWARD_MAX_IG
+        self.reward_min_ig = Config.REWARD_MIN_IG
 
         vmax = 2.0
         self.reward_distance_max = (
@@ -1144,6 +1148,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.possible_step_reward_values = [
             self.reward_max_ig,
+            self.reward_min_ig,
             self.reward_deadlocked,
             self.reward_subgoal_infeas,
             self.reward_distance_max,

@@ -314,11 +314,15 @@ class Agent(object):
                 or state == "binary_map"
                 or state == "ego_entropy_map"
                 or state == "ego_binary_map"
+                or state == "mc_ego_binary_goal"
             ):
                 continue
             observation[state] = np.array(
                 [eval("self." + Config.STATE_INFO_DICT[state]["attr"])]
             )
+            if len(observation[state].shape) > 3:
+                observation[state] = observation[state].squeeze()
+
         return observation
 
     def get_ref(self):

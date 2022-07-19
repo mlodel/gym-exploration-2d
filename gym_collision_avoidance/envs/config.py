@@ -33,7 +33,7 @@ class Config:
     )
     REWARD_TIMEOUT = 0.0  # reward given for not reaching the goal
     REWARD_INFEASIBLE = 0.0
-    REWARD_COLLISION_WITH_WALL = -0.25  # reward given when agent collides with wall
+    REWARD_COLLISION_WITH_WALL = -0.0  # reward given when agent collides with wall
     REWARD_GETTING_CLOSE = (
         0.0  # reward when agent gets close to another agent (unused?)
     )
@@ -105,18 +105,32 @@ class Config:
     EGO_MAP_SIZE = (80, 80)
 
     IG_MAP_RESOLUTION = 1.0
+    IG_EDF_RESOLUTION_FACTOR = 10
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
     IG_SENSE_RADIUS = 3.5
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 1.2  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
     IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
-    IG_THRES_ACTIVE = True
+    IG_THRES_ACTIVE = True  # When False fixed episode length by timeout
+
+    IG_REWARD_GOAL_CELL_FACTOR = 0.0
+    IG_REWARD_GOAL_PENALTY = -0.0
+    IG_REWARD_GOAL_COMPLETION = 0.0
+
+    IG_GOALS_SETTINGS = {"max_steps": 128}
+
+    REWARD_MAX_IG = (
+        1.2
+        + 13 * IG_REWARD_GOAL_CELL_FACTOR * IG_REWARD_BINARY_CELL
+        + IG_REWARD_GOAL_COMPLETION
+        if IG_REWARD_MODE == "binary"
+        else 4.0
+    )  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
 
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000

@@ -45,6 +45,7 @@ class ig_agent:
         self.rng = None
 
         self.global_pose = np.zeros(3)
+        self.map_size = None
 
         # np.random.seed(current_milli_time() - int(1.625e12))
 
@@ -57,12 +58,16 @@ class ig_agent:
         rng,
         rOcc,
         rEmp,
+        occ_map=None,
         edfmap_res_factor=10,
+        init_kwargs=None,
     ):
 
+        if init_kwargs is None:
+            init_kwargs = dict()
         self.detect_range = detect_range
         self.detect_fov = detect_fov * np.pi / 180
-
+        self.map_size = map_size
         # Init EDF and Target Map
         self.targetMap = targetMap(
             map_size,
@@ -80,6 +85,15 @@ class ig_agent:
 
         # self.expert_seed = expert_seed
         self.rng = rng
+
+        if occ_map is not None:
+            self.update_map(occ_map=occ_map)
+
+        init_kwargs = dict if init_kwargs is None else init_kwargs
+        self._init_model(**init_kwargs)
+
+    def _init_model(self, **kwargs):
+        raise NotImplementedError
 
     def update_map(self, occ_map=None, edf_map=None):
         self.targetMap.update_map(occ_map, edf_map)
