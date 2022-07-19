@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 def main():
     # Instantiate the environment
     # env = gym.make("CollisionAvoidance-v0")
-    n_envs = 16
+    n_envs = 1
     env, _ = create_env(n_envs=n_envs, subproc=(n_envs > 1))
     # Path to Map
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"
@@ -46,7 +46,7 @@ def main():
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 512
+    num_steps = 128
     max_rewards = []
     max_ig_rewards = []
     ig_rewards = [[] for i in range(n_envs)]
@@ -73,7 +73,7 @@ def main():
         for i in range(n_envs):
 
             rewards[i].append(np.squeeze(reward[i]))
-            ig_rewards[i].append(np.squeeze(info[i]['ig_reward']))
+            ig_rewards[i].append(np.squeeze(info[i]["ig_reward"]))
 
             if game_over[i].any():
                 # if info[i]["in_collision"]:
