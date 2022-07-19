@@ -1130,6 +1130,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.reward_wiggly_behavior = Config.REWARD_WIGGLY_BEHAVIOR
         self.wiggly_behavior_threshold = Config.WIGGLY_BEHAVIOR_THRESHOLD
         self.reward_max_ig = Config.REWARD_MAX_IG
+        self.reward_min_ig = Config.REWARD_MIN_IG
 
         vmax = 2.0
         self.reward_distance_max = (
@@ -1147,6 +1148,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.possible_step_reward_values = [
             self.reward_max_ig,
+            self.reward_min_ig,
             self.reward_deadlocked,
             self.reward_subgoal_infeas,
             self.reward_distance_max,

@@ -118,9 +118,9 @@ class Config:
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = False  # When False fixed episode length by timeout
 
-    IG_REWARD_GOAL_CELL_FACTOR = 3.0
+    IG_REWARD_GOAL_CELL_FACTOR = 0.0
     IG_REWARD_GOAL_PENALTY = -0.1
-    IG_REWARD_GOAL_COMPLETION = 0.0
+    IG_REWARD_GOAL_COMPLETION = 1.0
 
     IG_GOALS_SETTINGS = {"max_steps": 128}
 
@@ -131,6 +131,8 @@ class Config:
         if IG_REWARD_MODE == "binary"
         else 4.0
     )  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
+
+    REWARD_MIN_IG = IG_REWARD_GOAL_PENALTY
 
     # IG_CURRICULUM_LEARNING = True
     # IG_CURRICULUM_LEARNING_STEPS_2_OBS = 2000000
