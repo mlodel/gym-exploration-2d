@@ -429,7 +429,7 @@ class targetMap:
 
         map_cell = self.getCellsFromPose(pose[:2])
         # map_cell = (map_cell[0], 20-map_cell[1])
-        angle = -pose[2] * 180 / np.pi
+        angle = pose[2] * 180 / np.pi
 
         # Taking image height and width
         imgHeight, imgWidth = map.shape[0], map.shape[1]
@@ -467,7 +467,7 @@ class targetMap:
         point = transform_point + np.array([newImageWidth, newImageWidth], dtype=int)
 
         rot_mat = cv2.getRotationMatrix2D(
-            (int(point[0]), int(point[1])), 45 + angle, 1.0
+            (int(point[0]), int(point[1])), 45 - angle, 1.0
         )
         rot2 = cv2.warpAffine(
             ext_map, rot_mat, ext_map.shape[1::-1], borderValue=border_value

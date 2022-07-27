@@ -55,11 +55,21 @@ class edfMap:
 
         while u < 1:
             nextPoint = (1 - u) * pose + u * goal
-            xIdc = int(np.floor((nextPoint[0] + self.mapSize[0] / 2) / self.cellSize))
-            yIdc = int(np.floor((-nextPoint[1] + self.mapSize[1] / 2) / self.cellSize))
+            xIdc = int(np.floor((nextPoint[0] + self.mapSize[1] / 2) / self.cellSize))
+            yIdc = int(np.floor((-nextPoint[1] + self.mapSize[0] / 2) / self.cellSize))
 
-            xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
-            yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
+            # xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
+            xIdc = (
+                self.map.shape[1] - 1
+                if xIdc > self.map.shape[1] - 1
+                else (0 if xIdc < 0 else xIdc)
+            )
+            # yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
+            yIdc = (
+                self.map.shape[0] - 1
+                if yIdc > self.map.shape[1] - 1
+                else (0 if yIdc < 0 else yIdc)
+            )
 
             minDist = self.map[yIdc, xIdc]
 
