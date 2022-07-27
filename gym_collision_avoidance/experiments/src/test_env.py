@@ -99,12 +99,13 @@ def main():
     env.reset()
     # max_rewards.append(np.max(rewards))
     # eps_reward = np.sum(np.asarray(rewards)) / n_envs / n_eps
-    print("Avg Episode Reward: " + str(np.mean(eps_reward)))
-    print("Max Step Rewards: " + str(np.max(max_rewards)))
-    print("Max IG Step Rewards: " + str(np.max(max_ig_rewards)))
-    print("N episodes: " + str(len(eps_reward)))
-    print("N finished: " + str(coverage_finished))
-    print("Avg Steps per Eps: " + str(np.mean(n_eps_steps)))
+    if len(n_eps_steps) > 0:
+        print("Avg Episode Reward: " + str(np.mean(eps_reward)))
+        print("Max Step Rewards: " + str(np.max(max_rewards)))
+        print("Max IG Step Rewards: " + str(np.max(max_ig_rewards)))
+        print("N episodes: " + str(len(eps_reward)))
+        print("N finished: " + str(coverage_finished))
+        print("Avg Steps per Eps: " + str(np.mean(n_eps_steps)))
 
     output = np.c_[
         np.asarray(eps_reward),
@@ -115,9 +116,7 @@ def main():
     ]
     np.savetxt(
         os.path.join(
-            os.path.dirname(os.path.realpath(__file__))
-            + "/experiments/results"
-            + "/rewards.csv"
+            os.path.dirname(os.path.realpath(__file__)) + "/../results" + "/rewards.csv"
         ),
         output,
         delimiter=",",
