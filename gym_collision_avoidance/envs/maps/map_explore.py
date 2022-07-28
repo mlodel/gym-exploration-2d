@@ -21,8 +21,10 @@ class ExploreMap(BaseMap):
     def _init_maps(self):
         super()._init_maps()
 
-    def _update(self, pos: np.ndarray, global_map: BaseMap):
-        cell_pos = self.get_idc_from_pos(pos)
+    def update(self, pose: np.ndarray, global_map: BaseMap = None):
+        if global_map is None:
+            raise ValueError("No global map passed for map update")
+        cell_pos = self.get_idc_from_pos(pose)
         mask = np.zeros_like(global_map.map)
         mask = cv2.circle(mask, center=cell_pos, radius=15, color=1, thickness=-1)
         mask_inv = cv2.bitwise_not(mask)

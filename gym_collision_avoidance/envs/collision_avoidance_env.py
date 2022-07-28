@@ -19,7 +19,9 @@ from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.util import find_nearest, rgba2rgb
 from gym_collision_avoidance.envs.visualize import plot_episode, animate_episode
 from gym_collision_avoidance.envs.agent import Agent
-from gym_collision_avoidance.envs.Map import Map
+
+# from gym_collision_avoidance.envs.Map import Map
+from gym_collision_avoidance.envs.maps.map_env import EnvMap
 from gym_collision_avoidance.envs import test_cases as tc
 
 # from gym_collision_avoidance.envs.policies.RVOPolicy import RVOPolicy
@@ -383,6 +385,11 @@ class CollisionAvoidanceEnv(gym.Env):
             which_agents_done_dict[agent.id] = which_agents_done[i]
 
         # Take observation
+        self.map.update(
+            pose=np.append(
+                self.agents[0].pos_global_frame, self.agents[0].heading_global_frame
+            )
+        )
         next_observations = self._get_obs()
 
         infos = {
@@ -475,11 +482,11 @@ class CollisionAvoidanceEnv(gym.Env):
                     rng=self.testcase_rng,
                     rOcc=Config.IG_SENSE_rOcc,
                     rEmp=Config.IG_SENSE_rEmp,
-                    occ_map=self.map,
+                    occ_map=self.map.map,
                     edfmap_res_factor=Config.IG_EDF_RESOLUTION_FACTOR,
                     init_kwargs=Config.IG_GOALS_SETTINGS,
                 )
-                # agent.ig_model.update_map(occ_map=self.map)
+                # agent.ig_model.update_map(edf_map=self.map.edf_map)
                 agent.ig_model.set_expert_policy(self.expert_controller)
 
         for state in Config.STATES_IN_OBS:
@@ -611,14 +618,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         return actions
 
-    def update_top_down_map(self):
-        # print("Env.: " + str(self.env_id) + " Time Step: " + str(self.episode_step_number * self.dt_nominal)
-        #       + " Total Step: " + str(self.total_number_of_steps *self.n_env/Config.REPEAT_STEPS))
-        pass
-        # self.map.add_agents_to_map(self.agents)
-        # plt.imshow(self.map.map)
-        # plt.pause(0.1)
-
     def set_agents(self, agents):
         self.default_agents = agents
 
@@ -703,26 +702,18 @@ class CollisionAvoidanceEnv(gym.Env):
         self.static_map_filename = map_filename
 
     def _init_static_map(self):
-        # self.set_static_map('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/002.png')
-        """
-        ## Michael everetts version:
-        if isinstance(self.static_map_filename, list):
-            static_map_filename = np.random.choice(self.static_map_filename)
-        else:
-            static_map_filename = self.static_map_filename
-        """
-        ## Sants version:
-        # Check if there are obstacles given
-        if len(self.obstacles) == 0:
-            static_map_filename = None
-        else:
-            static_map_filename = self.obstacles
 
-        self.map = Map(
-            Config.MAP_WIDTH,
-            Config.MAP_HEIGHT,
-            Config.SUBMAP_RESOLUTION,
-            static_map_filename,
+        self.map = EnvMap(
+            map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
+            cell_size=Config.SUBMAP_RESOLUTION,
+            submap_size=(Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT),
+            obs_size=Config.EGO_MAP_SIZE,
+            obstacles_vert=self.obstacles,
+        )
+        self.map.update(
+            pose=np.append(
+                self.agents[0].pos_global_frame, self.agents[0].heading_global_frame
+            )
         )
 
         for agent in self.agents:
@@ -822,16 +813,12 @@ class CollisionAvoidanceEnv(gym.Env):
                 # If subgoal position in inside an obstacle
                 """ """
                 if i == 0 and not Config.TEST_MODE:
-                    [pi, pj], in_map = self.map.world_coordinates_to_map_indices(
-                        agent.policy.goal_
+                    agent.subgoal_in_wall = self.map.check_collision(agent.policy.goal_)
+                    rewards[i] += (
+                        Config.REWARD_SUBGOAL_INFEASIBLE
+                        if agent.subgoal_in_wall
+                        else 0.0
                     )
-                    mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
-                    if in_map and np.any(self.map.static_map[mask]):
-                        agent.subgoal_in_wall = True
-                        rewards[i] += Config.REWARD_SUBGOAL_INFEASIBLE
-                    elif not in_map:
-                        agent.subgoal_in_wall = True
-                        rewards[i] += Config.REWARD_SUBGOAL_INFEASIBLE
 
                 # Penalize Deadlock
                 if self.episode_step_number > 20 and (
@@ -852,89 +839,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         if Config.TRAIN_SINGLE_AGENT:
             rewards = rewards[0]
-        return rewards
-
-    def _compute_action_reward(self, action, agents):
-        ###############################
-        # Check for collisions and reaching of the goal here, and also assign
-        # the corresponding rewards based on those calculations.
-        #
-        # Outputs
-        #   - rewards: is a scalar if we are only training on a single agent, or
-        #               is a list of scalars if we are training on mult agents
-        ###############################
-
-        # if nothing noteworthy happened in that timestep, reward = -0.01
-        rewards = self.reward_time_step
-        ego_agent = agents[0]
-        other_agents = agents[1:]
-
-        (
-            collision_with_agent,
-            collision_with_wall,
-            entered_norm_zone,
-            dist_btwn_nearest_agent,
-        ) = self.check_action_for_collisions(action, ego_agent, other_agents)
-
-        is_in_goal_direction = (
-            ego_agent.pos_global_frame[0]
-            + action[0, 0]
-            - ego_agent.goal_global_frame[0]
-        ) ** 2 + (
-            ego_agent.pos_global_frame[1]
-            + action[0, 1]
-            - ego_agent.goal_global_frame[1]
-        ) ** 2 <= ego_agent.near_goal_threshold**2
-
-        if is_in_goal_direction:
-            if ego_agent.was_at_goal_already is False:
-                # agents should only receive the goal reward once
-                rewards = (
-                    self.reward_at_goal
-                )  # - np.linalg.norm(agent.past_actions[0,:])
-                # print("Agent %i: Is going to the goal!" % ego_agent.id)
-        else:
-            for i, agent in enumerate(other_agents):
-                # collision with other agent
-                if ego_agent.was_in_collision_already is False:
-                    if collision_with_agent[i]:
-                        rewards = self.reward_collision_with_agent
-                        agent.in_collision = True
-                        # print("\32 Agent %i: Collision with another agent!"
-                        #       % agent.id)
-                    # collision with a static obstacle
-                    elif collision_with_wall[i]:
-                        rewards = self.reward_collision_with_wall
-                        agent.in_collision = True
-                        # print("Agent %i: Collision with wall!"
-                        # % agent.id)
-                    # There was no collision
-                    else:
-                        # Penalty for getting close to agents
-                        if dist_btwn_nearest_agent[i] <= Config.GETTING_CLOSE_RANGE:
-                            rewards = -0.1 - dist_btwn_nearest_agent[i] / 2.0
-                            # print("Agent %i: Got close to another agent!"
-                            #       % agent.id)
-                        # Penalty for wiggly behavior
-                        if (
-                            np.linalg.norm(
-                                ego_agent.past_actions[-1, :]
-                                - ego_agent.past_actions[0, :]
-                            )
-                            > self.wiggly_behavior_threshold
-                        ):
-                            # Slightly penalize wiggly behavior
-                            rewards += self.reward_wiggly_behavior
-                        # elif entered_norm_zone[i]:
-                        #     rewards[i] = self.reward_entered_norm_zone
-            # if gets close to goal
-            rewards -= Config.REWARD_DISTANCE_TO_GOAL * np.linalg.norm(
-                ego_agent.goal_global_frame - ego_agent.pos_global_frame - action[0]
-            )
-
-        rewards = np.clip(
-            rewards, self.min_possible_reward, self.max_possible_reward
-        ) / (self.max_possible_reward - self.min_possible_reward)
         return rewards
 
     def _check_for_collisions(self):
@@ -973,68 +877,12 @@ class CollisionAvoidanceEnv(gym.Env):
         if self.obstacles:
             for i in agent_inds:
                 agent = self.agents[i]
-                [pi, pj], in_map = self.map.world_coordinates_to_map_indices(
-                    agent.pos_global_frame
+                collision_with_wall[i] = self.map.check_collision(
+                    agent.pos_global_frame, agent.radius
                 )
-                mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
-                # plt.figure('static map')
-                # plt.imshow(self.map.static_map + mask)
-                # plt.pause(0.1)
-                if in_map and np.any(self.map.static_map[mask]):
-                    # print("Collision with wall!")
-                    collision_with_wall[i] = True
         else:
             for i in agent_inds:
                 collision_with_wall[i] = False
-
-        return (
-            collision_with_agent,
-            collision_with_wall,
-            entered_norm_zone,
-            dist_btwn_nearest_agent,
-        )
-
-    def check_action_for_collisions(self, action, ego_agent, other_agents):
-        # NOTE: This method doesn't compute social zones!!!!!
-        collision_with_agent = [False for _ in other_agents]
-        collision_with_wall = [False for _ in other_agents]
-        entered_norm_zone = [False for _ in other_agents]
-        dist_btwn_nearest_agent = [np.inf for _ in other_agents]
-        agent_shapes = []
-        agent_front_zones = []
-        i = 0
-        for other_agent in other_agents:
-            if (
-                "StaticPolicy" in str(type(other_agent.policy))
-                and not Config.COLLISION_AV_W_STATIC_AGENT
-            ):
-                continue
-            else:
-                dist_btwn = np.linalg.norm(
-                    ego_agent.pos_global_frame + action - other_agent.pos_global_frame
-                )
-                combined_radius = ego_agent.radius + other_agent.radius
-                dist_btwn_nearest_agent[i] = min(
-                    dist_btwn_nearest_agent[i], dist_btwn - combined_radius
-                )
-                if dist_btwn <= combined_radius:
-                    # Collision with another agent!
-                    collision_with_agent[i] = True
-                i += 1
-        # TODO: Static Collision Avoidance check
-        if self.obstacles:
-            for i in agent_inds:
-                agent = self.agents[i]
-                [pi, pj], in_map = self.map.world_coordinates_to_map_indices(
-                    agent.pos_global_frame
-                )
-                mask = self.map.get_agent_map_indices([pi, pj], agent.radius)
-                # plt.figure('static map')
-                # plt.imshow(self.map.static_map + mask)
-                # plt.pause(0.1)
-                if in_map and np.any(self.map.static_map[mask]):
-                    # Collision with wall!
-                    collision_with_wall[i] = True
 
         return (
             collision_with_agent,
@@ -1086,9 +934,6 @@ class CollisionAvoidanceEnv(gym.Env):
         return which_agents_done, bool(game_over)
 
     def _get_obs(self):
-
-        # Agents have moved (states have changed), so update the map view
-        self.update_top_down_map()
 
         # Agents collect a reading from their map-based sensors
         for i, agent in enumerate(self.agents):
@@ -1167,9 +1012,6 @@ class CollisionAvoidanceEnv(gym.Env):
     def set_plot_save_dir(self, plot_save_dir):
         os.makedirs(plot_save_dir, exist_ok=True)
         self.plot_save_dir = plot_save_dir
-
-    def set_perturbed_info(self, perturbed_obs):
-        self.perturbed_obs = perturbed_obs
 
     def set_plot_env(self, plot_env=True):
         self.plot_env = plot_env

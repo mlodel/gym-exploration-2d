@@ -331,7 +331,7 @@ def IG_single_agent_crossing(
             init_heading,
             ego_agent_policy,
             ego_agent_dynamics,
-            [OtherAgentsStatesSensor, OccupancyGridSensor],
+            [OtherAgentsStatesSensor],
             0,
             ig_model=IG_agent_gym,
             ig_expert=ig_greedy,

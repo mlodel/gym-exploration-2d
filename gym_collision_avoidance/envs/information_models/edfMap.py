@@ -14,7 +14,8 @@ class edfMap:
 
     def update_from_occmap(self, obstMap):
         self.map = (
-            ndimage.distance_transform_edt((~obstMap.map).astype(int)) * self.cellSize
+            ndimage.distance_transform_edt((~obstMap.astype(bool)).astype(int))
+            * self.cellSize
         )
 
     def update_from_edfmap(self, edf_map):

@@ -163,12 +163,12 @@ def plot_episode(
 
     if env_map:
         ax.imshow(
-            env_map.static_map,
+            env_map.map.astype(bool),
             extent=[
-                -env_map.x_width / 2.0,
-                env_map.x_width / 2.0,
-                -env_map.y_width / 2.0,
-                env_map.y_width / 2.0,
+                -env_map.map_size[0] / 2.0,
+                env_map.map_size[0] / 2.0,
+                -env_map.map_size[1] / 2.0,
+                env_map.map_size[1] / 2.0,
             ],
             cmap=plt.cm.binary,
         )
@@ -192,10 +192,10 @@ def plot_episode(
         #     origin="upper",
         # )
         ax3.imshow(
-            agents[0].ig_model.targetMap.bin_ego_map.squeeze(),
+            agents[0].ig_model.targetMap.binaryMap.squeeze(),
             cmap="gray",
             vmin=0,
-            vmax=255,
+            vmax=1,
             origin="upper",
         )
         ax3.set_yticklabels([])

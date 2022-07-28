@@ -63,14 +63,9 @@ class BaseMap(ABC):
 
         return map_array[i, j]
 
+    @abstractmethod
     def update(self, pose: np.ndarray, **kwargs):
         self.pose = pose
-
-        self._update(pose, **kwargs)
-
-    @abstractmethod
-    def _update(self, pose: np.ndarray, **kwargs):
-        raise NotImplementedError
 
     def get_obs(self, map_name: str = None, obs_type: str = "as_is"):
         if map_name is not None:
@@ -104,7 +99,7 @@ class BaseMap(ABC):
         elif obs_type == "ego_submap" and self.submap_size is not None:
             return ego_submap_from_map(
                 map=map_array,
-                pos_pxl=list(map_cell),
+                pos_pxl=list(map_cell[::-1]),
                 angle_deg=angle,
                 submap_size=list(self.submap_size),
                 scale_size=list(self.obs_size),

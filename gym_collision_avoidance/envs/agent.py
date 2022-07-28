@@ -249,6 +249,9 @@ class Agent(object):
             sensor_data = sensor.sense(agents, agent_index, top_down_map)
             self.sensor_data[sensor.name] = sensor_data
 
+        # TODO Remove this dirty workaround
+        self.sensor_data["local_grid"] = top_down_map.get_obs(obs_type="ego_submap")
+
     def _update_state_history(self):
         global_state, ego_state = self.to_vector()
         self.global_state_history[self.step_num, :] = global_state
