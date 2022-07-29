@@ -49,7 +49,9 @@ from gym_collision_avoidance.envs.dynamics.UnicycleDynamicsMaxTurnRate import (
 from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics import (
     UnicycleSecondOrderEulerDynamics,
 )
-
+from gym_collision_avoidance.envs.dynamics.StaticDynamics import (
+    StaticDynamics,
+)
 from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
     PtMassSecondOrderDynamics,
 )
@@ -96,7 +98,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # self.ego_agent_dynamics = "FirstOrderDynamics"
 
         self.other_agents_policy = "StaticPolicy"
-        self.other_agents_dynamics = "UnicycleDynamics"  # "UnicycleDynamics"
+        self.other_agents_dynamics = "StaticDynamics"  # "UnicycleDynamics"
 
         self.max_heading_change = 4
         self.min_heading_change = -4

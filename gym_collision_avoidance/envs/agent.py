@@ -6,6 +6,25 @@ from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 import operator
 import math
 
+import functools
+
+
+def rsetattr(obj, attr, val):
+    pre, _, post = attr.rpartition(".")
+    return setattr(rgetattr(obj, pre) if pre else obj, post, val)
+
+
+def rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+
+    try:
+        obj = functools.reduce(_getattr, [obj] + attr.split("."))
+    except:
+        return None
+
+    return obj
+
 
 class Agent(object):
     def __init__(
@@ -32,7 +51,8 @@ class Agent(object):
             self.policy = policy()
 
         self.dynamics_model = dynamics_model(self)
-        self.sensors = [sensor() for sensor in sensors]
+        self.sensors = {sensor.__name__: sensor() for sensor in sensors}
+        self.observation = dict()
 
         if ig_model is not None:
             self.ig_model = ig_model(self, expert_policy=ig_expert)
@@ -142,18 +162,7 @@ class Agent(object):
         self.subgoal_in_wall = False
         self.deadlock_count = 0
 
-    # def __deepcopy__(self, memo):
-    #     # Copy every attribute about the agent except its policy
-    #     cls = self.__class__
-    #     obj = cls.__new__(cls)
-    #     for k, v in self.__dict__.items():
-    #         if k != 'policy':
-    #             setattr(obj, k, v)
-    #     return obj
-
     def _check_if_at_goal(self):
-        # is_near_goal = (self.pos_global_frame[0] - self.goal_global_frame[0])**2 + (self.pos_global_frame[1] - self.goal_global_frame[1])**2 <= self.near_goal_threshold**2
-        # self.is_at_goal = is_near_goal
         self.end_condition(self)
 
     def set_state(self, px, py, vx=None, vy=None, heading=None, ang_speed=None):
@@ -244,20 +253,67 @@ class Agent(object):
         return
 
     def sense(self, agents, agent_index, top_down_map):
-        self.sensor_data = {}
-        for sensor in self.sensors:
-            sensor_data = sensor.sense(agents, agent_index, top_down_map)
-            self.sensor_data[sensor.name] = sensor_data
+        for key in self.sensors:
+            self.sensors[key].sense(agents, agent_index, top_down_map)
 
-        # TODO Remove this dirty workaround
-        self.sensor_data["local_grid"] = top_down_map.get_obs(obs_type="ego_submap")
+    def get_agent_data(self, attribute):
+        return getattr(self, attribute)
+
+    def get_observation_dict(self, agents):
+        self.observation = {}
+        for state in Config.STATES_IN_OBS:
+            info = Config.STATE_INFO_DICT[state]
+            if self.ig_model is None and (
+                state == "target_map"
+                or state == "agent_pos_map"
+                or state == "entropy_map"
+                or state == "binary_map"
+                or state == "ego_entropy_map"
+                or state == "ego_binary_map"
+                or state == "mc_ego_binary_goal"
+            ):
+                continue
+
+            if ("agent_attr" in info and "sensor_name" in info) and (
+                info["agent_attr"] is not None and info["sensor_name"] is not None
+            ):
+                raise ValueError(
+                    "For observation "
+                    + state
+                    + " both agent_attr and sensor_name are specified, but only one is allowed!"
+                )
+            else:
+                if "agent_attr" in info and info["agent_attr"] is not None:
+                    obs = rgetattr(self, info["agent_attr"])
+                    if obs is None:
+                        raise ValueError(
+                            "For observation " + state + " invalid agent_attr given."
+                        )
+                elif "sensor_name" in info and info["sensor_name"] is not None:
+                    if info["sensor_name"] in self.sensors:
+                        kwargs = (
+                            info["sensor_kwargs"]
+                            if info["sensor_kwargs"] is not None
+                            else dict()
+                        )
+                        obs = self.sensors[info["sensor_name"]].get_obs(**kwargs)
+                    else:
+                        obs = None
+
+            # TODO define data type?
+            self.observation[state] = np.array([obs])
+
+            if len(self.observation[state].shape) > 3:
+                self.observation[state] = self.observation[state].squeeze()
+
+        return self.observation
 
     def _update_state_history(self):
         global_state, ego_state = self.to_vector()
         self.global_state_history[self.step_num, :] = global_state
         self.ego_state_history[self.step_num, :] = ego_state
-        if "local_grid" in self.sensor_data:
-            self.sensor_data_history.append(self.sensor_data["local_grid"])
+        # if "local_grid" in self.sensor_data:
+        #     self.sensor_data_history.append(self.sensor_data["local_grid"])
 
     def print_agent_info(self):
         print("----------")
@@ -291,37 +347,6 @@ class Agent(object):
         )
         ego_state = np.array([self.t, self.dist_to_goal, self.heading_ego_frame])
         return global_state, ego_state
-
-    def get_sensor_data(self, sensor_name):
-        if sensor_name in self.sensor_data:
-            return self.sensor_data[sensor_name]
-
-    def get_agent_data(self, attribute):
-        return getattr(self, attribute)
-
-    def get_agent_data_equiv(self, attribute, value):
-        return eval("self." + attribute) == value
-
-    def get_observation_dict(self, agents):
-        observation = {}
-        for state in Config.STATES_IN_OBS:
-            if self.ig_model is None and (
-                state == "target_map"
-                or state == "agent_pos_map"
-                or state == "entropy_map"
-                or state == "binary_map"
-                or state == "ego_entropy_map"
-                or state == "ego_binary_map"
-                or state == "mc_ego_binary_goal"
-            ):
-                continue
-            observation[state] = np.array(
-                [eval("self." + Config.STATE_INFO_DICT[state]["attr"])]
-            )
-            if len(observation[state].shape) > 3:
-                observation[state] = observation[state].squeeze()
-
-        return observation
 
     def get_ref(self):
         #
@@ -370,39 +395,3 @@ class Agent(object):
             np.array([global_pos[0], global_pos[1], 1]),
         )
         return ego_pos[:2]
-
-
-if __name__ == "__main__":
-    start_x = -3
-    start_y = 1
-    goal_x = 3
-    goal_y = 0
-    radius = 0.5
-    pref_speed = 1.2
-    initial_heading = 0.0
-    from gym_collision_avoidance.envs.policies.GA3CCADRLPolicy import GA3CCADRLPolicy
-    from gym_collision_avoidance.envs.dynamics.UnicycleDynamics import UnicycleDynamics
-
-    policy = GA3CCADRLPolicy
-    dynamics_model = UnicycleDynamics
-    sensors = []
-    id = 0
-    agent = Agent(
-        start_x,
-        start_y,
-        goal_x,
-        goal_y,
-        radius,
-        pref_speed,
-        initial_heading,
-        policy,
-        dynamics_model,
-        sensors,
-        id,
-    )
-    print(agent.ego_pos_to_global_pos(np.array([1, 0.5])))
-    print(agent.global_pos_to_ego_pos(np.array([-1.93140658, 1.32879797])))
-    # agents = [Agent(start_x, start_y, goal_x, goal_y, radius,
-    #              pref_speed, initial_heading, i) for i in range(4)]
-    # agents[0].observe(agents)
-    print("Created Agent.")

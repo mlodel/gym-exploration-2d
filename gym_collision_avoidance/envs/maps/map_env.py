@@ -17,15 +17,15 @@ class EnvMap(BaseMap):
     ):
         super().__init__(map_size, cell_size, obs_size, submap_size)
 
+        self.map_contours = np.zeros_like(self.map)
+
         self.obstacles = obstacles_vert if obstacles_vert is not None else []
         self.draw_obstacles()
+
         self.edf_map = (
             ndimage.distance_transform_edt((~(self.map.astype(bool))).astype(int))
             * self.cell_size
         )
-
-    def _init_maps(self):
-        super()._init_maps()
 
     def update(self, pose: np.ndarray, **kwargs):
         super().update(pose)
@@ -36,11 +36,24 @@ class EnvMap(BaseMap):
             for vert in obst:
                 vert_idc.append(self.get_idc_from_pos(vert)[::-1])
 
-            # self.map = cv2.polylines(
-            #     self.map, vert_idc, isClosed=True, color=1, thickness=-1
-            # )
             self.map = cv2.fillConvexPoly(
                 img=self.map, points=np.array(vert_idc), color=1
+            )
+            # self.map_contours = cv2.polylines(
+            #     self.map_contours,
+            #     pts=[np.array(vert_idc)],
+            #     isClosed=True,
+            #     color=1,
+            #     thickness=1,
+            # )
+
+        # Draw contour map
+        contours, hierarchy = cv2.findContours(
+            self.map, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
+        )
+        for i in range(len(contours)):
+            self.map_contours = cv2.drawContours(
+                self.map_contours, contours, i, color=1, thickness=5
             )
 
         self.map[0, :] = 1

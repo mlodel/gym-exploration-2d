@@ -55,7 +55,11 @@ from gym_collision_avoidance.envs.dynamics.UnicycleSecondOrderEulerDynamics impo
     UnicycleSecondOrderEulerDynamics,
 )
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
-from gym_collision_avoidance.envs.sensors.OccupancyGridSensor import OccupancyGridSensor
+from gym_collision_avoidance.envs.dynamics.StaticDynamics import (
+    StaticDynamics,
+)
+from gym_collision_avoidance.envs.sensors.explore_map_sensor import ExploreMapSensor
+from gym_collision_avoidance.envs.sensors.global_map_sensor import GlobalMapSensor
 
 # from gym_collision_avoidance.envs.sensors.AngularMapSensor import AngularMapSensor
 from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
@@ -122,7 +126,7 @@ def IG_single_agent(
             0 * np.pi / 4,
             ego_agent_policy,
             ego_agent_dynamics,
-            [OtherAgentsStatesSensor, OccupancyGridSensor],
+            [OtherAgentsStatesSensor, GlobalMapSensor],
             0,
             ig_model=IG_agent_gym,
             ig_expert=ig_greedy,
@@ -144,9 +148,9 @@ def IG_single_agent(
 def IG_single_agent_crossing(
     number_of_agents=1,
     ego_agent_policy=MPCRLStaticObsIGPolicy_Drone,
-    other_agents_policy=NonCooperativePolicy,
+    other_agents_policy=StaticPolicy,
     ego_agent_dynamics=FirstOrderDynamics,
-    other_agents_dynamics=UnicycleDynamics,
+    other_agents_dynamics=StaticDynamics,
     agents_sensors=[],
     seed=None,
     obstacle=None,
@@ -331,7 +335,7 @@ def IG_single_agent_crossing(
             init_heading,
             ego_agent_policy,
             ego_agent_dynamics,
-            [OtherAgentsStatesSensor],
+            [GlobalMapSensor, ExploreMapSensor],
             0,
             ig_model=IG_agent_gym,
             ig_expert=ig_greedy,
@@ -339,7 +343,7 @@ def IG_single_agent_crossing(
     )
     # agents.append(Agent(4, 3, 12, 12 + 100.0, radius, pref_speed, - 1*np.pi,
     #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
-    #                     [OtherAgentsStatesSensor, OccupancyGridSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
+    #                     [OtherAgentsStatesSensor, GlobalMapSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
 
     # target agent
     for i in range(n_targets):
@@ -374,8 +378,8 @@ def IG_single_agent_crossing(
                 0.2,
                 pref_speed,
                 0,
-                StaticPolicy,
-                UnicycleSecondOrderEulerDynamics,
+                other_agents_policy,
+                other_agents_dynamics,
                 [],
                 1,
             )

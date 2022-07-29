@@ -11,10 +11,23 @@ class PtMassSecondOrderDynamics(Dynamics):
         self.num_actions = 2
 
     def step(self, action, dt):
-        selected_vels = np.clip(
-            self.agent.vel_global_frame + action * dt,
-            -self.max_vel,
-            self.max_vel,
+        # selected_vels = np.clip(
+        #     self.agent.vel_global_frame + action * dt,
+        #     -self.max_vel,
+        #     self.max_vel,
+        # )
+        requested_vels = self.agent.vel_global_frame + action * dt
+        selected_vels = np.array(
+            [
+                self.max_vel
+                if requested_vels[i] > self.max_vel
+                else (
+                    -self.max_vel
+                    if requested_vels[i] < -self.max_vel
+                    else requested_vels[i]
+                )
+                for i in range(requested_vels.shape[0])
+            ]
         )
 
         self.agent.angular_speed_global_frame = 0.0

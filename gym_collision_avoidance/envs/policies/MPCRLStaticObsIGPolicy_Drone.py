@@ -124,8 +124,8 @@ class MPCRLStaticObsIGPolicy_Drone(Policy):
         self.current_state_[0] = agent.pos_global_frame[0]
         self.current_state_[1] = agent.pos_global_frame[1]
         self.current_state_[2] = agent.heading_global_frame
-        self.current_state_[3] = np.clip(agent.vel_global_frame[0], -2, 2)
-        self.current_state_[4] = np.clip(agent.vel_global_frame[1], -2, 2)
+        self.current_state_[3] = agent.vel_global_frame[0]
+        self.current_state_[4] = agent.vel_global_frame[1]
 
         # Compute Static Collision Constraints
         self.linear_constraints = self.static_obstacles_manager.get_linear_constraints(
@@ -198,8 +198,8 @@ class MPCRLStaticObsIGPolicy_Drone(Policy):
         self.current_state_[0] = agent.pos_global_frame[0]
         self.current_state_[1] = agent.pos_global_frame[1]
         self.current_state_[2] = agent.heading_global_frame
-        self.current_state_[3] = np.clip(agent.vel_global_frame[0], -2, 2)
-        self.current_state_[4] = np.clip(agent.vel_global_frame[1], -2, 2)
+        self.current_state_[3] = agent.vel_global_frame[0]
+        self.current_state_[4] = agent.vel_global_frame[1]
         # self.x_error_weight_ = 15.0
         # self.y_error_weight_ = 15.0
 

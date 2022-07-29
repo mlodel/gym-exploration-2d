@@ -1,14 +1,12 @@
 import numpy as np
 from gym_collision_avoidance.envs.sensors.Sensor import Sensor
-from gym_collision_avoidance.envs.sensors.LaserScanSensor import LaserScanSensor
 from gym_collision_avoidance.envs.config import Config
 import math
-import pylab as pl
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
 
-from gym_collision_avoidance.envs.sensors.ego_submap_from_map import ego_submap_from_map
+from gym_collision_avoidance.envs.utils.ego_submap_from_map import ego_submap_from_map
 
 
 class OccupancyGridSensor(Sensor):
@@ -168,7 +166,7 @@ class OccupancyGridSensor(Sensor):
 
     # Plot
     def plot_top_down_map(
-        self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title
+            self, top_down_map, ego_agent_idx, start_idx_x, start_idx_y, heading, title
     ):
         fig = plt.figure(title)
         ax = fig.subplots(1)
@@ -257,7 +255,7 @@ class OccupancyGridSensor(Sensor):
         )
         # map_size = [Config.MAP_WIDTH / Config.SUBMAP_RESOLUTION, Config.MAP_HEIGHT / Config.SUBMAP_RESOLUTION]
         map_size = (
-            np.array([Config.MAP_WIDTH, Config.MAP_HEIGHT]) / Config.SUBMAP_RESOLUTION
+                np.array([Config.MAP_WIDTH, Config.MAP_HEIGHT]) / Config.SUBMAP_RESOLUTION
         ).astype(int)
 
         if self.agent_idx[1] + submap_size[0] / 2 > map_size[1]:

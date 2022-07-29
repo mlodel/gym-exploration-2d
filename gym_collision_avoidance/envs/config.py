@@ -76,7 +76,7 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
-    EGO_MAP_SIZE = (80, 80)
+    EGO_MAP_SIZE = (100, 100)
 
     IG_MAP_RESOLUTION = 1.0
     IG_EDF_RESOLUTION_FACTOR = 10
@@ -150,41 +150,17 @@ class Config:
         "angvel_global_frame",
         "pos_global_frame",
         "vel_global_frame",
-        "local_grid",
         "ego_binary_map",
+        "ego_explored_map",
     ]  # occupancy grid
 
     STATES_NOT_USED_IN_POLICY = ["use_ppo", "num_other_agents"]
     STATE_INFO_DICT = {
-        "dist_to_goal": {
-            "dtype": np.float64,
-            "size": 1,
-            "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("dist_to_goal")',
-            "std": np.array([5.0], dtype=np.float64),
-            "mean": np.array([0.0], dtype=np.float64),
-        },
-        "radius": {
-            "dtype": np.float64,
-            "size": 1,
-            "bounds": [0, np.inf],
-            "attr": 'get_agent_data("radius")',
-            "std": np.array([1.0], dtype=np.float64),
-            "mean": np.array([0.5], dtype=np.float64),
-        },
-        "rel_goal": {
-            "dtype": np.float64,
-            "size": 2,
-            "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("rel_goal")',
-            "std": np.array([10.0], dtype=np.float64),
-            "mean": np.array([0.0], dtype=np.float64),
-        },
         "heading_ego_frame": {
             "dtype": np.float64,
             "size": 1,
             "bounds": [-np.pi, np.pi],
-            "attr": 'get_agent_data("heading_ego_frame")',
+            "agent_attr": "heading_ego_frame",
             "std": np.array([3.14], dtype=np.float64),
             "mean": np.array([0.0], dtype=np.float64),
         },
@@ -192,7 +168,7 @@ class Config:
             "dtype": np.float64,
             "size": 1,
             "bounds": [-np.pi, np.pi],
-            "attr": 'get_agent_data("heading_global_frame")',
+            "agent_attr": "heading_global_frame",
             "std": np.array([3.14], dtype=np.float64),
             "mean": np.array([0.0], dtype=np.float64),
         },
@@ -200,7 +176,7 @@ class Config:
             "dtype": np.float64,
             "size": 2,
             "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("pos_global_frame")',
+            "agent_attr": "pos_global_frame",
             "std": np.array([1.0], dtype=np.float64),
             "mean": np.array([0.0], dtype=np.float64),
         },
@@ -208,7 +184,7 @@ class Config:
             "dtype": np.float64,
             "size": 2,
             "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("vel_global_frame")',
+            "agent_attr": "vel_global_frame",
             "std": np.array([1.0], dtype=np.float64),
             "mean": np.array([0.0], dtype=np.float64),
         },
@@ -216,91 +192,66 @@ class Config:
             "dtype": np.float64,
             "size": 1,
             "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("angular_speed_global_frame")',
+            "agent_attr": "angular_speed_global_frame",
             "std": np.array([1.0], dtype=np.float64),
             "mean": np.array([0.0], dtype=np.float64),
-        },
-        "pref_speed": {
-            "dtype": np.float64,
-            "size": 1,
-            "bounds": [0, np.inf],
-            "attr": 'get_agent_data("pref_speed")',
-            "std": np.array([1.0], dtype=np.float64),
-            "mean": np.array([1.0], dtype=np.float64),
-        },
-        "num_other_agents": {
-            "dtype": np.float64,
-            "size": 1,
-            "bounds": [0, np.inf],
-            "attr": 'get_agent_data("num_other_agents_observed")',
-            "std": np.array([1.0], dtype=np.float64),
-            "mean": np.array([1.0], dtype=np.float64),
-        },
-        "other_agent_states": {
-            "dtype": np.float64,
-            "size": 9,
-            "bounds": [-np.inf, np.inf],
-            "attr": 'get_agent_data("other_agent_states")',
-            "std": np.array(
-                [5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0], dtype=np.float64
-            ),
-            "mean": np.array(
-                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0], dtype=np.float64
-            ),
-        },
-        "other_agents_states": {
-            "dtype": np.float64,
-            "size": (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 10),
-            "bounds": [-np.inf, np.inf],
-            "attr": 'get_sensor_data("other_agents_states")',
-            "std": np.tile(
-                np.array(
-                    [5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0, 5.0, 1.0], dtype=np.float64
-                ),
-                (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1),
-            ),
-            "mean": np.tile(
-                np.array(
-                    [0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0, 0.0, 1.0], dtype=np.float64
-                ),
-                (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1),
-            ),
-        },
-        "angular_map": {
-            "dtype": np.float64,
-            "size": NUM_OF_SLICES,
-            "bounds": [0.0, 6.0],
-            "attr": 'get_sensor_data("angular_map")',
-            "std": np.ones(NUM_OF_SLICES, dtype=np.float64),
-            "mean": np.ones(NUM_OF_SLICES, dtype=np.float64),
-        },
-        "laserscan": {
-            "dtype": np.float64,
-            "size": LASERSCAN_LENGTH,
-            "bounds": [0.0, 6.0],
-            "attr": 'get_sensor_data("laserscan")',
-            "std": 5.0 * np.ones((LASERSCAN_LENGTH), dtype=np.float64),
-            "mean": 5.0 * np.ones((LASERSCAN_LENGTH), dtype=np.float64),
-        },
-        "use_ppo": {
-            "dtype": np.float64,
-            "size": 1,
-            "bounds": [0.0, 1.0],
-            "attr": 'get_agent_data_equiv("policy.str", "learning")',
         },
         "local_grid": {
             "dtype": np.uint8,
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
-            "attr": 'get_sensor_data("local_grid")',
+            "sensor_name": "GlobalMapSensor",
+            "sensor_kwargs": dict(obs_type="ego_submap"),
             "std": np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.uint8),
             "mean": np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.uint8),
+        },
+        "explored_map": {
+            "dtype": np.uint8,
+            "size": (
+                int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                int(MAP_WIDTH / SUBMAP_RESOLUTION),
+            ),
+            "bounds": [0, 255],
+            "sensor_name": "ExploreMapSensor",
+            "sensor_kwargs": dict(obs_type="as_is"),
+            "std": np.ones(
+                (
+                    int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                    int(MAP_WIDTH / SUBMAP_RESOLUTION),
+                ),
+                dtype=np.uint8,
+            ),
+            "mean": np.ones(
+                (
+                    int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                    int(MAP_WIDTH / SUBMAP_RESOLUTION),
+                ),
+                dtype=np.uint8,
+            ),
+        },
+        "ego_explored_map": {
+            "dtype": np.uint8,
+            "size": EGO_MAP_SIZE,
+            "bounds": [0, 255],
+            "sensor_name": "ExploreMapSensor",
+            "sensor_kwargs": dict(obs_type="ego_global_map"),
+            "std": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
+            "mean": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
+        },
+        "ego_global_map": {
+            "dtype": np.uint8,
+            "size": EGO_MAP_SIZE,
+            "bounds": [0, 255],
+            "sensor_name": "EnvMapSensor",
+            "sensor_kwargs": dict(obs_type="ego_global_map"),
+            "std": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
+            "mean": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
         },
         "target_map": {
             "dtype": np.uint8,
             "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             "bounds": [-np.inf, np.inf],
-            "attr": "ig_model.targetMap.probMap",
+            "agent_attr": "ig_model.targetMap.probMap",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -308,7 +259,7 @@ class Config:
             "dtype": np.uint8,
             "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             "bounds": [-np.inf, np.inf],
-            "attr": "ig_model.targetMap.entropyMap",
+            "agent_attr": "ig_model.targetMap.entropyMap",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -316,7 +267,7 @@ class Config:
             "dtype": np.uint8,
             "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             "bounds": [-np.inf, np.inf],
-            "attr": "ig_model.agent_pos_map",
+            "agent_attr": "ig_model.agent_pos_map",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -324,7 +275,7 @@ class Config:
             "dtype": np.uint8,
             "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             "bounds": [-np.inf, np.inf],
-            "attr": "ig_model.targetMap.binaryMap.astype(float)",
+            "agent_attr": "ig_model.targetMap.binaryMap.astype(float)",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -332,7 +283,7 @@ class Config:
             "dtype": np.uint8,
             "size": EGO_MAP_SIZE,
             "bounds": [-np.inf, np.inf],
-            "attr": "ig_model.targetMap.ego_map",
+            "agent_attr": "ig_model.targetMap.ego_map",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -340,7 +291,7 @@ class Config:
             "dtype": np.uint8,
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
-            "attr": "ig_model.targetMap.bin_ego_map",
+            "agent_attr": "ig_model.targetMap.bin_ego_map",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
@@ -348,10 +299,102 @@ class Config:
             "dtype": np.uint8,
             "size": (2, EGO_MAP_SIZE[0], EGO_MAP_SIZE[1]),
             "bounds": [0, 255],
-            "attr": "ig_model.targetMap.mc_ego_binary_goal",
+            "agent_attr": "ig_model.targetMap.mc_ego_binary_goal",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
+        # "dist_to_goal": {
+        #     "dtype": np.float64,
+        #     "size": 1,
+        #     "bounds": [-np.inf, np.inf],
+        #     "attr": '"dist_to_goal")',
+        #     "std": np.array([5.0], dtype=np.float64),
+        #     "mean": np.array([0.0], dtype=np.float64),
+        # },
+        # "radius": {
+        #     "dtype": np.float64,
+        #     "size": 1,
+        #     "bounds": [0, np.inf],
+        #     "attr": 'get_agent_data("radius")',
+        #     "std": np.array([1.0], dtype=np.float64),
+        #     "mean": np.array([0.5], dtype=np.float64),
+        # },
+        # "rel_goal": {
+        #     "dtype": np.float64,
+        #     "size": 2,
+        #     "bounds": [-np.inf, np.inf],
+        #     "attr": 'get_agent_data("rel_goal")',
+        #     "std": np.array([10.0], dtype=np.float64),
+        #     "mean": np.array([0.0], dtype=np.float64),
+        # },
+        # "pref_speed": {
+        #     "dtype": np.float64,
+        #     "size": 1,
+        #     "bounds": [0, np.inf],
+        #     "attr": 'get_agent_data("pref_speed")',
+        #     "std": np.array([1.0], dtype=np.float64),
+        #     "mean": np.array([1.0], dtype=np.float64),
+        # },
+        # "num_other_agents": {
+        #     "dtype": np.float64,
+        #     "size": 1,
+        #     "bounds": [0, np.inf],
+        #     "attr": 'get_agent_data("num_other_agents_observed")',
+        #     "std": np.array([1.0], dtype=np.float64),
+        #     "mean": np.array([1.0], dtype=np.float64),
+        # },
+        # "other_agent_states": {
+        #     "dtype": np.float64,
+        #     "size": 9,
+        #     "bounds": [-np.inf, np.inf],
+        #     "attr": 'get_agent_data("other_agent_states")',
+        #     "std": np.array(
+        #         [5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0], dtype=np.float64
+        #     ),
+        #     "mean": np.array(
+        #         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0], dtype=np.float64
+        #     ),
+        # },
+        # "other_agents_states": {
+        #     "dtype": np.float64,
+        #     "size": (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 10),
+        #     "bounds": [-np.inf, np.inf],
+        #     "attr": 'get_sensor_data("other_agents_states")',
+        #     "std": np.tile(
+        #         np.array(
+        #             [5.0, 5.0, 1.0, 1.0, 1.0, 5.0, 1.0, 5.0, 1.0], dtype=np.float64
+        #         ),
+        #         (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1),
+        #     ),
+        #     "mean": np.tile(
+        #         np.array(
+        #             [0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0, 0.0, 1.0], dtype=np.float64
+        #         ),
+        #         (MAX_NUM_OTHER_AGENTS_IN_ENVIRONMENT, 1),
+        #     ),
+        # },
+        # "angular_map": {
+        #     "dtype": np.float64,
+        #     "size": NUM_OF_SLICES,
+        #     "bounds": [0.0, 6.0],
+        #     "attr": 'get_sensor_data("angular_map")',
+        #     "std": np.ones(NUM_OF_SLICES, dtype=np.float64),
+        #     "mean": np.ones(NUM_OF_SLICES, dtype=np.float64),
+        # },
+        # "laserscan": {
+        #     "dtype": np.float64,
+        #     "size": LASERSCAN_LENGTH,
+        #     "bounds": [0.0, 6.0],
+        #     "attr": 'get_sensor_data("laserscan")',
+        #     "std": 5.0 * np.ones((LASERSCAN_LENGTH), dtype=np.float64),
+        #     "mean": 5.0 * np.ones((LASERSCAN_LENGTH), dtype=np.float64),
+        # },
+        # "use_ppo": {
+        #     "dtype": np.float64,
+        #     "size": 1,
+        #     "bounds": [0.0, 1.0],
+        #     "attr": 'get_agent_data_equiv("policy.str", "learning")',
+        # },
     }
     MEAN_OBS = {}
     STD_OBS = {}

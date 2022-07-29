@@ -135,9 +135,20 @@ class targetMap:
         xIdc = np.floor((pose[0] + self.mapSize[0] / 2) / self.cellSize)
         yIdc = np.floor((-pose[1] + self.mapSize[1] / 2) / self.cellSize)
 
-        xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
-        yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
-        return (yIdc.astype(int), xIdc.astype(int))
+        # xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
+        xIdc = (
+            self.map.shape[1] - 1
+            if xIdc > self.map.shape[1] - 1
+            else (0 if xIdc < 0 else xIdc)
+        )
+        # yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
+        yIdc = (
+            self.map.shape[0] - 1
+            if yIdc > self.map.shape[1] - 1
+            else (0 if yIdc < 0 else yIdc)
+        )
+
+        return (int(yIdc), int(xIdc))
 
     def getPoseFromCell(self, cell):
         x = (cell[1]) * self.cellSize - self.mapSize[0] / 2 + self.cellSize / 2

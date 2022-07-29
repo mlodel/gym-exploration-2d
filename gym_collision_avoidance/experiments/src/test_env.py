@@ -41,8 +41,8 @@ def main():
 
     obs = env.reset()  # Get agents' initial observations
 
-    # env.env_method("set_use_expert_action", 1, True, "ig_greedy", False, 0.0, True)
-    env.env_method("set_use_expert_action", 1, False, "ig_greedy", False, 0.0, False)
+    env.env_method("set_use_expert_action", 1, True, "ig_greedy", False, 0.0, True)
+    # env.env_method("set_use_expert_action", 1, False, "ig_greedy", False, 0.0, False)
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1

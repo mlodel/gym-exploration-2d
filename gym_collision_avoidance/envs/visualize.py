@@ -9,7 +9,7 @@ import matplotlib
 from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
 import os
 import matplotlib.patches as ptch
-from matplotlib.patches import Polygon, Ellipse, Wedge, Arrow
+from matplotlib.patches import Polygon, Ellipse, Wedge, Arrow, Circle
 from matplotlib.collections import LineCollection
 import glob
 import imageio
@@ -192,32 +192,33 @@ def plot_episode(
         #     origin="upper",
         # )
         ax3.imshow(
-            agents[0].ig_model.targetMap.binaryMap.squeeze(),
+            agents[0].observation["ego_explored_map"].squeeze(),
             cmap="gray",
             vmin=0,
-            vmax=1,
+            vmax=255,
             origin="upper",
         )
-        ax3.set_yticklabels([])
-        ax3.set_xticklabels([])
+        ax3.axis("off")
+        ax3_center = (Config.EGO_MAP_SIZE[0] // 2, Config.EGO_MAP_SIZE[1] // 2)
+        ax3.add_patch(Circle(xy=ax3_center, radius=1))
+        ax3.add_patch(Arrow(x=ax3_center[0], y=ax3_center[1], dx=0, dy=-5, width=3.5))
 
-    if "local_grid" in agents[0].sensor_data:
-        ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
-        occupancy_grid = agents[0].sensor_data["local_grid"].squeeze()
-        ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
-        # ax4.imshow(
-        #     # agents[0].ig_model.targetMap.goal_ego_map.squeeze(),
-        #     agents[0].ig_model.targetMap.goal_map,
-        #     cmap="gray",
-        #     vmin=0,
-        #     vmax=1,
-        #     origin="upper",
-        # )
-        ax4.scatter(0, 0, s=100, c="red", marker="o")
-        ax4.axis("off")
-        ax4.arrow(
-            0, 0, 5, 0, width=0.5, head_width=1.5, head_length=1.5, fc="yellow"
-        )  # agent poiting direction
+    # if "local_grid" in agents[0].observation:
+    ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
+    occupancy_grid = agents[0].observation["local_grid"].squeeze()
+    ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
+    ax4.imshow(
+        # agents[0].ig_model.targetMap.goal_ego_map.squeeze(),
+        agents[0].observation["ego_binary_map"].squeeze(),
+        cmap="gray",
+        vmin=0,
+        vmax=255,
+        origin="upper",
+    )
+    ax4.axis("off")
+    ax4_center = (Config.EGO_MAP_SIZE[0] // 2, Config.EGO_MAP_SIZE[1] // 2)
+    ax4.add_patch(Circle(xy=ax4_center, radius=1))
+    ax4.add_patch(Arrow(x=ax4_center[0], y=ax4_center[1], dx=0, dy=-5, width=3.5))
 
     # Label the axes
     ax.set_xlabel("x (m)")

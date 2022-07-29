@@ -22,25 +22,36 @@ class BaseMap(ABC):
             int(self.map_size[0] / self.cell_size),
             int(self.map_size[1] / self.cell_size),
         )
-        self.map = None
-        self._init_maps()
-
+        self.map = np.zeros(self.shape, dtype=np.uint8)
         self.pose = np.zeros(3)
         self.obs_size = obs_size
         self.submap_size = submap_size
 
-    @abstractmethod
-    def _init_maps(self):
-        self.map = np.zeros(self.shape)
+        # map_scale is maximum value of cells in map (important for scaling to grayscale)
+        self.map_scale = 1
+
+        # Optional setting for border_value for image rotations when generating obs, if None map_scale is used
+        self.obs_border_value = None
 
     def get_idc_from_pos(self, pos: Union[np.ndarray, list, tuple]) -> tuple:
         # OpenCV coordinate frame is in the top-left corner, x to the left, y downwards
         x_idx = np.floor((pos[0] + self.map_size[0] / 2) / self.cell_size)
         y_idx = np.floor((-pos[1] + self.map_size[1] / 2) / self.cell_size)
 
-        x_idx = np.clip(x_idx, 0, self.map.shape[1] - 1)
-        y_idx = np.clip(y_idx, 0, self.map.shape[0] - 1)
-        return y_idx.astype(int), x_idx.astype(int)
+        # x_idx = np.clip(x_idx, 0, self.map.shape[1] - 1)
+        x_idx = (
+            self.map.shape[1] - 1
+            if x_idx > self.map.shape[1] - 1
+            else (0 if x_idx < 0 else x_idx)
+        )
+        # y_idx = np.clip(y_idx, 0, self.map.shape[0] - 1)
+        y_idx = (
+            self.map.shape[0] - 1
+            if y_idx > self.map.shape[1] - 1
+            else (0 if y_idx < 0 else y_idx)
+        )
+
+        return int(y_idx), int(x_idx)
 
     def get_pos_from_idc(self, idc: tuple) -> np.ndarray:
         x = (idc[1]) * self.cell_size - self.map_size[0] / 2  # + self.cell_size / 2
@@ -67,6 +78,9 @@ class BaseMap(ABC):
     def update(self, pose: np.ndarray, **kwargs):
         self.pose = pose
 
+    def _map_obs_postprocessor(self, map_array):
+        return map_array
+
     def get_obs(self, map_name: str = None, obs_type: str = "as_is"):
         if map_name is not None:
             if (
@@ -86,23 +100,42 @@ class BaseMap(ABC):
         angle = self.pose[2] * 180 / np.pi
 
         if obs_type == "as_is":
-            return map_array
+            obs = map_array
         elif obs_type == "ego_global_map":
-            submap_width = 0
-            return ego_global_map(
+            submap_width = int(
+                np.sqrt(map_array.shape[0] ** 2 + map_array.shape[1] ** 2)
+            )
+            obs = ego_global_map(
                 map=map_array,
                 map_cell=map_cell,
                 angle=angle,
                 sub_img_width=submap_width,
                 output_size=self.obs_size,
+                border_value=(
+                    self.obs_border_value
+                    if self.obs_border_value is not None
+                    else self.map_scale
+                ),
             )
         elif obs_type == "ego_submap" and self.submap_size is not None:
-            return ego_submap_from_map(
+            obs = ego_submap_from_map(
                 map=map_array,
                 pos_pxl=list(map_cell[::-1]),
                 angle_deg=angle,
                 submap_size=list(self.submap_size),
                 scale_size=list(self.obs_size),
+                border_value=(
+                    self.obs_border_value
+                    if self.obs_border_value is not None
+                    else self.map_scale
+                ),
             )
         else:
             raise ValueError("Unknown or not configured observation type")
+
+        obs = self._map_obs_postprocessor(obs)
+
+        # Scale image to grayscale
+        obs = obs * (255 // self.map_scale)
+
+        return obs.astype(np.uint8)

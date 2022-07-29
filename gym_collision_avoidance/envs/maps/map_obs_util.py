@@ -32,9 +32,12 @@ def ego_global_map(
         rotationMatrix,
         (sub_img_width, sub_img_width),
         borderValue=border_value,
+        flags=cv2.INTER_LINEAR,
     )
 
-    ext_map = np.zeros((3 * sub_img_width, 3 * sub_img_width), dtype=np.float32)
+    ext_map = (
+        np.ones((3 * sub_img_width, 3 * sub_img_width), dtype=np.uint8) * border_value
+    )
     ext_map[
         sub_img_width : 2 * sub_img_width, sub_img_width : 2 * sub_img_width
     ] = rotatingimage
@@ -47,7 +50,11 @@ def ego_global_map(
 
     rot_mat = cv2.getRotationMatrix2D((int(point[0]), int(point[1])), 45 - angle, 1.0)
     rot2 = cv2.warpAffine(
-        ext_map, rot_mat, ext_map.shape[1::-1], borderValue=border_value
+        ext_map,
+        rot_mat,
+        ext_map.shape[1::-1],
+        borderValue=border_value,
+        flags=cv2.INTER_LINEAR,
     )
 
     final = rot2[
@@ -57,8 +64,7 @@ def ego_global_map(
     # final = cv2.flip(final, 1)
     final_resize = cv2.resize(final, output_size, interpolation=cv2.INTER_LINEAR)
 
-    # return np.expand_dims((final_resize * 255).astype(np.uint8), axis=0)
-    return (final_resize * 255).astype(np.uint8)
+    return final_resize
 
 
 def ego_submap_from_map(
@@ -67,6 +73,7 @@ def ego_submap_from_map(
     angle_deg: float,
     submap_size: list,
     scale_size: list = None,
+    border_value: int = 1,
 ) -> np.ndarray:
     """Creates an egocentric submap from a global map (map),
     the submap is centered in the agent's position (pos_pxl) and rotated according to its orientation (angle_deg)
@@ -92,7 +99,7 @@ def ego_submap_from_map(
         submap_size[1] // 2,
         submap_size[1] // 2,
         borderType=cv2.BORDER_CONSTANT,
-        value=1,
+        value=border_value,
     )
 
     pos = np.array(
@@ -103,7 +110,7 @@ def ego_submap_from_map(
         center=(int(pos[0]), int(pos[1])), angle=-angle, scale=1
     )
 
-    rot_img = cv2.warpAffine(img, M, img.shape, borderValue=1)
+    rot_img = cv2.warpAffine(img, M, img.shape, borderValue=1, flags=cv2.INTER_LINEAR)
 
     submap_idc_x_l = int(pos[0] - submap_size[0] / 2)
     submap_idc_x_h = int(pos[0] + submap_size[0] / 2)
@@ -115,11 +122,13 @@ def ego_submap_from_map(
     if scale_size is not None and isinstance(scale_size, list):
         if len(scale_size) == 2:
             scale_img = cv2.resize(
-                submap_img, tuple(scale_size), interpolation=cv2.INTER_CUBIC
+                submap_img, tuple(scale_size), interpolation=cv2.INTER_LINEAR
             )
         else:
             raise TypeError(
                 "Scale size for submap must be list of two integers [width, height]"
             )
 
-    return scale_img
+        return scale_img
+    else:
+        return submap_img
