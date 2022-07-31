@@ -205,8 +205,8 @@ def plot_episode(
 
     # if "local_grid" in agents[0].observation:
     ax4 = fig.add_axes([0.72, 0.5, 0.3, 0.3])
-    occupancy_grid = agents[0].observation["local_grid"].squeeze()
-    ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
+    # occupancy_grid = agents[0].observation["local_grid"].squeeze()
+    # ax4.imshow(occupancy_grid, extent=[-10, 10, -10, 10])
     ax4.imshow(
         # agents[0].ig_model.targetMap.goal_ego_map.squeeze(),
         agents[0].observation["ego_binary_map"].squeeze(),

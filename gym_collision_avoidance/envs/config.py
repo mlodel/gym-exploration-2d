@@ -76,7 +76,7 @@ class Config:
     MAP_WIDTH_PXL = 20
     MAP_HEIGHT_PXL = 20
 
-    EGO_MAP_SIZE = (100, 100)
+    EGO_MAP_SIZE = (84, 84)
 
     IG_MAP_RESOLUTION = 1.0
     IG_EDF_RESOLUTION_FACTOR = 10
@@ -85,7 +85,6 @@ class Config:
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
-    REWARD_MAX_IG = 1.2  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
@@ -128,9 +127,7 @@ class Config:
     CLIP_ACTION = True
     USE_MPC_EXPERT_IN_TEST = False
 
-    SCENARIOS_FOR_TRAINING = [
-        "IG_single_agent_crossing"
-    ]  # ["train_agents_swap_circle","train_agents_random_positions","train_agents_pairwise_swap"]
+    SCENARIOS_FOR_TRAINING = ["IG_single_agent_crossing"]
 
     # Angular Map
     NUM_OF_SLICES = 16
