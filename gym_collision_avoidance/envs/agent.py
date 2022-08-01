@@ -301,7 +301,10 @@ class Agent(object):
                         obs = None
 
             # TODO define data type?
-            self.observation[state] = np.array([obs])
+            if np.ndim(obs) == 1:
+                self.observation[state] = np.array(obs)
+            else:
+                self.observation[state] = np.array([obs])
 
             if len(self.observation[state].shape) > 3:
                 self.observation[state] = self.observation[state].squeeze()

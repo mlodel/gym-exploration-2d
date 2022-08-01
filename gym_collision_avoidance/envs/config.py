@@ -149,7 +149,8 @@ class Config:
         "vel_global_frame",
         "ego_binary_map",
         "ego_explored_map",
-    ]  # occupancy grid
+        # "local_grid",
+    ]
 
     STATES_NOT_USED_IN_POLICY = ["use_ppo", "num_other_agents"]
     STATE_INFO_DICT = {

@@ -153,7 +153,7 @@ class CollisionAvoidanceEnv(gym.Env):
                 shape.extend(Config.STATE_INFO_DICT[state]["size"])
                 shape = tuple(shape)
             else:
-                shape = (1, Config.STATE_INFO_DICT[state]["size"])
+                shape = (Config.STATE_INFO_DICT[state]["size"],)
 
             self.observation_space.spaces[state] = gym.spaces.Box(
                 low=Config.STATE_INFO_DICT[state]["bounds"][0] * np.ones(shape),
