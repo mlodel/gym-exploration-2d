@@ -67,12 +67,15 @@ class GoalGenerator:
             self.goals.append(next_goal)
 
         self.current_goal = None
+        self.finished = not Config.IG_GOALS_TERMINATION
 
     def next_goal(self, num_steps) -> bool:
         if num_steps in self.goal_steps:
             self.current_goal = self.goals[0]
             self.goals.remove(self.current_goal)
             self.goal_steps.remove(num_steps)
+            if Config.IG_GOALS_TERMINATION:
+                self.finished = len(self.goals) == 0
 
             return True
         else:

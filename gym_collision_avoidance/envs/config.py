@@ -98,6 +98,8 @@ class Config:
 
     IG_GOALS_ACTIVE = False
     IG_GOALS_SETTINGS = {"max_steps": 128}
+    IG_GOALS_TERMINATION = False
+    IG_GOALS_TERMINATION_WAIT = 0
 
     REWARD_MAX_IG = (
         1.2

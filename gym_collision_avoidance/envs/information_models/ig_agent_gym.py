@@ -5,6 +5,7 @@ from gym_collision_avoidance.envs.information_models.goal_generator import GoalG
 
 from gym_collision_avoidance.envs.config import Config
 
+
 class IG_agent_gym(ig_agent):
     def __init__(self, host_agent, expert_policy=None):
         super().__init__(expert_policy)
@@ -55,7 +56,7 @@ class IG_agent_gym(ig_agent):
                 new_goal = self.goal_generator.get_goal()
                 self.targetMap.update_goal_map(new_goal, self.goal_radius)
 
-        self.finished = self.targetMap.finished
+        self.finished = self.targetMap.finished and self.goal_generator.finished
 
     def _update_belief(self, agents):
         targets = []

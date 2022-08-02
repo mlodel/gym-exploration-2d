@@ -98,6 +98,7 @@ class targetMap:
             self.goal_map.astype(float),
             self.ego_map_inner_size,
         )
+        self.goal_completion_counter = 0
 
         # Multi-Channel Map
         self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
@@ -327,15 +328,9 @@ class targetMap:
 
         # Check Termination
         if Config.IG_THRES_ACTIVE:
-            if self.entropy_free_space <= self.thres_entropy:
-                self.finished_entropy = True
-            else:
-                self.finished_entropy = False
 
-            if self.visited_share >= self.thres_share_vis_cells:
-                self.finished_binary = True
-            else:
-                self.finished_binary = False
+            self.finished_entropy = self.entropy_free_space <= self.thres_entropy
+            self.finished_binary = self.visited_share >= self.thres_share_vis_cells
 
             if Config.IG_REWARD_MODE == "binary":
                 self.finished = self.finished_binary
@@ -345,6 +340,16 @@ class targetMap:
         if Config.IG_GOALS_ACTIVE:
             # Check for completed goals
             reward += self.check_goal_completion()
+
+            if Config.IG_GOALS_TERMINATION:
+                if len(self.current_goals) == 0:
+                    self.goal_completion_counter += 1
+                else:
+                    self.goal_completion_counter = 0
+
+                self.finished = self.finished and (
+                    self.goal_completion_counter > Config.IG_GOALS_TERMINATION_WAIT
+                )
 
             # Update Multi-Channel Map
             self.mc_ego_binary_goal = np.stack((self.bin_ego_map, self.goal_ego_map))
