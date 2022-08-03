@@ -91,6 +91,7 @@ class Config:
     IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = True  # When False fixed episode length by timeout
+    IG_REWARD_COVERAGE_FINISHED = 0.0
 
     IG_REWARD_GOAL_CELL_FACTOR = 0.0
     IG_REWARD_GOAL_PENALTY = -0.0

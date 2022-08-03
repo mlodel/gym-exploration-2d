@@ -337,6 +337,9 @@ class targetMap:
             else:
                 self.finished = self.finished_entropy
 
+            if self.finished:
+                reward += Config.IG_REWARD_COVERAGE_FINISHED
+
         if Config.IG_GOALS_ACTIVE:
             # Check for completed goals
             reward += self.check_goal_completion()
