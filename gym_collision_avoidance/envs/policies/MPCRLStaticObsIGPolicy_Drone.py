@@ -12,6 +12,8 @@ from gym_collision_avoidance.envs.policies.static_obstacles.StaticObstacleAvoida
     StaticObstacleAvoidance,
 )
 from gym_collision_avoidance.envs.utils.block_stdout import stdout_redirected
+import contextlib
+
 
 
 class MPCRLStaticObsIGPolicy_Drone(Policy):
@@ -377,7 +379,8 @@ class MPCRLStaticObsIGPolicy_Drone(Policy):
             "all_parameters": self.FORCES_all_parameters,
         }
 
-        with stdout_redirected():
+        # with stdout_redirected():
+        with contextlib.redirect_stdout(None):
             OUTPUT, EXITFLAG, INFO = MPCSolver(PARAMS)
 
         self.solve_time = INFO.solvetime
