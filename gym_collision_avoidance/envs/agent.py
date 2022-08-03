@@ -270,7 +270,7 @@ class Agent(object):
                 or state == "binary_map"
                 or state == "ego_entropy_map"
                 or state == "ego_binary_map"
-                or state == "mc_ego_binary_goal"
+                or state == "ego_goal_map"
             ):
                 continue
 

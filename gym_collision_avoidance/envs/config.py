@@ -91,21 +91,22 @@ class Config:
     IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = True  # When False fixed episode length by timeout
-    IG_REWARD_COVERAGE_FINISHED = 0.0
+    IG_REWARD_COVERAGE_FINISHED = 1.0
 
     IG_REWARD_GOAL_CELL_FACTOR = 0.0
     IG_REWARD_GOAL_PENALTY = -0.0
-    IG_REWARD_GOAL_COMPLETION = 0.0
+    IG_REWARD_GOAL_COMPLETION = 1.0
 
-    IG_GOALS_ACTIVE = False
+    IG_GOALS_ACTIVE = True
     IG_GOALS_SETTINGS = {"max_steps": 128}
-    IG_GOALS_TERMINATION = False
+    IG_GOALS_TERMINATION = True
     IG_GOALS_TERMINATION_WAIT = 0
 
     REWARD_MAX_IG = (
         1.2
         + 13 * IG_REWARD_GOAL_CELL_FACTOR * IG_REWARD_BINARY_CELL
         + IG_REWARD_GOAL_COMPLETION
+        + IG_REWARD_COVERAGE_FINISHED
         if IG_REWARD_MODE == "binary"
         else 4.0
     )  # 6.7 4.0 # 0.2 ## binary 1.2 entropy 4.0 (w/o accumulating)
@@ -152,6 +153,7 @@ class Config:
         "vel_global_frame",
         "ego_binary_map",
         "ego_explored_map",
+        "ego_goal_map"
         # "local_grid",
     ]
 
@@ -293,6 +295,14 @@ class Config:
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
             "agent_attr": "ig_model.targetMap.bin_ego_map",
+            "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+            "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+        },
+        "ego_goal_map": {
+            "dtype": np.uint8,
+            "size": EGO_MAP_SIZE,
+            "bounds": [0, 255],
+            "agent_attr": "ig_model.targetMap.goal_ego_map",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },
