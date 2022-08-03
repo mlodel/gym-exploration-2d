@@ -46,15 +46,15 @@ class IG_agent_gym(ig_agent):
 
         self.global_pose = np.append(pos_global_frame, heading_global_frame)
 
-        self._update_belief(agents)
-
-        self.update_agent_pos_map()
-
         # Check for new goal
         if Config.IG_GOALS_ACTIVE:
             if self.goal_generator.next_goal(num_steps):
                 new_goal = self.goal_generator.get_goal()
                 self.targetMap.update_goal_map(new_goal, self.goal_radius)
+
+        self._update_belief(agents)
+
+        self.update_agent_pos_map()
 
         self.finished = self.targetMap.finished and self.goal_generator.finished
 
