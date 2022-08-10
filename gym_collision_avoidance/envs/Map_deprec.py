@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import time
 
-class Map():
+
+class Map:
     def __init__(self, x_width, y_width, grid_cell_size, map_filename=None):
         # Set desired map parameters (regardless of actual image file dims)
         self.x_width = x_width
@@ -14,8 +15,16 @@ class Map():
         self.grid_cell_size = grid_cell_size
 
         # Load the image file corresponding to the static map, and resize according to desired specs
-        self.dims = (int(self.x_width/self.grid_cell_size),int(self.y_width/self.grid_cell_size))
-        self.origin_coords = np.array([(self.x_width / 2.) / self.grid_cell_size, (self.y_width / 2.) / self.grid_cell_size])
+        self.dims = (
+            int(self.x_width / self.grid_cell_size),
+            int(self.y_width / self.grid_cell_size),
+        )
+        self.origin_coords = np.array(
+            [
+                (self.x_width / 2.0) / self.grid_cell_size,
+                (self.y_width / 2.0) / self.grid_cell_size,
+            ]
+        )
         if map_filename is None:
             self.static_map = np.zeros(self.dims, dtype=bool)
         else:
@@ -25,7 +34,7 @@ class Map():
             #     self.static_map = np.array(PIL.Image.fromarray(self.static_map).resize(dims, PIL.Image.NEAREST).convert("L"))
             #     # self.static_map = scipy.misc.imresize(self.static_map, dims, interp='nearest')
             # self.static_map = np.invert(self.static_map).astype(bool)
-            
+
             ## This is the version of Sant:
             # map_filename contains obstacles as defined in test_cases
             self.static_map = self.get_occupancy_grid(map_filename)
@@ -35,25 +44,33 @@ class Map():
 
         self.map = copy(self.static_map)
 
-        #self.origin_coords = np.array([(self.x_width/2.)/self.grid_cell_size, (self.y_width/2.)/self.grid_cell_size])
+        # self.origin_coords = np.array([(self.x_width/2.)/self.grid_cell_size, (self.y_width/2.)/self.grid_cell_size])
 
     def world_coordinates_to_map_indices(self, pos):
         # for a single [px, py] -> [gx, gy]
-        gx = int(np.floor(self.origin_coords[0]-pos[1]/self.grid_cell_size))
-        gy = int(np.floor(self.origin_coords[1]+pos[0]/self.grid_cell_size))
-        gx = np.clip(gx, 0, self.dims[0]-1)
-        gy = np.clip(gy, 0, self.dims[1]-1)
+        gx = int(np.floor(self.origin_coords[0] - pos[1] / self.grid_cell_size))
+        gy = int(np.floor(self.origin_coords[1] + pos[0] / self.grid_cell_size))
+        gx = np.clip(gx, 0, self.dims[0] - 1)
+        gy = np.clip(gy, 0, self.dims[1] - 1)
         grid_coords = np.array([gx, gy])
-        #in_map = gx >= 0 and gy >= 0 and gx < self.map.shape[0] and gy < self.map.shape[1]
-        in_map = 0 <= gx < self.dims[0] and gy >= 0 and gy < self.dims[1] # replaced self.map.shape[0] with self.dims[0]
+        # in_map = gx >= 0 and gy >= 0 and gx < self.map.shape[0] and gy < self.map.shape[1]
+        in_map = (
+            0 <= gx < self.dims[0] and gy >= 0 and gy < self.dims[1]
+        )  # replaced self.map.shape[0] with self.dims[0]
         return grid_coords, in_map
 
     def world_coordinates_to_map_indices_vec(self, pos):
         # for a 3d array of [[[px, py]]] -> gx=[...], gy=[...]
-        gxs = np.floor(self.origin_coords[0]-pos[:,:,1]/self.grid_cell_size).astype(int)
-        gys = np.floor(self.origin_coords[1]+pos[:,:,0]/self.grid_cell_size).astype(int)
-        in_map = np.logical_and.reduce((gxs >= 0, gys >= 0, gxs < self.map.shape[0], gys < self.map.shape[1]))
-        
+        gxs = np.floor(
+            self.origin_coords[0] - pos[:, :, 1] / self.grid_cell_size
+        ).astype(int)
+        gys = np.floor(
+            self.origin_coords[1] + pos[:, :, 0] / self.grid_cell_size
+        ).astype(int)
+        in_map = np.logical_and.reduce(
+            (gxs >= 0, gys >= 0, gxs < self.map.shape[0], gys < self.map.shape[1])
+        )
+
         # gxs, gys filled to -1 if outside map to ensure you don't query pts outside map
         not_in_map_inds = np.where(in_map == False)
         gxs[not_in_map_inds] = -1
@@ -69,13 +86,15 @@ class Map():
     def get_agent_map_indices(self, pos, radius):
         x = np.arange(0, self.map.shape[1])
         y = np.arange(0, self.map.shape[0])
-        mask = (x[np.newaxis,:]-pos[1])**2 + (y[:,np.newaxis]-pos[0])**2 < (radius/self.grid_cell_size)**2
+        mask = (x[np.newaxis, :] - pos[1]) ** 2 + (y[:, np.newaxis] - pos[0]) ** 2 < (
+            radius / self.grid_cell_size
+        ) ** 2
         return mask
 
     def get_agent_mask(self, global_pos, radius):
         [gx, gy], in_map = self.world_coordinates_to_map_indices(global_pos)
         if in_map:
-            mask = self.get_agent_map_indices([gx,gy], radius)
+            mask = self.get_agent_map_indices([gx, gy], radius)
             return mask
         else:
             return np.zeros_like(self.map)
@@ -111,8 +130,8 @@ class Map():
         # This function puts the obstacles in the right places of the static grid
         # Dimension is 300 by 300 because this is also used in the trained auto-encoder model
 
-        #Initialize variables
-        occupancy_grid = np.zeros(shape=self.dims) #dimension (300,300), dtype float64
+        # Initialize variables
+        occupancy_grid = np.zeros(shape=self.dims)  # dimension (300,300), dtype float64
 
         # For every obstacle, change grid value to 1
         for obs in obstacles:
@@ -120,11 +139,19 @@ class Map():
             start_idx, _ = self.world_coordinates_to_map_indices(obs[1])
             end_idx, _ = self.world_coordinates_to_map_indices(obs[3])
 
-            for ii in range(start_idx[0],(end_idx[0]+1),int(np.sign((end_idx[0]+1) - start_idx[0]))):
-                for jj in range(start_idx[1],(end_idx[1]+1),int(np.sign((end_idx[1]+1) - start_idx[1]))):
+            for ii in range(
+                start_idx[0],
+                (end_idx[0] + 1),
+                int(np.sign((end_idx[0] + 1) - start_idx[0])),
+            ):
+                for jj in range(
+                    start_idx[1],
+                    (end_idx[1] + 1),
+                    int(np.sign((end_idx[1] + 1) - start_idx[1])),
+                ):
                     occupancy_grid[ii, jj] = 1
 
-            '''
+            """
             This can maybe be used if the obstacles are not square/rectangle or if they are crocket. 
             # Initialize variables
             start_idx_x = np.inf
@@ -146,12 +173,12 @@ class Map():
             y = list(range(start_idx_y, end_idx_y+1))
             for ii in x:
                 for jj in y:
-                    occupancy_grid[ii, jj] = 1'''
+                    occupancy_grid[ii, jj] = 1"""
 
         return occupancy_grid
 
     def get_occupancy_grid2(self, obstacles):
-        #If I ever want to use this (but this is much slower):
+        # If I ever want to use this (but this is much slower):
         # self.static_map = Image.open('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png').convert('L')
         # self.static_map = self.static_map.resize(self.dims)
         # self.static_map.save('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/resizedWORLDMAP.png')
@@ -164,15 +191,8 @@ class Map():
         ax = fig.add_subplot(1, 1, 1)
         for obs in obstacles:
             ax.add_patch(plt.Polygon(obs, fill=True))
-        plt.axis('off')
-        #check = fig.savefig('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png', bbox_inches='tight')
+        plt.axis("off")
+        # check = fig.savefig('../gym-collision-avoidance/gym_collision_avoidance/envs/world_maps/WORLDMAP.png', bbox_inches='tight')
         plt.close()
 
-        #print("hoi")
-
-
-
-
-
-
-
+        # print("hoi")

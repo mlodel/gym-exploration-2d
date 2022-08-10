@@ -58,6 +58,8 @@ from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
 
 from gym_collision_avoidance.envs.dynamics.ExternalDynamics import ExternalDynamics
 
+from gym_collision_avoidance.envs.vis_ui.render import GymRenderer
+
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -168,10 +170,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 )
 
         self.agents = None
-        self.default_agents = None
         self.prev_episode_agents = None
 
-        self.static_map_filename = None
         self.map = None
 
         self.episode_step_number = 0
@@ -187,8 +187,6 @@ class CollisionAvoidanceEnv(gym.Env):
         self.perturbed_obs = None
 
         self.obstacles = None
-
-        self.prediction_model = None
 
         self.prev_scenario_index = 0
         self.scenario_index = 0
@@ -219,9 +217,9 @@ class CollisionAvoidanceEnv(gym.Env):
         self.n_env = 1
         self.env_id = 0
         self.plot_every_n_episodes = (
-                Config.PLOT_EVERY_N_STEPS
-                * Config.REPEAT_STEPS
-                // (self.n_env * Config.MAX_TIME_RATIO * 200)
+            Config.PLOT_EVERY_N_STEPS
+            * Config.REPEAT_STEPS
+            // (self.n_env * Config.MAX_TIME_RATIO * 200)
         )
 
         self.testcase = None
@@ -229,10 +227,12 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase_repeat = 1
         self.testcase_seed = 0
         self.testcase_rng = np.random.default_rng(0)
-        self.testcase_n_train = 128
-        self.testcase_n_test = 16
+        self.testcase_n_train = 2
+        self.testcase_n_test = 2
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
+
+        self.renderer = None
 
     def step(self, actions, dt=None):
         ###############################
@@ -283,7 +283,7 @@ class CollisionAvoidanceEnv(gym.Env):
             if self.dagger:
                 # LINEAR DECAY
                 # self.dagger_beta = np.maximum(self.beta - self.n_env / Config.PRE_TRAINING_STEPS, 0)
-                if np.random.uniform(0, 1) > self.dagger_beta:
+                if self.testcase_rng.uniform(0, 1) > self.dagger_beta:
                     selected_action = actions_subgoal
                 else:
                     selected_action = mpc_actions
@@ -315,10 +315,6 @@ class CollisionAvoidanceEnv(gym.Env):
             self.episode_step_number += 1
             self.total_number_of_steps += 1
 
-            # Generate Predictions
-            if self.prediction_model:
-                self._prediction_step()
-
             # Take action
             self._take_action(clipped_selected_action, dt, new_action)
             new_action = False
@@ -336,12 +332,12 @@ class CollisionAvoidanceEnv(gym.Env):
                 rewards += step_rewards
             # a=b
             if (
-                    ((self.episode_number - 1) % self.plot_every_n_episodes == 0)
-                    and not Config.TEST_MODE
-                    and Config.ANIMATE_EPISODES
-                    and self.episode_number >= 1
-                    and self.plot_env
-                    and self.episode_step_number % self.animation_period_steps == 0
+                ((self.episode_number - 1) % self.plot_every_n_episodes == 0)
+                and not Config.TEST_MODE
+                and Config.ANIMATE_EPISODES
+                and self.episode_number >= 1
+                and self.plot_env
+                and self.episode_step_number % self.animation_period_steps == 0
             ):
                 plot_episode(
                     self.agents,
@@ -361,23 +357,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
             # Check which agents' games are finished (at goal/collided/out of time)
             which_agents_done, game_over = self._check_which_agents_done()
-
-            if (
-                    game_over
-                    and (str(self.prediction_model) != "CVModel")
-                    and self.prediction_model is not None
-            ):
-                if not Config.PERFORMANCE_TEST:
-                    self.n_collisions = np.roll(self.n_collisions, 1)
-                    self.n_collisions[0] = self.agents[0].in_collision
-                    self.n_timeouts = np.roll(self.n_timeouts, 1)
-                    self.n_timeouts[0] = self.agents[0].ran_out_of_time
-                    # if self.agents[0].in_collision or self.episode_number<200:
-                    # self.prediction_model.data_handler.addEpisodeData(self.agents)
-                    # if (self.episode_number >= 100) and (self.episode_number % 100 == 0) and (
-                    #         len(self.prediction_model.data_handler.trajectory_set) >= 100):
-                    #     self.prediction_model.train_step(self.episode_number, np.mean(self.n_collisions),
-                    #                                      np.mean(self.n_timeouts))
 
         which_agents_done_dict = {}
         for i, agent in enumerate(self.agents):
@@ -403,7 +382,7 @@ class CollisionAvoidanceEnv(gym.Env):
             "n_other_agents": sum(
                 [0 if agent.policy.str == "Static" else 1 for agent in self.agents]
             )
-                              - 1,
+            - 1,
             "actions": actions,
             "mpc_actions": clipped_mpc_actions,
             "n_episodes": self.episode_number,
@@ -415,22 +394,25 @@ class CollisionAvoidanceEnv(gym.Env):
             "scenario_seed": self.testcase_seed,
             "ig_expert_runtime": expert_runtime,
         }
-
         return next_observations, rewards, game_over, infos
 
     def reset(self):
 
+        if self.renderer is not None and self.renderer.is_storing_video:
+            self.renderer.save_video()
+            self.renderer.is_storing_video = False
+
         if (
-                (
-                        (self.episode_number - 1) % self.plot_every_n_episodes == 0
-                        or (
-                                Config.TEST_MODE
-                                # and self.episode_number <= 2*self.testcase_repeat
-                        )
+            (
+                (self.episode_number - 1) % self.plot_every_n_episodes == 0
+                or (
+                    Config.TEST_MODE
+                    # and self.episode_number <= 2*self.testcase_repeat
                 )
-                and Config.SAVE_EPISODE_PLOTS
-                and self.episode_number >= 1
-                and self.episode_step_number > 0
+            )
+            and Config.SAVE_EPISODE_PLOTS
+            and self.episode_number >= 1
+            and self.episode_step_number > 0
         ):
             plot_episode(
                 self.agents,
@@ -462,7 +444,6 @@ class CollisionAvoidanceEnv(gym.Env):
         self.episode_step_number = 0
 
         self._init_agents()
-        self._init_prediction_model()
         self._init_static_map()
         _, collision_with_wall, _, _ = self._check_for_collisions()
         init_pos_infeas = collision_with_wall[0]
@@ -500,29 +481,25 @@ class CollisionAvoidanceEnv(gym.Env):
             if agent.ig_model is not None:
                 agent.ig_model.update(self.agents, 0)
 
+        # Rendering
+        self.renderer = GymRenderer(
+            self.plot_save_dir, (Config.MAP_HEIGHT, Config.MAP_WIDTH), self.obstacles
+        )
+
         return self._get_obs()
+
+    def render(self, mode="human"):
+        self.renderer.draw_frame(self.agents)
+        if mode == "human":
+            self.renderer.display()
+        elif mode == "rgb_array":
+            return self.renderer.get_last_frame()
+        elif mode == "save_video":
+            self.renderer.is_storing_video = True
 
     def close(self):
         print("--- Closing CollisionAvoidanceEnv! ---")
         return
-
-    def _prediction_step(self):
-        if self.episode_number >= 100 and self.prediction_model:
-            self.predicted_trajectory = self.prediction_model.query(self.agents)[0]
-        else:
-            # For the first time step Use CV model
-            self.predicted_trajectory = np.zeros((len(self.agents), Config.FORCES_N, 6))
-            for ag_id, agent in enumerate(self.agents):
-                for t in range(Config.FORCES_N):
-                    self.predicted_trajectory[ag_id, t, :2] = (
-                            agent.pos_global_frame
-                            + agent.vel_global_frame * Config.FORCES_DT
-                    )
-                    self.predicted_trajectory[ag_id, t, 4:6] = agent.vel_global_frame
-        indices = np.arange(len(self.agents))
-        for id, agent in enumerate(self.agents):
-            agent.policy.predicted_trajectory = self.predicted_trajectory[indices != id]
-            agent.policy.all_predicted_trajectory = self.predicted_trajectory
 
     def _take_action(self, actions, dt, new_action=True):
         num_actions_per_agent = self.agents[0].dynamics_model.num_actions
@@ -617,24 +594,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         return actions
 
-    def set_agents(self, agents):
-        self.default_agents = agents
-
-    def _init_prediction_model(self):
-        if self.prediction_model:
-            if self.episode_number > 1:
-                self.prediction_model.reset_states(len(self.agents))
-            else:
-                self.prediction_model.load_model(len(self.agents))
-            self.plot_policy_name = (
-                    self.agents[0].policy.str + "_" + str(self.prediction_model)
-            )
-
-        else:
-            self.plot_policy_name = self.agents[0].policy.str + "_CV"
-        # self.plot_policy_name = self.agents[0].policy.str + '_' + str(self.prediction_model)
-        self._prediction_step()
-
     def _init_agents(self):
         # if self.agents is not None:
         #     self.prev_episode_agents = copy.deepcopy(self.agents)
@@ -651,7 +610,7 @@ class CollisionAvoidanceEnv(gym.Env):
             )
             seed = np.arange(tc_start, tc_end)[
                 (self.testcase_count - 1) % testcases_per_env
-                ]
+            ]
         else:
             np.random.seed((self.env_id + 1234) * self.episode_number)
             seed = np.random.choice(self.testcase_n_train)
@@ -682,9 +641,6 @@ class CollisionAvoidanceEnv(gym.Env):
             n_obstacles=self.n_obstacles,
         )
 
-        if self.prediction_model:
-            self.prediction_model.reset_states(len(self.agents))
-
         for agent in self.agents:
             agent.max_heading_change = self.max_heading_change
             agent.max_speed = self.max_speed
@@ -696,9 +652,6 @@ class CollisionAvoidanceEnv(gym.Env):
                 agent.policy.update_predicted_trajectory()
             # if str(agent.policy) == 'PedestrianDatasetPolicy':
             #    agent.policy.trajectory = self.data_prep.getRandomTrajectory()
-
-    def set_static_map(self, map_filename):
-        self.static_map_filename = map_filename
 
     def _init_static_map(self):
 
@@ -768,10 +721,10 @@ class CollisionAvoidanceEnv(gym.Env):
                             #       % agent.id)
                         # Penalty for wiggly behavior
                         if (
-                                np.linalg.norm(
-                                    agent.past_actions[-1, :] - agent.past_actions[0, :]
-                                )
-                                > self.wiggly_behavior_threshold
+                            np.linalg.norm(
+                                agent.past_actions[-1, :] - agent.past_actions[0, :]
+                            )
+                            > self.wiggly_behavior_threshold
                         ):
                             # Slightly penalize wiggly behavior
                             rewards[i] += self.reward_wiggly_behavior
@@ -790,7 +743,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 # if gets close to goal
                 rewards[i] += Config.REWARD_DISTANCE_TO_GOAL * (
-                        agent.past_dist_to_goal - agent.dist_to_goal
+                    agent.past_dist_to_goal - agent.dist_to_goal
                 )
 
                 if agent.ig_model is not None:
@@ -804,8 +757,8 @@ class CollisionAvoidanceEnv(gym.Env):
                     distance = np.linalg.norm(
                         agent.pos_global_frame
                         - agent.global_state_history[
-                          : agent.step_num - Config.REPEAT_STEPS, 1:2
-                          ]
+                            : agent.step_num - Config.REPEAT_STEPS, 1:2
+                        ]
                     )
                     rewards[i] += distance * Config.REWARD_FACTOR_DISTANCE
 
@@ -821,8 +774,8 @@ class CollisionAvoidanceEnv(gym.Env):
 
                 # Penalize Deadlock
                 if self.episode_step_number > 20 and (
-                        agent.speed_global_frame < 0.01
-                        and np.abs(agent.angular_speed_global_frame) < 0.01
+                    agent.speed_global_frame < 0.01
+                    and np.abs(agent.angular_speed_global_frame) < 0.01
                 ):
                     rewards[i] += Config.REWARD_DEADLOCKED
                     agent.deadlock_count += 1
@@ -854,8 +807,8 @@ class CollisionAvoidanceEnv(gym.Env):
             agent = self.agents[i]
             other_agent = self.agents[j]
             if (
-                    "StaticPolicy" in str(type(other_agent.policy))
-                    and not Config.COLLISION_AV_W_STATIC_AGENT
+                "StaticPolicy" in str(type(other_agent.policy))
+                and not Config.COLLISION_AV_W_STATIC_AGENT
             ):
                 continue
             else:
@@ -964,7 +917,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         vmax = 2.0
         self.reward_distance_max = (
-                vmax * Config.DT * Config.REPEAT_STEPS * Config.REWARD_FACTOR_DISTANCE
+            vmax * Config.DT * Config.REPEAT_STEPS * Config.REWARD_FACTOR_DISTANCE
         )
 
         self.possible_terminal_reward_values = np.array(
@@ -986,24 +939,24 @@ class CollisionAvoidanceEnv(gym.Env):
 
         repeat_steps = Config.REPEAT_STEPS if Config.IG_ACCUMULATE_REWARDS else 1
         self.min_possible_reward = (
-                repeat_steps * self.reward_time_step
-                + sum([r if r < 0 else 0 for r in self.possible_step_reward_values])
-                + np.min(self.possible_terminal_reward_values)
+            repeat_steps * self.reward_time_step
+            + sum([r if r < 0 else 0 for r in self.possible_step_reward_values])
+            + np.min(self.possible_terminal_reward_values)
         )
 
         self.max_possible_reward = (
-                repeat_steps * self.reward_time_step
-                + sum([r if r > 0 else 0 for r in self.possible_step_reward_values])
-                + np.max(self.possible_terminal_reward_values)
+            repeat_steps * self.reward_time_step
+            + sum([r if r > 0 else 0 for r in self.possible_step_reward_values])
+            + np.max(self.possible_terminal_reward_values)
         )
 
     def get_expert_goal(self):
         if (
-                Config.TEST_MODE and not Config.USE_MPC_EXPERT_IN_TEST
+            Config.TEST_MODE and not Config.USE_MPC_EXPERT_IN_TEST
         ) or Config.ACTION_SPACE_TYPE == Config.discrete:
             goal = self.agents[0].ig_model.expert_policy.get_expert_goal()[
-                   0:2
-                   ]  # - self.agents[0].pos_global_frame
+                0:2
+            ]  # - self.agents[0].pos_global_frame
         else:
             goal, exitflag = self.agents[0].policy.mpc_output(0, self.agents)
         return goal
@@ -1030,7 +983,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.plot_every_n_episodes = 1
 
     def set_use_expert_action(
-            self, n_algs, use_expert, expert, dagger, dagger_beta, comp_expert
+        self, n_algs, use_expert, expert, dagger, dagger_beta, comp_expert
     ):
         self.use_expert = use_expert
         self.dagger = dagger
@@ -1046,6 +999,12 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def set_n_obstacles(self, n_obstacles):
         self.n_obstacles = n_obstacles
+
+    def set_new_human_goal(self, coord: tuple, mode: str = "render"):
+        if mode == "render" and self.renderer is not None:
+            goal_pos = self.renderer.image_coord_2_map_pos(coord=coord)
+            if goal_pos is not None:
+                self.agents[0].ig_model.new_human_goal(goal_pos)
 
 
 if __name__ == "__main__":

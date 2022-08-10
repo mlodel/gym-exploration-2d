@@ -46,7 +46,7 @@ def main():
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 128
+    num_steps = 1024
     max_rewards = []
     max_ig_rewards = []
     ig_rewards = [[] for i in range(n_envs)]
@@ -69,6 +69,7 @@ def main():
         # dummy_action = 1 * np.array([[2.0, 2.0]])
 
         obs, reward, game_over, info = env.step(dummy_action)
+        env.render()
 
         for i in range(n_envs):
 

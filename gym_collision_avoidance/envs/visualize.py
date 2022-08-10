@@ -709,9 +709,9 @@ def draw_agent_ig(agent, i, ax):
                     fill=True,
                 )
             )
-
     if hasattr(agent.policy, "policy_goal"):
         pose = agent.policy.policy_goal
+
         alpha = 0.5
         c = rgba2rgb(plt_color + [float(alpha)])
         heading = 0.0

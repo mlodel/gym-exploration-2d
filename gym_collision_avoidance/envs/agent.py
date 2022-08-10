@@ -8,41 +8,26 @@ import math
 
 import functools
 
-
-def rsetattr(obj, attr, val):
-    pre, _, post = attr.rpartition(".")
-    return setattr(rgetattr(obj, pre) if pre else obj, post, val)
-
-
-def rgetattr(obj, attr, *args):
-    def _getattr(obj, attr):
-        return getattr(obj, attr, *args)
-
-    try:
-        obj = functools.reduce(_getattr, [obj] + attr.split("."))
-    except:
-        return None
-
-    return obj
+from gym_collision_avoidance.envs.utils.nested_attr import rgetattr
 
 
 class Agent(object):
     def __init__(
-        self,
-        start_x,
-        start_y,
-        goal_x,
-        goal_y,
-        radius,
-        pref_speed,
-        initial_heading,
-        policy,
-        dynamics_model,
-        sensors,
-        id,
-        cooperation_coef=1.0,
-        ig_model=None,
-        ig_expert=None,
+            self,
+            start_x,
+            start_y,
+            goal_x,
+            goal_y,
+            radius,
+            pref_speed,
+            initial_heading,
+            policy,
+            dynamics_model,
+            sensors,
+            id,
+            cooperation_coef=1.0,
+            ig_model=None,
+            ig_expert=None,
     ):
 
         if policy == "GA3CCADRLPolicy":
@@ -98,11 +83,11 @@ class Agent(object):
         self.end_condition = ec._check_if_at_goal
 
         self.straight_line_time_to_reach_goal = (
-            np.linalg.norm(self.pos_global_frame - self.goal_global_frame)
-            - self.near_goal_threshold
-        ) / self.pref_speed
+                                                        np.linalg.norm(self.pos_global_frame - self.goal_global_frame)
+                                                        - self.near_goal_threshold
+                                                ) / self.pref_speed
         self.time_remaining_to_reach_goal = (
-            Config.MAX_TIME_RATIO * self.straight_line_time_to_reach_goal
+                Config.MAX_TIME_RATIO * self.straight_line_time_to_reach_goal
         )
         self.t = 0.0
         self.t_offset = None
@@ -173,8 +158,8 @@ class Agent(object):
             else:
                 # Interpolate velocity from last pos
                 self.vel_global_frame = (
-                    np.array([px, py]) - self.pos_global_frame
-                ) / self.dt_nominal
+                                                np.array([px, py]) - self.pos_global_frame
+                                        ) / self.dt_nominal
         else:
             self.vel_global_frame = np.array([vx, vy])
 
@@ -185,8 +170,8 @@ class Agent(object):
             else:
                 # Interpolate ang velocity from last pos
                 self.angular_speed_global_frame = (
-                    heading - self.heading_global_frame
-                ) / self.dt_nominal
+                                                          heading - self.heading_global_frame
+                                                  ) / self.dt_nominal
         else:
             self.angular_speed_global_frame = ang_speed
 
@@ -259,11 +244,9 @@ class Agent(object):
     def get_agent_data(self, attribute):
         return getattr(self, attribute)
 
-    def get_observation_dict(self, agents):
-        self.observation = {}
-        for state in Config.STATES_IN_OBS:
-            info = Config.STATE_INFO_DICT[state]
-            if self.ig_model is None and (
+    def get_observation(self, state):
+        info = Config.STATE_INFO_DICT[state]
+        if self.ig_model is None and (
                 state == "target_map"
                 or state == "agent_pos_map"
                 or state == "entropy_map"
@@ -271,43 +254,50 @@ class Agent(object):
                 or state == "ego_entropy_map"
                 or state == "ego_binary_map"
                 or state == "ego_goal_map"
-            ):
-                continue
+        ):
+            return None
 
-            if ("agent_attr" in info and "sensor_name" in info) and (
+        if ("agent_attr" in info and "sensor_name" in info) and (
                 info["agent_attr"] is not None and info["sensor_name"] is not None
-            ):
-                raise ValueError(
-                    "For observation "
-                    + state
-                    + " both agent_attr and sensor_name are specified, but only one is allowed!"
-                )
-            else:
-                if "agent_attr" in info and info["agent_attr"] is not None:
-                    obs = rgetattr(self, info["agent_attr"])
-                    if obs is None:
-                        raise ValueError(
-                            "For observation " + state + " invalid agent_attr given."
-                        )
-                elif "sensor_name" in info and info["sensor_name"] is not None:
-                    if info["sensor_name"] in self.sensors:
-                        kwargs = (
-                            info["sensor_kwargs"]
-                            if info["sensor_kwargs"] is not None
-                            else dict()
-                        )
-                        obs = self.sensors[info["sensor_name"]].get_obs(**kwargs)
-                    else:
-                        obs = None
+        ):
+            raise ValueError(
+                "For observation "
+                + state
+                + " both agent_attr and sensor_name are specified, but only one is allowed!"
+            )
+        else:
+            if "agent_attr" in info and info["agent_attr"] is not None:
+                obs = rgetattr(self, info["agent_attr"])
+                if obs is None:
+                    raise ValueError(
+                        "For observation " + state + " invalid agent_attr given."
+                    )
+            elif "sensor_name" in info and info["sensor_name"] is not None:
+                if info["sensor_name"] in self.sensors:
+                    kwargs = (
+                        info["sensor_kwargs"]
+                        if info["sensor_kwargs"] is not None
+                        else dict()
+                    )
+                    obs = self.sensors[info["sensor_name"]].get_obs(**kwargs)
+                else:
+                    obs = None
 
-            # TODO define data type?
-            if np.ndim(obs) == 1:
-                self.observation[state] = np.array(obs)
-            else:
-                self.observation[state] = np.array([obs])
+        # TODO define data type?
+        if np.ndim(obs) == 1:
+            obs = np.array(obs)
+        else:
+            obs = np.array([obs])
 
-            if len(self.observation[state].shape) > 3:
-                self.observation[state] = self.observation[state].squeeze()
+        if len(obs.shape) > 3:
+            obs = obs.squeeze()
+
+        return obs
+
+    def get_observation_dict(self, agents):
+        self.observation = {}
+        for state in Config.STATES_IN_OBS:
+            self.observation[state] = self.get_observation(state)
 
         return self.observation
 

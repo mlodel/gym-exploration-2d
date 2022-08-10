@@ -400,22 +400,27 @@ class targetMap:
 
     def update_goal_map(self, new_goal, radius=2):
 
-        self.current_goals.append(new_goal)
+        if len(self.current_goals) < 3:
+            self.current_goals.append(new_goal)
 
-        (i, j) = self.getCellsFromPose(new_goal)
+            (i, j) = self.getCellsFromPose(new_goal)
 
-        old_goal_map = copy.copy(self.goal_map)
+            old_goal_map = copy.copy(self.goal_map)
 
-        cv2.circle(self.goal_map, center=(j, i), radius=radius, color=1, thickness=-1)
+            cv2.circle(
+                self.goal_map, center=(j, i), radius=radius, color=1, thickness=-1
+            )
 
-        rows, cols = np.where(self.goal_map != old_goal_map)
+            rows, cols = np.where(self.goal_map != old_goal_map)
 
-        cells = list(zip(rows.tolist(), cols.tolist()))
-        for cell in cells:
-            if cell not in self.free_cells:
-                cells.remove(cell)
+            cells = list(zip(rows.tolist(), cols.tolist()))
+            for cell in cells:
+                if cell not in self.free_cells:
+                    cells.remove(cell)
 
-        self.goal_cells.append(cells)
+            self.goal_cells.append(cells)
+        else:
+            print("Too many parallel goals, goal not added!")
 
     def check_goal_completion(self):
 
