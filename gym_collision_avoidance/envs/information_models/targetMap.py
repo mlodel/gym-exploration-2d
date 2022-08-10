@@ -76,6 +76,7 @@ class targetMap:
 
         self.finished_binary = False
         self.finished_entropy = False
+        self.finished_coverage = False
         self.finished = False
 
         self.ego_map_inner_size = int(np.ceil(np.sqrt(shape[0] ** 2 + shape[1] ** 2)))
@@ -337,7 +338,8 @@ class targetMap:
             else:
                 self.finished = self.finished_entropy
 
-            if self.finished:
+            if self.finished and not self.finished_coverage:
+                self.finished_coverage = True
                 reward += Config.IG_REWARD_COVERAGE_FINISHED
 
         if Config.IG_GOALS_ACTIVE:
