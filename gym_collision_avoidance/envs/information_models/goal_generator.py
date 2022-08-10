@@ -1,8 +1,11 @@
 import numpy as np
 from typing import Union
-
+import random
+import copy
 from gym_collision_avoidance.envs.config import Config
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+
+random.seed(0)
 
 
 class GoalGenerator:
@@ -28,6 +31,13 @@ class GoalGenerator:
         self.goal_radius = goal_radius
         self.edf_obj = edf_obj
         self.rng = rng
+
+        # Permute rng to get different goals for each  sequence
+        rng_state = self.rng.__getstate__()
+        num = random.randint(0, 31)
+        new_state = copy.copy(rng_state)
+        new_state["state"]["state"] -= num
+        self.rng.__setstate__(new_state)
 
         # Sample goal sequence
         self.num_goals = rng.integers(self.max_num_goals + 1)
@@ -65,6 +75,8 @@ class GoalGenerator:
                 goal_ok = True
 
             self.goals.append(next_goal)
+
+        self.rng.__setstate__(rng_state)
 
         self.current_goal = None
         self.finished = not Config.IG_GOALS_TERMINATION
