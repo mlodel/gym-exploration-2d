@@ -48,7 +48,7 @@ class IG_agent_gym(ig_agent):
         self.global_pose = np.append(pos_global_frame, heading_global_frame)
 
         # Check for new goal
-        if Config.IG_GOALS_ACTIVE and not Config.TEST_MODE:
+        if Config.IG_GOALS_ACTIVE and not Config.UI_MODE:
             if self.goal_generator.next_goal(num_steps):
                 new_goal = self.goal_generator.get_goal()
                 self.targetMap.update_goal_map(new_goal, self.goal_radius)

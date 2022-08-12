@@ -121,7 +121,8 @@ class Config:
 
     REWARDS_NORMALIZE = True
 
-    TEST_MODE = False
+    UI_MODE = True
+    TEST_MODE = True
     TEST_N_OBST = 2
 
     DISCRETE_SUBGOAL_ANGLES = 12
@@ -153,8 +154,8 @@ class Config:
         "vel_global_frame",
         "ego_binary_map",
         "ego_explored_map",
-        "ego_goal_map"
-        # "local_grid",
+        "ego_goal_map",
+        "local_grid",
     ]
 
     STATES_NOT_USED_IN_POLICY = ["use_ppo", "num_other_agents"]
