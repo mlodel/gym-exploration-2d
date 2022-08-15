@@ -168,12 +168,7 @@ def IG_single_agent_crossing(
     elif seed is None and rng is None:
         rng = np.random.default_rng(1)
 
-    # Corridor scenario
     obstacle = []
-    # obstacle_1 = [(2, 6), (-6, 6), (-6, 4), (2, 4)]
-    # obstacle_2 = [(7, 7), (5, 7), (5, -4), (7, -4)]
-    # obstacle_3 = [(10, -2), (2, -2), (2, -10), (10, -10)]
-    # obstacle_4 = [(-2, -1), (-6, -1), (-6, -7), (-2, -7)]
 
     obstacle_5 = [(-9.8, 10), (-10, 10), (-10, -10), (-9.8, -10)]
     obstacle_6 = [(10, 10), (9.8, 10), (9.8, -10), (10, -10)]
@@ -183,15 +178,6 @@ def IG_single_agent_crossing(
     pos_lims_map = Config.MAP_HEIGHT / 2
     obstacle_margin = 4 * radius
     pos_lims_margin = Config.MAP_HEIGHT / 2 - obstacle_margin
-
-    # if not Config.TEST_MODE:
-    #     if n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_2_OBS * Config.REPEAT_STEPS/n_env \
-    #             or not Config.IG_CURRICULUM_LEARNING:
-    #         n_obstacles = 1
-    #     elif n_steps < Config.IG_CURRICULUM_LEARNING_STEPS_3_OBS * Config.REPEAT_STEPS/n_env:
-    #         n_obstacles = 2
-    #     else:
-    #         n_obstacles = 3
 
     obstacle_np = []
     obstacle_at_wall = False
@@ -297,6 +283,135 @@ def IG_single_agent_crossing(
 
     # obstacle.extend([obstacle_1, obstacle_2, obstacle_4, obstacle_5, obstacle_6, obstacle_7, obstacle_8])
     obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
+
+    # Get random initial position
+    pos_infeasible = True
+    while pos_infeasible:
+        init_pos = (2 * pos_lims_margin) * rng.random(2) - pos_lims_margin
+        init_heading = 2 * np.pi * rng.random() - np.pi
+        pos_infeasible_list = []
+        for k in range(n_obstacles):
+            obstacle_limits = [
+                [np.min(obstacle_np[k][:, 0]), np.max(obstacle_np[k][:, 0])],
+                [np.min(obstacle_np[k][:, 1]), np.max(obstacle_np[k][:, 1])],
+            ]
+            pos_infeasible_list.append(
+                all(
+                    [
+                        (
+                            obstacle_limits[i][0] - radius - 0.2
+                            < init_pos[i]
+                            < obstacle_limits[i][1] + radius + 0.2
+                        )
+                        for i in range(2)
+                    ]
+                )
+            )
+        pos_infeasible = any(pos_infeasible_list)
+
+    # ego agent
+    agents.append(
+        Agent(
+            init_pos[0],
+            init_pos[1],
+            init_pos[0],
+            init_pos[1] + 100.0,
+            radius,
+            pref_speed,
+            init_heading,
+            ego_agent_policy,
+            ego_agent_dynamics,
+            [GlobalMapSensor, ExploreMapSensor],
+            0,
+            ig_model=IG_agent_gym,
+            ig_expert=ig_greedy,
+        )
+    )
+    # agents.append(Agent(4, 3, 12, 12 + 100.0, radius, pref_speed, - 1*np.pi,
+    #                     ego_agent_policy, UnicycleSecondOrderEulerDynamics,
+    #                     [OtherAgentsStatesSensor, GlobalMapSensor], 0, ig_model=ig_agent, ig_expert=ig_greedy))
+
+    # target agent
+    for i in range(n_targets):
+        pos_infeasible = True
+        while pos_infeasible:
+            init_pos = (2 * pos_lims_margin) * rng.random(2) - pos_lims_margin
+            pos_infeasible_list = []
+            for k in range(n_obstacles):
+                obstacle_limits = [
+                    [np.min(obstacle_np[k][:, 0]), np.max(obstacle_np[k][:, 0])],
+                    [np.min(obstacle_np[k][:, 1]), np.max(obstacle_np[k][:, 1])],
+                ]
+                pos_infeasible_list.append(
+                    all(
+                        [
+                            (
+                                obstacle_limits[i][0] - radius - 0.2
+                                < init_pos[i]
+                                < obstacle_limits[i][1] + radius + 0.2
+                            )
+                            for i in range(2)
+                        ]
+                    )
+                )
+            pos_infeasible = any(pos_infeasible_list)
+        agents.append(
+            Agent(
+                init_pos[0],
+                init_pos[1],
+                100,
+                100,
+                0.2,
+                pref_speed,
+                0,
+                other_agents_policy,
+                other_agents_dynamics,
+                [],
+                1,
+            )
+        )
+
+    if (
+        "MPCRLStaticObsPolicy" == str(agents[0].policy)
+        or "MPCStaticObsPolicy" == str(agents[0].policy)
+        or "MPC_IG_Policy" == str(agents[0].policy)
+        or "MPCRLStaticObsIGPolicy" == str(agents[0].policy)
+        or "MPCRLStaticObsIGPolicy_Drone" == str(agents[0].policy)
+    ):
+        agents[0].policy.static_obstacles_manager.obstacle = obstacle
+
+    return agents, obstacle
+
+
+def IG_single_agent_crossing2(
+    ego_agent_policy=MPCRLStaticObsIGPolicy_Drone,
+    other_agents_policy=StaticPolicy,
+    ego_agent_dynamics=FirstOrderDynamics,
+    other_agents_dynamics=StaticDynamics,
+    agents_sensors=[],
+    seed=None,
+    n_steps=0,
+    n_env=1,
+    n_obstacles=1,
+    rng=None,
+):
+    pref_speed = 5.0  # np.random.uniform(1.0, 0.5)
+    radius = 0.5  # np.random.uniform(0.5, 0.5)
+    agents = []
+    n_targets = 3
+    if seed is not None and rng is None:
+        rng = np.random.default_rng(seed)
+    elif seed is None and rng is None:
+        rng = np.random.default_rng(1)
+
+    # Corridor scenario
+    obstacle = []
+
+    pos_lims_map = Config.MAP_HEIGHT / 2
+    obstacle_margin = 4 * radius
+    pos_lims_margin = Config.MAP_HEIGHT / 2 - obstacle_margin
+
+    obstacle_np = []
 
     # Get random initial position
     pos_infeasible = True

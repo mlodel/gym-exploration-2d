@@ -131,7 +131,7 @@ class Config:
     CLIP_ACTION = True
     USE_MPC_EXPERT_IN_TEST = False
 
-    SCENARIOS_FOR_TRAINING = ["IG_single_agent_crossing"]
+    SCENARIOS_FOR_TRAINING = [{"env": "json_map_file", "agents": "exploration_random"}]
 
     # Angular Map
     NUM_OF_SLICES = 16
