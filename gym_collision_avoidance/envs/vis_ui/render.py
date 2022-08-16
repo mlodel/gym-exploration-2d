@@ -177,6 +177,8 @@ class GymRenderer:
         else:
             trajectory = None
 
+        path_history = agent.global_state_history[: agent.step_num - 1, 1:3]
+
         current_goals = rgetattr(agent, "ig_model.targetMap.current_goals")
         goal_radius = rgetattr(agent, "ig_model.goal_radius")
         goal_radius = goal_radius if goal_radius is not None else 2.0
@@ -238,6 +240,20 @@ class GymRenderer:
                 img,
                 pts=[trajectory_cells],
                 color=(self.colors[1, :] + (255 - self.colors[1, :]) // 3).tolist(),
+                isClosed=False,
+                lineType=cv2.LINE_AA,
+                thickness=self.res_factor,
+            )
+
+        # Draw path history
+        if path_history is not None:
+            path_cells = np.array(
+                [self.render_map.get_idc_from_pos(pos)[::-1] for pos in path_history]
+            )
+            img = cv2.polylines(
+                img,
+                pts=[path_cells],
+                color=(self.colors[1, :] + (255 - self.colors[1, :]) // 4).tolist(),
                 isClosed=False,
                 lineType=cv2.LINE_AA,
                 thickness=self.res_factor,
