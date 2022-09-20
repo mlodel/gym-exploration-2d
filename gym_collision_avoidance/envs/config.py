@@ -8,9 +8,9 @@ class Config:
     continuous, discrete = range(2)  # Initialize game types as enum
     ACTION_SPACE_TYPE = discrete
 
-    ANIMATE_EPISODES = True
+    ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
-    SAVE_EPISODE_PLOTS = True
+    SAVE_EPISODE_PLOTS = False
     TRAIN_SINGLE_AGENT = True
 
     #########################################################################
@@ -121,6 +121,7 @@ class Config:
 
     REWARDS_NORMALIZE = True
 
+    UI_MODE = True
     TEST_MODE = False
     TEST_N_OBST = 3
 
@@ -278,7 +279,15 @@ class Config:
             "dtype": np.uint8,
             "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
             "bounds": [-np.inf, np.inf],
-            "agent_attr": "ig_model.targetMap.binaryMap.astype(float)",
+            "agent_attr": "ig_model.targetMap.binaryMap",
+            "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+            "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
+        },
+        "goal_map": {
+            "dtype": np.uint8,
+            "size": (MAP_WIDTH_PXL, MAP_HEIGHT_PXL),
+            "bounds": [-np.inf, np.inf],
+            "agent_attr": "ig_model.targetMap.goal_map",
             "std": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
             "mean": np.ones((MAP_WIDTH_PXL, MAP_HEIGHT_PXL), dtype=np.uint8),
         },

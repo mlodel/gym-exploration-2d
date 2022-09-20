@@ -22,6 +22,8 @@ from gym_collision_avoidance.envs.maps.map_env import EnvMap
 from gym_collision_avoidance.envs.scenario import agent_scenarios
 from gym_collision_avoidance.envs.scenario import environment_scenarios
 
+from gym_collision_avoidance.envs.vis_ui.render import GymRenderer
+
 
 class CollisionAvoidanceEnv(gym.Env):
     metadata = {
@@ -122,10 +124,8 @@ class CollisionAvoidanceEnv(gym.Env):
                 )
 
         self.agents = None
-        self.default_agents = None
         self.prev_episode_agents = None
 
-        self.static_map_filename = None
         self.map = None
 
         self.episode_step_number = 0
@@ -182,9 +182,11 @@ class CollisionAvoidanceEnv(gym.Env):
         self.testcase_seed = 0
         self.testcase_rng = np.random.default_rng(0)
         self.testcase_n_train = 128
-        self.testcase_n_test = 16
+        self.testcase_n_test = 128
         # self.testcases_seeds_train = np.arange(self.testcase_n_train)
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
+
+        self.renderer = None
 
     def step(self, actions, dt=None):
         ###############################
@@ -351,6 +353,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def reset(self):
 
+        if self.renderer is not None and self.renderer.is_storing_video:
+            self.renderer.save_video()
+            self.renderer.is_storing_video = False
+
         if (
             (
                 (self.episode_number - 1) % self.plot_every_n_episodes == 0
@@ -429,7 +435,21 @@ class CollisionAvoidanceEnv(gym.Env):
             if agent.ig_model is not None:
                 agent.ig_model.update(self.agents, 0)
 
+        # Rendering
+        self.renderer = GymRenderer(
+            self.plot_save_dir, (Config.MAP_HEIGHT, Config.MAP_WIDTH), self.obstacles
+        )
+
         return self._get_obs()
+
+    def render(self, mode="human"):
+        self.renderer.draw_frame(self.agents)
+        if mode == "human":
+            self.renderer.display()
+        elif mode == "rgb_array":
+            return self.renderer.get_last_frame()
+        elif mode == "save_video":
+            self.renderer.is_storing_video = True
 
     def close(self):
         print("--- Closing CollisionAvoidanceEnv! ---")
@@ -898,6 +918,12 @@ class CollisionAvoidanceEnv(gym.Env):
 
     def set_n_obstacles(self, n_obstacles):
         self.n_obstacles = n_obstacles
+
+    def set_new_human_goal(self, coord: tuple, mode: str = "render"):
+        if mode == "render" and self.renderer is not None:
+            goal_pos = self.renderer.image_coord_2_map_pos(coord=coord)
+            if goal_pos is not None:
+                self.agents[0].ig_model.new_human_goal(goal_pos)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 from gym_collision_avoidance.envs.information_models.goal_generator import GoalGenerator
@@ -47,7 +48,7 @@ class IG_agent_gym(ig_agent):
         self.global_pose = np.append(pos_global_frame, heading_global_frame)
 
         # Check for new goal
-        if Config.IG_GOALS_ACTIVE:
+        if Config.IG_GOALS_ACTIVE and not Config.UI_MODE:
             if self.goal_generator.next_goal(num_steps):
                 new_goal = self.goal_generator.get_goal()
                 self.targetMap.update_goal_map(new_goal, self.goal_radius)
@@ -57,6 +58,14 @@ class IG_agent_gym(ig_agent):
         self.update_agent_pos_map()
 
         self.finished = self.targetMap.finished and self.goal_generator.finished
+
+    def new_human_goal(self, new_goal: np.ndarray) -> None:
+        if Config.IG_GOALS_ACTIVE:
+            self.targetMap.update_goal_map(new_goal, self.goal_radius)
+        else:
+            warnings.warn(
+                "New human goal given, but IG_GOALS_ACTIVE is False. Ignoring new goal ..."
+            )
 
     def _update_belief(self, agents):
         targets = []
