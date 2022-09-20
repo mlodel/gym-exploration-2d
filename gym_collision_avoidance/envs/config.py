@@ -152,7 +152,7 @@ class Config:
         "pos_global_frame",
         "vel_global_frame",
         "ego_binary_map",
-        "ego_explored_map",
+        "ego_global_map",
         "ego_goal_map"
         # "local_grid",
     ]

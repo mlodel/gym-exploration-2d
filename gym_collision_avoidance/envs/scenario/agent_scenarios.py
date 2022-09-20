@@ -10,6 +10,11 @@ from gym_collision_avoidance.envs.information_models.ig_agent_gym import IG_agen
 from gym_collision_avoidance.envs.policies.MPCRLStaticObsIGPolicy_Drone import (
     MPCRLStaticObsIGPolicy_Drone,
 )
+
+from gym_collision_avoidance.envs.policies.go_mpc_drone_decomp import (
+    GoMPCDroneDecomp,
+)
+
 from gym_collision_avoidance.envs.policies.StaticPolicy import StaticPolicy
 
 from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
@@ -28,7 +33,7 @@ def exploration_random(Config, env_map, radius=0.5, rng=None, seed=None):
 
     agents = []
 
-    pos_lims_margin = Config.MAP_HEIGHT / 2 - 2 * radius
+    pos_lims_margin = np.array(env_map.map_size) / 2 - 2 * radius
 
     # Get random initial position
     pos_infeasible = True
@@ -47,9 +52,12 @@ def exploration_random(Config, env_map, radius=0.5, rng=None, seed=None):
             initial_heading=init_heading,
             radius=radius,
             pref_speed=0.5,
-            policy=MPCRLStaticObsIGPolicy_Drone,
+            policy=GoMPCDroneDecomp,
             dynamics_model=PtMassSecondOrderDynamics,
-            sensors=[GlobalMapSensor, ExploreMapSensor],
+            sensors=[
+                GlobalMapSensor,
+                # ExploreMapSensor,
+            ],
             id=0,
             ig_model=IG_agent_gym,
         )

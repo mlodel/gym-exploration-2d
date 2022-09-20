@@ -403,7 +403,7 @@ class CollisionAvoidanceEnv(gym.Env):
         for agent in self.agents:
             if agent.ig_model is not None:
                 agent.ig_model.init_model(
-                    map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
+                    map_size=self.map.map_size,
                     map_res=Config.IG_MAP_RESOLUTION,
                     detect_fov=Config.IG_SENSE_FOV,
                     detect_range=Config.IG_SENSE_RADIUS,

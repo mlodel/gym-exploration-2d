@@ -2,6 +2,18 @@ import numpy as np
 from gym_collision_avoidance.envs.maps.map_env import EnvMap
 
 
+def json_map_file(Config, **kwargs):
+    json_prefix = (
+        "/home/max/Documents/projects/exploration_2d/HouseExpo/HouseExpo/json/"
+    )
+
+    file_name = "0a1b29dba355df2ab02630133187bfab.json"
+
+    json_path = json_prefix + file_name
+
+    return None, json_path
+
+
 def exploration_random_obstacles(
     Config, n_obstacles=0, radius=0.5, rng=None, seed=None
 ):
@@ -125,15 +137,3 @@ def exploration_random_obstacles(
     obstacle.extend([obstacle_5, obstacle_6, obstacle_7, obstacle_8])
 
     return obstacle, None
-
-
-def json_map_file(Config, **kwargs):
-    json_prefix = (
-        "/home/max/Documents/projects/exploration_2d/HouseExpo/HouseExpo/json/"
-    )
-
-    file_name = "0a1b29dba355df2ab02630133187bfab.json"
-
-    json_path = json_prefix + file_name
-
-    return None, json_path

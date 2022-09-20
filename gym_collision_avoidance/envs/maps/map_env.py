@@ -75,12 +75,16 @@ class EnvMap(BaseMap):
         #     dtype=np.uint8,
         # )
 
-        ratio = self.map.shape[0] / max(shape)
-        verts = (verts * ratio).astype(int)
+        self.map_size = (shape[1] * self.cell_size, shape[0] * self.cell_size)
+        self.map.resize(shape, refcheck=False)
+
+        # ratio = self.map.shape[0] / max(shape)
+        # verts = (verts * ratio).astype(int)
 
         verts[:, 0] = verts[:, 0] - x_min + border_pad
         verts[:, 1] = verts[:, 1] - y_min + border_pad
-        cv2.drawContours(self.map, [verts], 0, 1, 1)
+        cv2.drawContours(self.map, [verts], 0, 255, -1)
+        self.map = cv2.bitwise_not(self.map) // 255
 
         # shape = cnt_map.shape
         # target_size = shape[1] // 10, shape[0] // 10
@@ -119,3 +123,44 @@ class EnvMap(BaseMap):
             return True
         else:
             return False
+
+    def get_local_pointcloud(self, pos: np.ndarray, lookahead: float):
+        lookahead_px = int(lookahead / self.cell_size)
+
+        # Create border around map to select submap close to map boundaries
+        map_border = cv2.copyMakeBorder(
+            self.map,
+            lookahead_px,
+            lookahead_px,
+            lookahead_px,
+            lookahead_px,
+            borderType=cv2.BORDER_CONSTANT,
+            value=0,
+        )
+
+        pos_px = self.get_idc_from_pos(pos)
+
+        submap = map_border[
+            pos_px[0] : pos_px[0] + 2 * lookahead_px,
+            pos_px[1] : pos_px[1] + 2 * lookahead_px,
+        ]
+        submap[:, [0, -1]] = 1
+        submap[[0, -1], :] = 1
+
+        points = np.argwhere(submap)
+        points = points + (
+            np.array(pos_px) - np.array([submap.shape[0] / 2, submap.shape[1] / 2])
+        )
+        points = points[:, [1, 0]]
+        # points = (
+        #     points * np.array([1, -1]) * self.cell_size
+        #     + np.array(self.map_size) * np.array([-1, 1]) / 2
+        # )
+        # points = np.zeros_like(points, dtype=float)
+        points[:, 0] = points[:, 0] * self.cell_size - self.map_size[0] / 2
+        points[:, 1] = -points[:, 1] * self.cell_size + self.map_size[1] / 2
+
+        # x = (idc[1]) * self.cell_size - self.map_size[0] / 2  # + self.cell_size / 2
+        # y = (-idc[0]) * self.cell_size + self.map_size[1] / 2  # - self.cell_size / 2
+
+        return points, submap

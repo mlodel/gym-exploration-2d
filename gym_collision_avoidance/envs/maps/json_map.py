@@ -6,6 +6,9 @@ import copy
 import time
 import random as rng
 
+import cProfile
+import pstats
+
 ALLOWED_ROOM_TYPES = {
     "indoor": 1,
     "kitchen": 2,
@@ -34,8 +37,8 @@ if __name__ == "__main__":
         "/home/max/Documents/projects/exploration_2d/HouseExpo/HouseExpo/json/"
     )
     # file_name = "0a5c77794ab1c44936682ccf4562f3c3.json"
-    file_name = "0a7d100165ef451e2ab508a227e4c403.json"
-    # file_name = "0a1b29dba355df2ab02630133187bfab.json"
+    # file_name = "0a7d100165ef451e2ab508a227e4c403.json"
+    file_name = "0a1b29dba355df2ab02630133187bfab.json"
 
     meter2pixel = 50
     border_pad = 0
@@ -72,8 +75,8 @@ if __name__ == "__main__":
     cv2.waitKey(0)
 
     # pos = (150, 300)
-    pos = (140, 180)
-    # pos = (270, 270)
+    # pos = (140, 180)
+    pos = (270, 270)
     lookahead = 3 * meter2pixel
 
     cnt_map_border = cv2.copyMakeBorder(
@@ -86,16 +89,14 @@ if __name__ == "__main__":
         value=255,
     )
 
-    start = time.time()
+    profiler = cProfile.Profile()
+    profiler.enable()
 
     submap = cnt_map_border[
         pos[1] : pos[1] + 2 * lookahead, pos[0] : pos[0] + 2 * lookahead
     ]
 
     submap = cv2.copyMakeBorder(submap, 1, 1, 1, 1, cv2.BORDER_CONSTANT, 0)
-
-    # cv2.imshow("map", submap)
-    # cv2.waitKey(0)
 
     kernel_q = np.ones((3, 3), np.uint8)
     submap_q = cv2.erode(submap, kernel_q, iterations=3)
@@ -140,8 +141,6 @@ if __name__ == "__main__":
     mark = markers.astype("uint8")
     mark = cv2.bitwise_not(mark)
 
-    print(time.time() - start)
-
     cv2.imshow("map", submap)
     cv2.imshow("map_d", submap_d)
     cv2.imshow("map_d2", submap_d2)
@@ -153,8 +152,8 @@ if __name__ == "__main__":
     kernel_q = np.ones((2, 2), np.uint8)
     mark = cv2.erode(mark, kernel_q, iterations=1)
 
-    cv2.imshow("Markers_v3", mark)
-    cv2.waitKey(0)
+    # cv2.imshow("Markers_v3", mark)
+    # cv2.waitKey(0)
 
     contours, hierarchy = cv2.findContours(mark, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -205,6 +204,9 @@ if __name__ == "__main__":
         # cv2.imshow("colormap", color_map2)
         # cv2.waitKey(0)
 
+    profiler.disable()
+    stats = pstats.Stats(profiler)
+    stats.dump_stats(os.path.dirname(os.path.realpath(__file__)) + "/stats.prof")
     # Visualize the final image
     cv2.imshow("shapes", dst)
     cv2.imshow("hulls", dst_hulls)

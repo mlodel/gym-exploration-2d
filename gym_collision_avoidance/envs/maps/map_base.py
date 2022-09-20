@@ -18,6 +18,7 @@ class BaseMap(ABC):
     ):
         self.map_size = map_size
         self.cell_size = cell_size
+        self.cell_size_decimals = int(-np.floor(np.log10(self.cell_size))) + 1
         self.shape = (
             int(self.map_size[0] / self.cell_size),
             int(self.map_size[1] / self.cell_size),
@@ -34,6 +35,10 @@ class BaseMap(ABC):
         self.obs_border_value = None
 
     def get_idc_from_pos(self, pos: Union[np.ndarray, list, tuple]) -> tuple:
+
+        # Round to correct for numerical errors before doing np.floor
+        pos = pos.round(self.cell_size_decimals)
+
         # OpenCV coordinate frame is in the top-left corner, x to the left, y downwards
         x_idx = np.floor((pos[0] + self.map_size[0] / 2) / self.cell_size)
         y_idx = np.floor((-pos[1] + self.map_size[1] / 2) / self.cell_size)

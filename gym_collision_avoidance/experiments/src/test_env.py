@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 def main():
     # Instantiate the environment
     # env = gym.make("CollisionAvoidance-v0")
-    n_envs = 1
+    n_envs = 2
     env, _ = create_env(n_envs=n_envs, subproc=(n_envs > 1))
     # Path to Map
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"

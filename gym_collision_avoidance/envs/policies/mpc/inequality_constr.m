@@ -1,4 +1,4 @@
-function ineq_constr =  inequality_constr( x_R,u_R, p,i)
+function ineq_constr =  inequality_constr( x_R,u_R, p, i, n_constr)
 
 % states and inputs for ego vehicle
 
@@ -83,11 +83,11 @@ function ineq_constr =  inequality_constr( x_R,u_R, p,i)
             c_disc_0_obst_4 + slack;
             c_disc_0_obst_5 + slack;
             c_disc_0_obst_6 + slack];
-    for l = 1 : 4
+    for l = 1 : n_constr
     %l = 1
-        A1 = p(71 +l-1); 
-        A2 = p(75 +l-1);
-        b = p(79 +l-1);
+        A1 = p(71 + (l-1)*3); 
+        A2 = p(72 + (l-1)*3);
+        b = p(73 + (l-1)*3);
         
         ineq_constr = [ineq_constr;A1*x+A2*y-b-slack];
 %         ineq_constr = [ineq_constr];

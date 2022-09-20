@@ -23,14 +23,14 @@ deg2rad = @(deg) deg/180*pi; % convert degrees into radians
 rad2deg = @(rad) rad/pi*180; % convert radians into degrees
 
 %% Problem dimensions
-n_constraints_per_region = 4;
+n_constraints_per_region = 10;
 model.N = 15;            % horizon length
 model.nvar = 8;          % number of variables
 model.neq= 5;            % number of equality constraints
 model.nh = 6 + n_constraints_per_region;            % number of inequality constraint functions
 n_other_param = 70;
 dt = 0.1;
-model.npar =  n_other_param +12;          % number of parameters
+model.npar =  n_other_param + 3*n_constraints_per_region;          % number of parameters
 
 %% Inequality constraints
 % upper/lower variable bounds lb <= x <= ub
@@ -55,7 +55,7 @@ for i=1:model.N
     %% Objective function
     model.objective{i} = @(z, p) objective_scenario_drone(z(4:8),z(1: 3), p,i,model.N); 
 
-    model.ineq{i} = @(z,p) inequality_constr(z(4: 8),z(1: 3), p, i);
+    model.ineq{i} = @(z,p) inequality_constr(z(4: 8),z(1: 3), p, i, n_constraints_per_region);
 
     %% Upper/lower bounds For road boundaries
    model.hu{i} = [+Inf, +Inf, +Inf, +Inf, +Inf, +Inf, 0*ones(1, n_constraints_per_region)]; % 2*3 for ellips 1 for binary
