@@ -11,7 +11,7 @@ class ig_greedy:
     def __init__(self, ig_model):
         self.ig_model = ig_model
 
-    def get_expert_goal(self, max_dist=6.0, min_dist=0.0, Nsamples=30):
+    def get_expert_goal(self, max_dist=3.0, min_dist=0.0, Nsamples=30):
         pose = self.ig_model.host_agent.pos_global_frame
 
         if Config.ACTION_SPACE_TYPE == Config.discrete:
@@ -68,10 +68,12 @@ class ig_greedy:
             edf_next_pose = self.ig_model.targetMap.edfMapObj.get_edf_value_from_pose(
                 goal
             )
-            if edf_next_pose < 0:  # self.ig_model.host_agent.radius + 0.1:
-                reward = 0
-            elif not self.ig_model.targetMap.edfMapObj.checkVisibility(pose, goal):
-                reward = 0
+            if edf_next_pose < 0.01:  # self.ig_model.host_agent.radius:
+                reward = -1
+            elif not self.ig_model.targetMap.edfMapObj.checkVisibility(
+                pose, goal  # , thres=self.ig_model.host_agent.radius
+            ):
+                reward = -1
             else:
                 reward = self.ig_model.targetMap.get_reward_from_pose(
                     goal, force_mi=True
@@ -82,7 +84,16 @@ class ig_greedy:
                 best_cand_idx = i
                 global_goal = goal
 
-        greedy_goal = candidates[best_cand_idx, :]
-        self.ig_model.expert_goal = global_goal
+        if best_cand_idx is not None:
+            greedy_goal = candidates[best_cand_idx, :]
+        else:
+            greedy_goal = np.zeros(2)
+        # greedy_goal = candidates[6, :]
+        # self.ig_model.expert_goal = global_goal
+        # self.ig_model.targetMap.edfMapObj.get_edf_value_from_pose(pose + greedy_goal)
+        # self.ig_model.targetMap.edfMapObj.checkVisibility(pose, pose + greedy_goal)
+
+        if greedy_goal.ndim > 1:
+            test = 1
 
         return greedy_goal

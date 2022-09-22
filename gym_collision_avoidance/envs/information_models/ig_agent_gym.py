@@ -57,7 +57,10 @@ class IG_agent_gym(ig_agent):
 
         self.update_agent_pos_map()
 
-        self.finished = self.targetMap.finished and self.goal_generator.finished
+        if Config.IG_GOALS_ACTIVE:
+            self.finished = self.targetMap.finished and self.goal_generator.finished
+        else:
+            self.finished = self.targetMap.finished
 
     def new_human_goal(self, new_goal: np.ndarray) -> None:
         if Config.IG_GOALS_ACTIVE:

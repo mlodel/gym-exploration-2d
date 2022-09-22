@@ -75,10 +75,12 @@ class GoMPCDroneDecomp(Policy):
         # self.static_obstacles = StaticObstacleAvoidance()
 
         self.static_obstacles_manager = ConstraintGen(
-            resolution=Config.SUBMAP_RESOLUTION, robot_radius=0.1, n_constraints=self.M
+            resolution=Config.SUBMAP_RESOLUTION, robot_radius=0.3, n_constraints=self.M
         )
+        self.ellipse_decomp = True
 
         self.linear_constraints = {}
+        self.constr_visualization = {}
 
         self.count = 0
 
@@ -120,8 +122,8 @@ class GoMPCDroneDecomp(Policy):
             else:
                 self.goal_[0] = agent.goal_global_frame[0]
                 self.goal_[1] = agent.goal_global_frame[1]
-            agent.next_goal = self.goal_
 
+            agent.next_goal = self.goal_
             self.policy_goal = self.goal_
 
         self.current_state_[0] = agent.pos_global_frame[0]
@@ -132,15 +134,18 @@ class GoMPCDroneDecomp(Policy):
 
         # Compute Static Collision Constraints
         map = agent.sensors["GlobalMapSensor"].map
+        constraints_goal = self.goal_ if self.ellipse_decomp else None
         points, _ = map.get_local_pointcloud(agent.pos_global_frame, lookahead=3)
         (
             self.linear_constraints["a"],
             self.linear_constraints["b"],
             new_goal,
-            _,
+            self.constr_visualization,
         ) = self.static_obstacles_manager.constraints_from_pointcloud(
-            points, agent.pos_global_frame, self.goal_
+            points, agent.pos_global_frame, constraints_goal
         )
+        # if new_goal is not None:
+        #     self.goal_ = new_goal
 
         # self.x_error_weight_ = 5.0
         # self.y_error_weight_ = 5.0
@@ -188,6 +193,7 @@ class GoMPCDroneDecomp(Policy):
         # self.goal_[1] = agent.goal_global_frame[1]
 
         goal = agent.ig_model.expert_policy.get_expert_goal()
+        goal = goal[:2]
 
         if self.subgoal_egocentric:
             c, s = np.cos(agent.heading_global_frame), np.sin(

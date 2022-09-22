@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import pypoman
 from gym_collision_avoidance.envs.maps.map_env import EnvMap
 import time
 import os
@@ -23,6 +24,7 @@ class GymRenderer:
         path: str,
         map_size: tuple,
         obstacles: list,
+        map_file: str,
         map_min_shape: int = 500,
         map_border_width: int = 5,
         small_map_size: int = 168,
@@ -39,16 +41,17 @@ class GymRenderer:
         self.colors = np.around(self.colors * 255).astype(np.uint8)
         self.colors = self.colors[:, ::-1]
 
-        self.obs_keys = ["ego_explored_map", "goal_map"]
+        self.obs_keys = ["ego_global_map", "explored_map"]
 
         # Init Map
         cellsize = min(map_size) / (res_factor * map_min_shape)
         self.res = int(np.around(1 / cellsize))
         self.render_map = EnvMap(
-            map_size=(20, 20),
+            map_size=map_size,
             cell_size=cellsize,
             obs_size=(84, 84),
-            submap_size=(40, 40),
+            submap_lookahead=3.0,
+            json=map_file,
             obstacles_vert=obstacles,
         )
 
@@ -74,7 +77,7 @@ class GymRenderer:
 
         img = cv2.GaussianBlur(img, ksize=(3, 3), sigmaX=0, sigmaY=0)
 
-        downsample = (img.shape[1] // self.res_factor, img.shape[1] // self.res_factor)
+        downsample = (img.shape[1] // self.res_factor, img.shape[0] // self.res_factor)
         img = cv2.resize(img, dsize=downsample, interpolation=cv2.INTER_AREA)
 
         img = cv2.copyMakeBorder(
@@ -97,8 +100,8 @@ class GymRenderer:
         canvas = np.ones(canvas_shape, dtype=np.uint8) * 255
 
         canvas[
-            self.margins : self.margins + map_shape[1],
             self.margins : self.margins + map_shape[0],
+            self.margins : self.margins + map_shape[1],
             :,
         ] = img
 
@@ -141,9 +144,10 @@ class GymRenderer:
         cap.release()
         writer.release()
 
-    def display(self, fps: int = 10):
+    def display(self, fps: int = 1000):
         cv2.imshow("gym_display", self.get_last_frame())
         cv2.waitKey(1000 // fps)
+        test = 1
 
     def image_coord_2_map_pos(self, coord: tuple):
 
@@ -168,7 +172,7 @@ class GymRenderer:
         agent_orientation = agent.heading_ego_frame
 
         if hasattr(agent.policy, "policy_goal"):
-            subgoal = agent.policy.policy_goal
+            subgoal = agent.policy.goal_
         else:
             subgoal = None
 
@@ -189,7 +193,7 @@ class GymRenderer:
         img = cv2.circle(
             img,
             center=agent_cell,
-            radius=self.res // 2,
+            radius=np.around(agent.radius * self.res).astype(int) - self.res_factor,
             thickness=-1,
             color=(self.colors[1, :] + (255 - self.colors[1, :]) // 2).tolist(),
             lineType=cv2.LINE_AA,
@@ -198,14 +202,14 @@ class GymRenderer:
         img = cv2.circle(
             img,
             center=agent_cell,
-            radius=self.res // 2,
+            radius=np.around(agent.radius * self.res).astype(int) - self.res_factor,
             thickness=self.res_factor,
             color=self.colors[1, :].tolist(),
             lineType=cv2.LINE_AA,
         )
         # Draw Orientation
         d = np.around(
-            (self.res // 2)
+            (agent.radius * self.res)
             * np.array([np.cos(agent_orientation), np.sin(-agent_orientation)])
         ).astype(int)
         p2 = (agent_cell[0] + d[0], agent_cell[1] + d[1])
@@ -225,7 +229,7 @@ class GymRenderer:
             img = cv2.circle(
                 img,
                 center=subgoal_cell,
-                radius=self.res // 3,
+                radius=np.around(agent.radius * self.res).astype(int),
                 thickness=-1,
                 color=(self.colors[1, :] + (255 - self.colors[1, :]) // 1.5).tolist(),
                 lineType=cv2.LINE_AA,
@@ -290,11 +294,31 @@ class GymRenderer:
                     lineType=cv2.LINE_AA,
                 )
 
+        # Draw constraints
+        img = self._draw_constraints(img, agent)
+
         return img
 
     def _get_small_map(self, agent, obs):
-        small_map = agent.get_observation(obs).squeeze().astype(np.uint8)
-        small_map = small_map * 255 if np.max(small_map) == 1 else small_map
+        small_map = agent.get_observation(obs).squeeze()
+        max_val = np.max(small_map)
+        if max_val > 0 and max_val <= 1:
+            small_map = small_map * 255
+        small_map = small_map.astype(np.uint8)
+
+        # Make sure the map is square
+        if small_map.shape[0] != small_map.shape[1]:
+            if small_map.shape[0] > small_map.shape[1]:
+                pad = small_map.shape[0] - small_map.shape[1]
+                small_map = np.pad(
+                    small_map, ((0, 0), (pad // 2, pad - pad // 2)), "constant"
+                )
+            else:
+                pad = small_map.shape[1] - small_map.shape[0]
+                small_map = np.pad(
+                    small_map, ((pad // 2, pad - pad // 2), (0, 0)), "constant"
+                )
+
         small_map = cv2.cvtColor(small_map, cv2.COLOR_GRAY2BGR)
         small_map = cv2.resize(
             small_map,
@@ -317,3 +341,61 @@ class GymRenderer:
         )
 
         return small_map
+
+    def _draw_constraints(self, img, agent):
+
+        constraints = agent.policy.linear_constraints
+
+        if "a" in constraints:
+            A, b = constraints["a"], constraints["b"]
+            A = np.array(A)
+            b = np.array(b)
+            # for i in range(A.shape[0]):
+            #     if A[i, 0] != 0:
+            #         x = np.array([0, b[i] / A[i, 0]])
+            #         y = np.array([1, (b[i] - A[i, 1]) / A[i, 0]])
+            #     else:
+            #         x = np.array([b[i] / A[i, 1], 0])
+            #         y = np.array([(b[i] - A[i, 0]) / A[i, 1], 1])
+            #     x = self.render_map.get_idc_from_pos(x)[::-1]
+            #     y = self.render_map.get_idc_from_pos(y)[::-1]
+            #     img = cv2.line(
+            #         img,
+            #         pt1=x,
+            #         pt2=y,
+            #         color=self.colors[3, :].tolist(),
+            #         thickness=self.res_factor,
+            #         lineType=cv2.LINE_AA,
+            #     )
+
+            vert = pypoman.compute_polytope_vertices(A, b)
+            pts = np.array([(self.render_map.get_idc_from_pos(pt)) for pt in vert])
+            convex = cv2.convexHull(pts).squeeze()
+            pts_sorted = convex[np.newaxis, :, [1, 0]]
+            img = cv2.drawContours(
+                img,
+                pts_sorted,
+                -1,
+                color=self.colors[3, :].tolist(),
+                thickness=self.res_factor,
+            )
+
+            # Display closest points
+            constr_visualization = agent.policy.constr_visualization
+            # closest_points.append(np.zeros(2))
+            if (
+                constr_visualization is not None
+                and "closest_points" in constr_visualization
+            ):
+                closest_points = constr_visualization["closest_points"]
+                for pt in closest_points:
+                    pt_px = self.render_map.get_idc_from_pos(pt)[::-1]
+                    img = cv2.circle(
+                        img,
+                        center=pt_px,
+                        radius=self.res_factor * 3,
+                        color=self.colors[5, :].tolist(),
+                        thickness=-1,
+                    )
+
+        return img

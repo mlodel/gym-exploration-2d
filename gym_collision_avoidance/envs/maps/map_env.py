@@ -13,11 +13,11 @@ class EnvMap(BaseMap):
         map_size: tuple,
         cell_size: float,
         obs_size: tuple,
-        submap_size=None,
+        submap_lookahead: float = None,
         obstacles_vert: list = None,
         json: str = None,
     ):
-        super().__init__(map_size, cell_size, obs_size, submap_size)
+        super().__init__(map_size, cell_size, obs_size, submap_lookahead)
 
         self.map_contours = np.zeros_like(self.map)
 
@@ -104,14 +104,21 @@ class EnvMap(BaseMap):
         self.map[:, -1] = 1
 
     def draw_contour_map(self):
+
+        self.map_contours = np.zeros_like(self.map)
+
         # Draw contour map
         contours, hierarchy = cv2.findContours(
             self.map, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
         )
         for i in range(len(contours)):
             self.map_contours = cv2.drawContours(
-                self.map_contours, contours, i, color=1, thickness=5
+                self.map_contours, contours, i, color=1, thickness=1
             )
+
+        # Dilate the contour map
+        kernel = np.ones((3, 3), np.uint8)
+        self.map_contours = cv2.dilate(self.map_contours, kernel, iterations=1)
 
     def check_collision(self, pose: np.ndarray = None, radius: float = 0.0) -> bool:
         if pose is None:
@@ -124,7 +131,7 @@ class EnvMap(BaseMap):
         else:
             return False
 
-    def get_local_pointcloud(self, pos: np.ndarray, lookahead: float):
+    def get_local_pointcloud(self, pos: np.ndarray, lookahead: float, pt_type="pos"):
         lookahead_px = int(lookahead / self.cell_size)
 
         # Create border around map to select submap close to map boundaries
@@ -144,14 +151,21 @@ class EnvMap(BaseMap):
             pos_px[0] : pos_px[0] + 2 * lookahead_px,
             pos_px[1] : pos_px[1] + 2 * lookahead_px,
         ]
-        submap[:, [0, -1]] = 1
-        submap[[0, -1], :] = 1
 
-        points = np.argwhere(submap)
-        points = points + (
+        # if pt_type == "pos":
+        #     submap[:, [0, -1]] = 1
+        #     submap[[0, -1], :] = 1
+        # elif pt_type == "idc":
+        #     points_free = np.argwhere(submap == 0)
+        #     points_free = points_free + (
+        #             np.array(pos_px) - np.array([submap.shape[0] / 2, submap.shape[1] / 2])
+        #     )
+
+        points_idc = np.argwhere(submap)
+        points_idc = points_idc + (
             np.array(pos_px) - np.array([submap.shape[0] / 2, submap.shape[1] / 2])
         )
-        points = points[:, [1, 0]]
+        points = points_idc[:, [1, 0]]
         # points = (
         #     points * np.array([1, -1]) * self.cell_size
         #     + np.array(self.map_size) * np.array([-1, 1]) / 2
@@ -163,4 +177,9 @@ class EnvMap(BaseMap):
         # x = (idc[1]) * self.cell_size - self.map_size[0] / 2  # + self.cell_size / 2
         # y = (-idc[0]) * self.cell_size + self.map_size[1] / 2  # - self.cell_size / 2
 
-        return points, submap
+        if pt_type == "pos":
+            return points, submap
+        elif pt_type == "idc":
+            return points_idc
+        else:
+            raise ValueError("pt_type must be 'pos' or 'idc'")

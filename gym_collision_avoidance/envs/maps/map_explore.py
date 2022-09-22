@@ -15,9 +15,11 @@ class ExploreMap(BaseMap):
         sensing_range: float,
         sensing_fov: float = 2 * np.pi,
         obs_size=(80, 80),
-        submap_size=(40, 40),
+        submap_lookahead: float = 3.0,
     ):
-        super().__init__(map_size, cell_size, obs_size, submap_size)
+        super().__init__(
+            map_size, cell_size, obs_size, submap_lookahead=submap_lookahead
+        )
         self.map_unknown_color = 127
         self.map += self.map_unknown_color
         self.map_scale = 255
@@ -30,41 +32,63 @@ class ExploreMap(BaseMap):
 
         super().update(pose)
 
-        cell_pos = self.get_idc_from_pos(pose)
+        # Get the local point cloud from the global map
+        point_cloud = global_map.get_local_pointcloud(
+            pos=pose[:2], lookahead=self.sens_range * self.cell_size, pt_type="idc"
+        ).astype(int)
 
-        # Create mask and inverse mask for visible area in circle around robot
-        mask = np.zeros_like(global_map.map)
-        mask = cv2.circle(
-            mask, center=cell_pos[::-1], radius=self.sens_range, color=255, thickness=-1
-        )
-        # TODO limited FOV
-        #  cv2.ellipse(mask, cell_pos[::-1], (self.sens_range, self.sens_range), pose[2], -self.sens_fov/2,
-        #  self.sens_fov/2, 255, -1)
-        mask_inv = cv2.bitwise_not(mask)
+        # Update the map with the point cloud
+        self.map[point_cloud[:, 0], point_cloud[:, 1]] = self.map_scale
+        #
+        #
+        # cell_pos = global_map.get_idc_from_pos(pose)
+        #
+        # # Create mask and inverse mask for visible area in circle around robot
+        # mask = np.zeros_like(global_map.map)
+        # mask = cv2.circle(
+        #     mask, center=cell_pos[::-1], radius=self.sens_range, color=255, thickness=-1
+        # )
+        # # TODO limited FOV
+        # #  cv2.ellipse(mask, cell_pos[::-1], (self.sens_range, self.sens_range), pose[2], -self.sens_fov/2,
+        # #  self.sens_fov/2, 255, -1)
+        # mask_inv = cv2.bitwise_not(mask)
+        #
+        # cv2.imshow("mask", mask)
+        # cv2.waitKey(1)
+        #
+        # # Extract contours and filled obstacles in visible area (mask circle)
+        # update_contours = cv2.bitwise_and(
+        #     global_map.map_contours, global_map.map_contours, mask=mask
+        # )
+        # update_filled = cv2.bitwise_and(global_map.map, global_map.map, mask=mask)
+        #
+        # # Scale update maps
+        # update_contours *= 255 // global_map.map_scale
+        # update_filled *= 255 // global_map.map_scale
+        #
+        # # Forget prior in sensing area, overwrite with new measurement
+        # self.map[
+        #     : global_map.map.shape[0], : global_map.map.shape[1]
+        # ] = cv2.bitwise_and(
+        #     self.map[: global_map.map.shape[0], : global_map.map.shape[1]],
+        #     self.map[: global_map.map.shape[0], : global_map.map.shape[1]],
+        #     mask=mask_inv,
+        # )
+        #
+        # # Color unknown areas in visible area (mask) grey
+        # update_unknown = np.zeros_like(mask)
+        # update_unknown[update_filled == 255] = self.map_unknown_color
+        # # TODO
+        #
+        # # Combine obstacle contour with unknown areas in visible area
+        # update = cv2.bitwise_or(update_contours, update_unknown, mask=mask)
+        #
+        # # Add update to map prior (where visible area is 0)
+        # self.map[: global_map.map.shape[0], : global_map.map.shape[1]] = cv2.add(
+        #     self.map[: global_map.map.shape[0], : global_map.map.shape[1]], update
+        # )
 
-        # Extract contours and filled obstacles in visible area (mask circle)
-        update_contours = cv2.bitwise_and(
-            global_map.map_contours, global_map.map_contours, mask=mask
-        )
-        update_filled = cv2.bitwise_and(global_map.map, global_map.map, mask=mask)
-
-        # Scale update maps
-        update_contours *= 255 // global_map.map_scale
-        update_filled *= 255 // global_map.map_scale
-
-        # Forget prior in sensing area, overwrite with new measurement
-        self.map = cv2.bitwise_and(self.map, self.map, mask=mask_inv)
-
-        # Color unknown areas in visible area (mask) grey
-        update_unknown = np.zeros_like(mask)
-        update_unknown[update_filled == 255] = self.map_unknown_color
-        # TODO
-
-        # Combine obstacle contour with unknown areas in visible area
-        update = cv2.bitwise_or(update_contours, update_unknown, mask=mask)
-
-        # Add update to map prior (where visible area is 0)
-        self.map = cv2.add(self.map, update)
+        # ----------------
 
         # # Fill closed obstacles
         # contours, hierarchy = cv2.findContours(

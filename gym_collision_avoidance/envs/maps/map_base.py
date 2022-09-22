@@ -7,14 +7,19 @@ from typing import Any, Dict, Optional, Type, Union
 from abc import ABC, abstractmethod
 
 from gym_collision_avoidance.envs.maps.map_obs_util import (
-    ego_global_map,
+    ego_rot_global_map,
+    ego_fixed_global_map,
     ego_submap_from_map,
 )
 
 
 class BaseMap(ABC):
     def __init__(
-        self, map_size: tuple, cell_size: float, obs_size: tuple, submap_size=None
+        self,
+        map_size: tuple,
+        cell_size: float,
+        obs_size: tuple,
+        submap_lookahead: float = 3.0,
     ):
         self.map_size = map_size
         self.cell_size = cell_size
@@ -26,7 +31,7 @@ class BaseMap(ABC):
         self.map = np.zeros(self.shape, dtype=np.uint8)
         self.pose = np.zeros(3)
         self.obs_size = obs_size
-        self.submap_size = submap_size
+        self.submap_size = int(2 * submap_lookahead / self.cell_size)
 
         # map_scale is maximum value of cells in map (important for scaling to grayscale)
         self.map_scale = 1
@@ -106,15 +111,22 @@ class BaseMap(ABC):
 
         if obs_type == "as_is":
             obs = map_array
-        elif obs_type == "ego_global_map":
-            submap_width = int(
-                np.sqrt(map_array.shape[0] ** 2 + map_array.shape[1] ** 2)
-            )
-            obs = ego_global_map(
+        elif obs_type == "ego_rot_global_map":
+            obs = ego_rot_global_map(
                 map=map_array,
                 map_cell=map_cell,
                 angle=angle,
-                sub_img_width=submap_width,
+                output_size=self.obs_size,
+                border_value=(
+                    self.obs_border_value
+                    if self.obs_border_value is not None
+                    else self.map_scale
+                ),
+            )
+        elif obs_type == "ego_fixed_global_map":
+            obs = ego_fixed_global_map(
+                map=map_array,
+                map_cell=map_cell,
                 output_size=self.obs_size,
                 border_value=(
                     self.obs_border_value
@@ -125,9 +137,9 @@ class BaseMap(ABC):
         elif obs_type == "ego_submap" and self.submap_size is not None:
             obs = ego_submap_from_map(
                 map=map_array,
-                pos_pxl=list(map_cell[::-1]),
+                pos_pxl=map_cell,
                 angle_deg=angle,
-                submap_size=list(self.submap_size),
+                submap_size=self.submap_size,
                 scale_size=list(self.obs_size),
                 border_value=(
                     self.obs_border_value

@@ -5,7 +5,7 @@ import gym
 gym.logger.set_level(40)
 from gym_collision_avoidance.envs import test_cases as tc
 from gym_collision_avoidance.envs.config import Config
-from gym_collision_avoidance.envs.utils.env_utils import run_episode, create_env
+from gym_collision_avoidance.envs.utils.env_utils import create_env
 
 import cProfile
 import pstats
@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 def main():
     # Instantiate the environment
     # env = gym.make("CollisionAvoidance-v0")
-    n_envs = 2
-    env, _ = create_env(n_envs=n_envs, subproc=(n_envs > 1))
+    n_envs = 1
+    env = create_env(n_envs=n_envs, subproc=(n_envs > 1))
     # Path to Map
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/simple_rooms_no_walls.png"
     # mapPath = os.path.abspath(os.path.dirname(__file__)) + "/../../envs/world_maps/002.png"
@@ -30,14 +30,14 @@ def main():
     # In case you want to save plots, choose the directory
     save_path = os.path.dirname(os.path.realpath(__file__)) + "/../results"
     # env.set_attr('prediction_model', prediction_model['CV']('CV', 0))
-    for i in range(n_envs):
-        plot_save_dir = save_path + "/figs_env" + str(i) + "/"
-        os.makedirs(plot_save_dir, exist_ok=True)
-        # env.set_attr('plot_save_dir', plot_save_dir, i)
-        env.env_method("set_plot_save_dir", plot_save_dir, indices=i)
-        env.env_method("set_n_env", n_envs, i, True, indices=i)
-        # if i != 0:
-        #     env.env_method('set_plot_env', False, indices=i)
+    # for i in range(n_envs):
+    #     plot_save_dir = save_path + "/figs_env" + str(i) + "/"
+    #     os.makedirs(plot_save_dir, exist_ok=True)
+    #     # env.set_attr('plot_save_dir', plot_save_dir, i)
+    #     env.env_method("set_plot_save_dir", plot_save_dir, indices=i)
+    #     env.env_method("set_n_env", n_envs, i, True, indices=i)
+    #     # if i != 0:
+    #     #     env.env_method('set_plot_env', False, indices=i)
 
     obs = env.reset()  # Get agents' initial observations
 
@@ -46,7 +46,7 @@ def main():
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 1024
+    num_steps = 128
     max_rewards = []
     max_ig_rewards = []
     ig_rewards = [[] for i in range(n_envs)]
@@ -64,13 +64,14 @@ def main():
         else np.zeros((n_envs, 1), dtype=np.uint64)
     )
 
+    # env.render()
+
     for j in range(num_steps * n_eps):
 
         # dummy_action = 1 * np.array([[2.0, 2.0]])
 
         obs, reward, game_over, info = env.step(dummy_action)
-        env.render()
-
+        # env.render()
         for i in range(n_envs):
 
             rewards[i].append(np.squeeze(reward[i]))

@@ -23,7 +23,7 @@ from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
 from gym_collision_avoidance.envs.dynamics.StaticDynamics import StaticDynamics
 
 
-def exploration_random(Config, env_map, radius=0.5, rng=None, seed=None):
+def exploration_random(Config, env_map, radius=0.2, rng=None, seed=None):
     n_targets = 3
 
     if seed is not None and rng is None:
@@ -49,14 +49,14 @@ def exploration_random(Config, env_map, radius=0.5, rng=None, seed=None):
             init_pos[1],
             init_pos[0],
             init_pos[1] + 100.0,
-            initial_heading=init_heading,
+            initial_heading=init_heading * 0.0,
             radius=radius,
             pref_speed=0.5,
             policy=GoMPCDroneDecomp,
             dynamics_model=PtMassSecondOrderDynamics,
             sensors=[
                 GlobalMapSensor,
-                # ExploreMapSensor,
+                ExploreMapSensor,
             ],
             id=0,
             ig_model=IG_agent_gym,
@@ -85,5 +85,33 @@ def exploration_random(Config, env_map, radius=0.5, rng=None, seed=None):
                 id=1,
             )
         )
+
+    return agents
+
+
+def exploration_fixed_init(Config, env_map, radius=0.2, rng=None, seed=None):
+    agents = []
+    # ego agent
+    init_heading = 0.0
+    init_pos = np.array([-3.0, 3.0])
+    agents.append(
+        Agent(
+            init_pos[0],
+            init_pos[1],
+            init_pos[0],
+            init_pos[1] + 100.0,
+            initial_heading=init_heading,
+            radius=radius,
+            pref_speed=0.5,
+            policy=GoMPCDroneDecomp,
+            dynamics_model=PtMassSecondOrderDynamics,
+            sensors=[
+                GlobalMapSensor,
+                # ExploreMapSensor,
+            ],
+            id=0,
+            ig_model=IG_agent_gym,
+        )
+    )
 
     return agents

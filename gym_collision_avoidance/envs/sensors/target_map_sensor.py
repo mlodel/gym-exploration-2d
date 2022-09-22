@@ -4,7 +4,7 @@ from gym_collision_avoidance.envs.maps.map_explore import ExploreMap
 from gym_collision_avoidance.envs.config import Config
 
 
-class ExploreMapSensor(Sensor):
+class TargetMapSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
         self.map = ExploreMap(
@@ -13,7 +13,7 @@ class ExploreMapSensor(Sensor):
             sensing_fov=Config.IG_SENSE_FOV,
             sensing_range=Config.IG_SENSE_RADIUS,
             obs_size=Config.EGO_MAP_SIZE,
-            submap_lookahead=Config.SUBMAP_LOOKAHEAD,
+            submap_size=(Config.SUBMAP_HEIGHT, Config.SUBMAP_WIDTH),
         )
 
     def sense(self, agents, agent_index, global_map):

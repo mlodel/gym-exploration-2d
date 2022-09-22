@@ -7,7 +7,9 @@ def json_map_file(Config, **kwargs):
         "/home/max/Documents/projects/exploration_2d/HouseExpo/HouseExpo/json/"
     )
 
-    file_name = "0a1b29dba355df2ab02630133187bfab.json"
+    # file_name = "0a1b29dba355df2ab02630133187bfab.json"
+    file_name = "0a1a5807d65749c1194ce1840354be39.json"
+    # file_name = "0a5c77794ab1c44936682ccf4562f3c3.json"
 
     json_path = json_prefix + file_name
 

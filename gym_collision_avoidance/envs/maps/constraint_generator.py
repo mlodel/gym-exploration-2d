@@ -132,8 +132,8 @@ class ConstraintGen:
             # Get tangent equation to create halfspace constraint
             new_a, new_b = self._get_tangent(closest_point, ellipse=True)
 
-            # # Shift by radius
-            # new_b -= new_a.T @ new_a * self.robot_radius
+            # Shift by radius
+            new_b -= new_a.T @ new_a * self.robot_radius
 
             a.append(new_a)
             b.append(new_b)
@@ -197,8 +197,8 @@ class ConstraintGen:
             # Get tangent equation to create halfspace constraint
             new_a, new_b = self._get_tangent(closest_point, ellipse=False)
 
-            # # Shift by radius
-            # new_b -= new_a.T @ new_a * self.robot_radius
+            # Shift by radius
+            new_b -= new_a.T @ new_a * self.robot_radius
 
             a.append(new_a)
             b.append(new_b)
@@ -256,6 +256,8 @@ class ConstraintGen:
         points_dist_in_circle = points_dist[points_in_circle_idc]
         points_in_circle = self.points[points_in_circle_idc]
 
+        if points_in_circle.ndim == 1:
+            points_in_circle = points_in_circle.reshape(1, -1)
         # Correct points in circle for resolution
         correct_x_idc = np.argwhere(points_in_circle[:, 0] < self.el.d[0])
         points_in_circle[correct_x_idc, 0] = (
@@ -363,10 +365,10 @@ class ConstraintGen:
 
         if points_in_region_idc.shape[0] > 0:
 
-            points_in_region = self.points[points_in_region_idc.squeeze()]
+            points_in_region = self.points[points_in_region_idc]
 
-            closest_point_idc = np.argmin(np.sum((points_in_region - pos) ** 2, axis=1))
-            pc = points_in_region[closest_point_idc]
+            closest_point_idc = np.argmin(np.sum((points_in_region - pos) ** 2, axis=2))
+            pc = points_in_region[closest_point_idc].squeeze()
 
             # Unit vector along line position to goal
             v = n2

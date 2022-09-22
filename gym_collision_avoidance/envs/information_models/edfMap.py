@@ -30,15 +30,16 @@ class edfMap:
 
         if (
             xIdc < 0
-            or xIdc >= self.mapSize[0] / self.cellSize
+            or xIdc >= self.mapSize[0] // self.cellSize
             or yIdc < 0
-            or yIdc >= self.mapSize[1] / self.cellSize
+            or yIdc >= self.mapSize[1] // self.cellSize
         ):
             return 0.0
         else:
+
             return self.map[int(yIdc), int(xIdc)]
 
-    def checkVisibility(self, pose, goal):
+    def checkVisibility(self, pose, goal, thres=0.001):
         pose = np.asarray(pose) if "list" in str(type(pose)) else pose
         goal = np.asarray(goal) if "list" in str(type(goal)) else goal
 
@@ -48,7 +49,6 @@ class edfMap:
             goal = goal[0:2]
 
         distIncr = 0.05
-        thres = 0.001
 
         visible = True
         diff = goal - pose
@@ -56,8 +56,8 @@ class edfMap:
 
         while u < 1:
             nextPoint = (1 - u) * pose + u * goal
-            xIdc = int(np.floor((nextPoint[0] + self.mapSize[1] / 2) / self.cellSize))
-            yIdc = int(np.floor((-nextPoint[1] + self.mapSize[0] / 2) / self.cellSize))
+            xIdc = int(np.floor((nextPoint[0] + self.mapSize[0] / 2) / self.cellSize))
+            yIdc = int(np.floor((-nextPoint[1] + self.mapSize[1] / 2) / self.cellSize))
 
             # xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
             xIdc = (

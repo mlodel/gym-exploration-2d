@@ -150,16 +150,6 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.n_other_agents = 0
 
-        # Rendering
-        self.viewer = None
-        self.automatic_rendering_callback = None
-        self.should_update_rendering = True
-        self.rendering_mode = "human"
-        self.offscreen = False
-        self.enable_auto_render = False
-        self.run = True
-        self.plot_env = True
-
         self.dagger = False
         self.dagger_beta = 1.0
         self.use_expert = True
@@ -187,6 +177,18 @@ class CollisionAvoidanceEnv(gym.Env):
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
 
         self.renderer = None
+        self.enable_auto_render = True
+        self.auto_rendering_mode = "human"
+
+        # Rendering
+        self.viewer = None
+        self.automatic_rendering_callback = None
+        self.should_update_rendering = True
+
+        self.offscreen = False
+
+        self.run = True
+        self.plot_env = True
 
     def step(self, actions, dt=None):
         ###############################
@@ -268,6 +270,10 @@ class CollisionAvoidanceEnv(gym.Env):
 
             self.episode_step_number += 1
             self.total_number_of_steps += 1
+
+            # Auto render
+            if self.enable_auto_render:
+                self.render(mode=self.auto_rendering_mode)
 
             # Take action
             self._take_action(clipped_selected_action, dt, new_action)
@@ -437,7 +443,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         # Rendering
         self.renderer = GymRenderer(
-            self.plot_save_dir, (Config.MAP_HEIGHT, Config.MAP_WIDTH), self.obstacles
+            self.plot_save_dir, self.map.map_size, self.obstacles, self.map_file
         )
 
         return self._get_obs()
@@ -570,7 +576,7 @@ class CollisionAvoidanceEnv(gym.Env):
         self.map = EnvMap(
             map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
             cell_size=Config.SUBMAP_RESOLUTION,
-            submap_size=(Config.SUBMAP_WIDTH, Config.SUBMAP_HEIGHT),
+            submap_lookahead=Config.SUBMAP_LOOKAHEAD,
             obs_size=Config.EGO_MAP_SIZE,
             obstacles_vert=self.obstacles,
             json=self.map_file,
@@ -914,7 +920,7 @@ class CollisionAvoidanceEnv(gym.Env):
             self.testcase_count = 0
         if use_expert and n_algs > 0:
             self.expert_controller = expert
-            # self.agents[0].ig_model.set_expert_policy(expert)
+            self.agents[0].ig_model.set_expert_policy(expert)
 
     def set_n_obstacles(self, n_obstacles):
         self.n_obstacles = n_obstacles

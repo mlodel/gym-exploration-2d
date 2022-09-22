@@ -4,20 +4,22 @@ import numpy as np
 import cv2
 
 # import scipy
+from gym_collision_avoidance.envs.maps.map_base import BaseMap
 from gym_collision_avoidance.envs.information_models.edfMap import edfMap
 from gym_collision_avoidance.envs.config import Config
 
 
-class targetMap:
+class targetMap(BaseMap):
     def __init__(
         self,
-        mapSize,
-        cellSize,
-        sensFOV,
-        sensRange,
-        rOcc,
-        rEmp,
-        edfmap_res_factor,
+        map_size: tuple,
+        cell_size: float,
+        obs_size: tuple,
+        sensFOV: float,
+        sensRange: float,
+        rOcc: float,
+        rEmp: float,
+        edfmap_res_factor: float,
         tolerance=0.01,
         prior=0.0,
         p_false_neg=0.1,
@@ -25,28 +27,31 @@ class targetMap:
         logmap_bound=30.0,
     ):
 
-        self.edfMapObj = edfMap(cellSize / edfmap_res_factor, mapSize)
+        super().__init__(map_size, cell_size, obs_size)
 
-        self.cellSize = cellSize
-        self.mapSize = np.asarray(mapSize)
+        # Initialize EDF map
+        self.edfMapObj = edfMap(cell_size / edfmap_res_factor, self.map_size)
+
+        # Store sensor parameters
         self.sensFOV = sensFOV
         self.sensRange = sensRange
-
         self.lOcc = np.log(rOcc)
         self.lEmp = np.log(rEmp)
         self.rOcc = rOcc
         self.rEmp = rEmp
         self.tolerance = tolerance
-
         self.p_false_neg = p_false_neg
         self.p_false_pos = p_false_pos
 
+        # Init target map arrays
         shape = (
-            int(self.mapSize[1] / self.cellSize),
-            int(self.mapSize[0] / self.cellSize),
+            int(self.map_size[1] / self.map_size),
+            int(self.map_size[0] / self.map_size),
         )
+        # log likelihood map
         self.map = np.ones(shape) * prior
 
+        # probability map
         p_prior = np.exp(prior) / (np.exp(prior) + 1)
         self.probMap = np.ones(shape) * p_prior
         # self.logMap = np.log(self.map)
@@ -56,10 +61,14 @@ class targetMap:
         cell_entropy_prior = (
             -p_prior * np.log(p_prior) - (1 - p_prior) * np.log(1 - p_prior)
         ) / np.log(2)
+
+        # entropy map
         self.entropyMap = np.ones(shape) * cell_entropy_prior
 
+        # Init binary coverage map
         self.binaryMap = np.zeros(shape).astype(bool)
 
+        # Init free cells
         self.received_map = False
         self.free_cells = set()
         self._init_free_cells()
@@ -68,6 +77,7 @@ class targetMap:
             cell_entropy_prior * self.n_free_cells
         )  # * shape[0] * shape [1]
 
+        # Init completion criteria
         self.visitedCells = set()
         self.visited_share = 0.0
 
@@ -109,7 +119,7 @@ class targetMap:
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
                 if self.received_map:
-                    pose = self.getPoseFromCell((i, j))
+                    pose = self.get_pos_from_idc((i, j))
                     if self.edfMapObj.get_edf_value_from_pose(pose) >= 0.001:
                         self.free_cells.add((i, j))
                 else:
@@ -129,39 +139,17 @@ class targetMap:
             self.received_map = True
             self._init_free_cells()
 
-    def getCellsFromPose(self, pose):
-        if len(pose) > 2:
-            pose = pose[0:2]
-        # OpenCV coordinate frame is in the top-left corner, x to the left, y downwards
-        xIdc = np.floor((pose[0] + self.mapSize[0] / 2) / self.cellSize)
-        yIdc = np.floor((-pose[1] + self.mapSize[1] / 2) / self.cellSize)
-
-        # xIdc = np.clip(xIdc, 0, self.map.shape[1] - 1)
-        xIdc = (
-            self.map.shape[1] - 1
-            if xIdc > self.map.shape[1] - 1
-            else (0 if xIdc < 0 else xIdc)
-        )
-        # yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
-        yIdc = (
-            self.map.shape[0] - 1
-            if yIdc > self.map.shape[1] - 1
-            else (0 if yIdc < 0 else yIdc)
-        )
-
-        return (int(yIdc), int(xIdc))
-
-    def getPoseFromCell(self, cell):
-        x = (cell[1]) * self.cellSize - self.mapSize[0] / 2 + self.cellSize / 2
-        y = (-cell[0]) * self.cellSize + self.mapSize[1] / 2 - self.cellSize / 2
-        return np.array([x, y])
-
     def get_pos_in_map_lims(self, pose):
         if len(pose) > 2:
             pose = pose[0:2]
         return np.max(
             np.array(
-                [np.min(np.array([pose, self.mapSize / 2]), axis=0), -self.mapSize / 2]
+                [
+                    # np.min(np.array([pose, self.map_size / 2]), axis=0),
+                    # -self.map_size / 2,
+                    np.min(np.stack(pose, np.array(self.map_size)), axis=0),
+                    -np.array(self.map_size) / 2,
+                ]
             ),
             axis=0,
         )
@@ -193,10 +181,10 @@ class targetMap:
 
         # Find Cell indices of pose, center, left, right
         limCellsX, limCellsY = np.zeros(4).astype(int), np.zeros(4).astype(int)
-        limCellsY[0], limCellsX[0] = self.getCellsFromPose(posepos)
-        limCellsY[1], limCellsX[1] = self.getCellsFromPose(center)
-        limCellsY[2], limCellsX[2] = self.getCellsFromPose(left)
-        limCellsY[3], limCellsX[3] = self.getCellsFromPose(right)
+        limCellsY[0], limCellsX[0] = self.get_idc_from_pos(posepos)
+        limCellsY[1], limCellsX[1] = self.get_idc_from_pos(center)
+        limCellsY[2], limCellsX[2] = self.get_idc_from_pos(left)
+        limCellsY[3], limCellsX[3] = self.get_idc_from_pos(right)
 
         # Find indices of rectangular map section
         x_idc_start, x_idc_end = (np.min(limCellsX), np.max(limCellsX))
@@ -209,7 +197,7 @@ class targetMap:
         visible_cells = set()
         for i in range(y_idc_start, y_idc_end + 1):
             for j in range(x_idc_start, x_idc_end + 1):
-                cellPos = self.getPoseFromCell((i, j))
+                cellPos = self.get_pos_from_idc((i, j))
                 r = np.dot(R, np.asarray(cellPos - pose[0:2]))
                 dphi = np.arctan2(r[1], r[0])
                 r_norm = np.sqrt(r[0] ** 2 + r[1] ** 2)
@@ -221,9 +209,11 @@ class targetMap:
 
         return visible_cells
 
-    def update(self, poses, observations, frame="global"):
+    def update(self, ego_pose, poses=None, observations=None, frame="global"):
         obsvdCells = set()
         reward = 0
+        poses = [] if poses is None else poses
+        observations = [] if observations is None else observations
         # Update for all agents observations
         for pose, obs in zip(poses, observations):
             c, s = np.cos(pose[2]), np.sin(pose[2])
@@ -243,7 +233,7 @@ class targetMap:
             visibleCells = self.getVisibleCells(pose)
             for i, j in visibleCells:
                 if n_detected > 0:
-                    cellPos = self.getPoseFromCell((i, j))
+                    cellPos = self.get_pos_from_idc((i, j))
                     r = np.dot(R_minus, np.asarray(cellPos - pose[0:2]))
                     # dphi = np.arctan2(r[1], r[0])
 
@@ -252,7 +242,7 @@ class targetMap:
                         r_diff = r_target - r
                         r_diff_norm = np.sqrt(r_diff[0] ** 2 + r_diff[1] ** 2)
                         if r_diff_norm < (
-                            np.sqrt(0.5) * self.cellSize + self.tolerance
+                            np.sqrt(0.5) * self.cell_size + self.tolerance
                         ):
                             in_current_cell = True
                             break
@@ -403,7 +393,7 @@ class targetMap:
         if len(self.current_goals) < 3:
             self.current_goals.append(new_goal)
 
-            (i, j) = self.getCellsFromPose(new_goal)
+            (i, j) = self.get_idc_from_pos(new_goal)
 
             old_goal_map = copy.copy(self.goal_map)
 
@@ -446,76 +436,12 @@ class targetMap:
 
     def create_ego_map(self, pose, map, newImageWidth, border_value=0.0):
 
-        map_cell = self.getCellsFromPose(pose[:2])
-
-        # Create squared extended map with size 3x larger map size and place square map in the middle
-        long_size = max(map.shape)
-        ext_map = np.ones((3 * long_size, 3 * long_size), dtype=np.uint8) * border_value
-
-        # Make map square
-        if map.shape[0] != map.shape[1]:
-            if map.shape[0] > map.shape[1]:
-                diff = map.shape[0] - map.shape[1]
-                pad1 = diff // 2 if diff % 2 == 0 else diff // 2 + 1
-                pad2 = diff // 2
-                map_square = np.pad(
-                    map,
-                    ((0, 0), (pad1, pad2)),
-                    "constant",
-                    constant_values=border_value,
-                )
-                pad_x = pad1
-                pad_y = 0
-            else:
-                diff = map.shape[1] - map.shape[0]
-                pad1 = diff // 2 if diff % 2 == 0 else diff // 2 + 1
-                pad2 = diff // 2
-                map_square = np.pad(
-                    map,
-                    ((pad1, pad2), (0, 0)),
-                    "constant",
-                    constant_values=border_value,
-                )
-                pad_x = 0
-                pad_y = pad1
-        else:
-            map_square = map
-            pad_x = 0
-            pad_y = 0
-
-        ext_map[long_size : 2 * long_size, long_size : 2 * long_size] = map_square
-
-        # Shift robot position in extended map
-        point = np.array(map_cell, dtype=int) + np.array(
-            [long_size + pad_y, long_size + pad_x], dtype=int
-        )
-
-        # Crop map to be centered around robot position
-        # Size is 2x long_size
-        final = ext_map[
-            point[0] - long_size : point[0] + long_size,
-            point[1] - long_size : point[1] + long_size,
-        ]
-
-        # # Dilate final map to preserve features
-        # iterations = np.ceil(final.shape[0] / 200).astype(int)
-        # final = cv2.dilate(final, np.ones((3, 3), np.uint8), iterations=iterations)
-
-        # Resize to output size
-        final_resize = cv2.resize(
-            final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_LINEAR
-        )
-
-        return final_resize
-
-    def create_ego_map_old(self, pose, map, newImageWidth, border_value=0.0):
-
         # # Clip position to be inside map bounds
         # position = np.clip(
-        #     pose[:2], -self.mapSize * np.ones(2), self.mapSize * np.ones(2)
+        #     pose[:2], -self.map_size * np.ones(2), self.map_size * np.ones(2)
         # )
 
-        map_cell = self.getCellsFromPose(pose[:2])
+        map_cell = self.get_idc_from_pos(pose[:2])
         # map_cell = (map_cell[0], 20-map_cell[1])
         angle = pose[2] * 180 / np.pi
 

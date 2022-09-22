@@ -6,7 +6,7 @@ class Config:
     # GENERAL PARAMETERS
     COLLISION_AVOIDANCE = True
     continuous, discrete = range(2)  # Initialize game types as enum
-    ACTION_SPACE_TYPE = discrete
+    ACTION_SPACE_TYPE = continuous
 
     ANIMATE_EPISODES = False
     SHOW_EPISODE_PLOTS = False
@@ -50,7 +50,7 @@ class Config:
     # MPC
     FORCES_N = 15
     FORCES_DT = 0.3
-    REPEAT_STEPS = 5
+    REPEAT_STEPS = 10
 
     LASERSCAN_LENGTH = 16  # num range readings in one scan
 
@@ -64,9 +64,8 @@ class Config:
     MAX_NUM_OTHER_AGENTS_OBSERVED = MAX_NUM_AGENTS_IN_ENVIRONMENT - 1
 
     # Gridmap parameters
-    SUBMAP_WIDTH = 40  # Pixels
-    SUBMAP_HEIGHT = 40  # Pixels
-    SUBMAP_RESOLUTION = 0.1  # Pixel / meter
+    SUBMAP_LOOKAHEAD = 3.0  # meters
+    SUBMAP_RESOLUTION = 0.05  # Pixel / meter
     SUBMAP_SCALE = True
     SUBMAP_SCALE_TARGET = (80, 80)
 
@@ -78,17 +77,17 @@ class Config:
 
     EGO_MAP_SIZE = (84, 84)
 
-    IG_MAP_RESOLUTION = 1.0
+    IG_MAP_RESOLUTION = 0.5
     IG_EDF_RESOLUTION_FACTOR = 10
     IG_EXPERT_POLICY = "IG_EXPERT_POLICY"
-    IG_SENSE_RADIUS = 3.5
+    IG_SENSE_RADIUS = 2.0
     IG_SENSE_FOV = 360.0
     IG_SENSE_rOcc = 3.0
     IG_SENSE_rEmp = 0.33
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
-    IG_THRES_VISITED_CELLS = 0.9
+    IG_THRES_VISITED_CELLS = 0.99
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = True  # When False fixed episode length by timeout
     IG_REWARD_COVERAGE_FINISHED = 1.0
@@ -97,9 +96,9 @@ class Config:
     IG_REWARD_GOAL_PENALTY = -0.0
     IG_REWARD_GOAL_COMPLETION = 1.0
 
-    IG_GOALS_ACTIVE = True
+    IG_GOALS_ACTIVE = False
     IG_GOALS_SETTINGS = {"max_steps": 128}
-    IG_GOALS_TERMINATION = True
+    IG_GOALS_TERMINATION = False
     IG_GOALS_TERMINATION_WAIT = 0
 
     REWARD_MAX_IG = (
@@ -126,7 +125,7 @@ class Config:
     TEST_N_OBST = 3
 
     DISCRETE_SUBGOAL_ANGLES = 12
-    DISCRETE_SUBGOAL_RADII = [4.0]
+    DISCRETE_SUBGOAL_RADII = [2.0]
 
     SUBGOALS_EGOCENTRIC = True
     CLIP_ACTION = True
@@ -153,7 +152,7 @@ class Config:
         "pos_global_frame",
         "vel_global_frame",
         "ego_binary_map",
-        "ego_global_map",
+        # "ego_global_map",
         "ego_goal_map"
         # "local_grid",
     ]
@@ -206,8 +205,32 @@ class Config:
             "bounds": [0, 255],
             "sensor_name": "GlobalMapSensor",
             "sensor_kwargs": dict(obs_type="ego_submap"),
-            "std": np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.uint8),
-            "mean": np.ones((SUBMAP_WIDTH, SUBMAP_HEIGHT), dtype=np.uint8),
+            "std": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
+            "mean": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
+        },
+        "global_map": {
+            "dtype": np.uint8,
+            "size": (
+                int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                int(MAP_WIDTH / SUBMAP_RESOLUTION),
+            ),
+            "bounds": [0, 255],
+            "sensor_name": "GlobalMapSensor",
+            "sensor_kwargs": dict(obs_type="as_is"),
+            "std": np.ones(
+                (
+                    int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                    int(MAP_WIDTH / SUBMAP_RESOLUTION),
+                ),
+                dtype=np.uint8,
+            ),
+            "mean": np.ones(
+                (
+                    int(MAP_HEIGHT / SUBMAP_RESOLUTION),
+                    int(MAP_WIDTH / SUBMAP_RESOLUTION),
+                ),
+                dtype=np.uint8,
+            ),
         },
         "explored_map": {
             "dtype": np.uint8,
@@ -238,7 +261,7 @@ class Config:
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
             "sensor_name": "ExploreMapSensor",
-            "sensor_kwargs": dict(obs_type="ego_global_map"),
+            "sensor_kwargs": dict(obs_type="ego_rot_global_map"),
             "std": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
             "mean": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
         },
@@ -246,8 +269,8 @@ class Config:
             "dtype": np.uint8,
             "size": EGO_MAP_SIZE,
             "bounds": [0, 255],
-            "sensor_name": "EnvMapSensor",
-            "sensor_kwargs": dict(obs_type="ego_global_map"),
+            "sensor_name": "GlobalMapSensor",
+            "sensor_kwargs": dict(obs_type="ego_fixed_global_map"),
             "std": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
             "mean": np.ones(EGO_MAP_SIZE, dtype=np.uint8),
         },

@@ -53,8 +53,8 @@ if __name__ == "__main__":
         json=json_prefix + file_name,
     )
 
-    # cv2.imshow("map", map.map * 255)
-    # cv2.waitKey(0)
+    cv2.imshow("map", map.map * 255)
+    cv2.waitKey(0)
     radius = 0.2
     obj = ConstraintGen(resolution=map.cell_size, robot_radius=radius)
 

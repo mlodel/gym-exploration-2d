@@ -81,7 +81,7 @@ class ig_agent:
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
         self.agent_pos_idc = self.targetMap.getCellsFromPose(self.global_pose)
-        self.agent_pos_map[self.agent_pos_idc[1], self.agent_pos_idc[0]] = 1.0
+        self.agent_pos_map[self.agent_pos_idc[0], self.agent_pos_idc[1]] = 1.0
 
         # self.expert_seed = expert_seed
         self.rng = rng
