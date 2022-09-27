@@ -2,15 +2,11 @@ import numpy as np
 from scipy import ndimage
 
 
-class edfMap:
-    def __init__(self, cellSize, mapSize):
-        self.cellSize = cellSize
-        self.mapSize = np.asarray(mapSize)
-        shape = (
-            int(self.mapSize[1] / self.cellSize),
-            int(self.mapSize[0] / self.cellSize),
-        )
-        self.map = np.zeros(shape)
+class EdfMap:
+    def __init__(self, env_map):
+        self.cellSize = env_map.cell_size
+        self.mapSize = env_map.map_size
+        self.map = env_map.edf_map
 
     def update_from_occmap(self, obstMap):
         self.map = (

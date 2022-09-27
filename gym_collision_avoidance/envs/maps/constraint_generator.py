@@ -12,11 +12,12 @@ class Ellipse:
 
 
 class ConstraintGen:
-    def __init__(self, resolution, robot_radius, n_constraints):
+    def __init__(self, resolution, robot_radius, n_constraints, lookahead):
 
         self.resolution = resolution
         self.robot_radius = robot_radius
         self.n_constraints = n_constraints
+        self.lookahead = lookahead
 
         # init buffers
         self.points = np.array(())
@@ -37,6 +38,12 @@ class ConstraintGen:
         else:
             a, b, vis, distances = self.get_constraints_from_circle(pos)
             new_goal = goal
+
+        # Add square constraints in lookahead distance
+        square_a, square_b, square_distances = self._get_local_square_constraints(pos)
+        a.extend(square_a)
+        b.extend(square_b)
+        distances.extend(square_distances)
 
         # Sort constraints by distance to robot
         sort_idc = np.argsort(distances)
@@ -390,3 +397,30 @@ class ConstraintGen:
 
         else:
             return goal, goal
+
+    def _get_local_square_constraints(self, pos):
+
+        # Get two points of local square
+        p1 = pos + self.lookahead
+        p2 = pos - self.lookahead
+
+        # Define normal vectors of square edges
+        n1 = np.array([1, 0])
+        n2 = np.array([-1, 0])
+        n3 = np.array([0, 1])
+        n4 = np.array([0, -1])
+
+        # Compute b values for linear equations
+        b1 = n1.T @ p1
+        b2 = n2.T @ p2
+        b3 = n3.T @ p1
+        b4 = n4.T @ p2
+
+        # Define linear equations
+        a = np.array([n1, n2, n3, n4])
+        b = np.array([b1, b2, b3, b4])
+
+        # Define distances
+        distances = [self.lookahead, self.lookahead, self.lookahead, self.lookahead]
+
+        return a, b, distances

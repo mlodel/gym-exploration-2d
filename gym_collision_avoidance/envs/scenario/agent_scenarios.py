@@ -93,7 +93,7 @@ def exploration_fixed_init(Config, env_map, radius=0.2, rng=None, seed=None):
     agents = []
     # ego agent
     init_heading = 0.0
-    init_pos = np.array([-3.0, 3.0])
+    init_pos = np.array([-1.5, -3.5])
     agents.append(
         Agent(
             init_pos[0],
@@ -107,7 +107,7 @@ def exploration_fixed_init(Config, env_map, radius=0.2, rng=None, seed=None):
             dynamics_model=PtMassSecondOrderDynamics,
             sensors=[
                 GlobalMapSensor,
-                # ExploreMapSensor,
+                ExploreMapSensor,
             ],
             id=0,
             ig_model=IG_agent_gym,

@@ -4,20 +4,20 @@ import numpy as np
 import cv2
 
 # import scipy
-from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+from gym_collision_avoidance.envs.information_models.edfMap import EdfMap
 from gym_collision_avoidance.envs.config import Config
 
 
 class targetMap:
     def __init__(
         self,
+        edf_map,
         mapSize,
         cellSize,
         sensFOV,
         sensRange,
         rOcc,
         rEmp,
-        edfmap_res_factor,
         tolerance=0.01,
         prior=0.0,
         p_false_neg=0.1,
@@ -25,7 +25,7 @@ class targetMap:
         logmap_bound=30.0,
     ):
 
-        self.edfMapObj = edfMap(cellSize / edfmap_res_factor, mapSize)
+        self.edfMapObj = edf_map
 
         self.cellSize = cellSize
         self.mapSize = np.asarray(mapSize)

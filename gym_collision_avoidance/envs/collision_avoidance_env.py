@@ -415,15 +415,14 @@ class CollisionAvoidanceEnv(gym.Env):
         for agent in self.agents:
             if agent.ig_model is not None:
                 agent.ig_model.init_model(
-                    map_size=self.map.map_size,
+                    map_size=Config.MAP_SIZE,  # self.map.map_size,
                     map_res=Config.IG_MAP_RESOLUTION,
                     detect_fov=Config.IG_SENSE_FOV,
                     detect_range=Config.IG_SENSE_RADIUS,
                     rng=self.testcase_rng,
                     rOcc=Config.IG_SENSE_rOcc,
                     rEmp=Config.IG_SENSE_rEmp,
-                    occ_map=self.map.map,
-                    edfmap_res_factor=Config.IG_EDF_RESOLUTION_FACTOR,
+                    env_map=self.map,
                     init_kwargs=Config.IG_GOALS_SETTINGS,
                 )
                 # agent.ig_model.update_map(edf_map=self.map.edf_map)
@@ -574,7 +573,7 @@ class CollisionAvoidanceEnv(gym.Env):
         )(Config, n_obstacles=self.n_obstacles, rng=self.testcase_rng)
 
         self.map = EnvMap(
-            map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
+            map_size=Config.MAP_SIZE,
             cell_size=Config.SUBMAP_RESOLUTION,
             submap_lookahead=Config.SUBMAP_LOOKAHEAD,
             obs_size=Config.EGO_MAP_SIZE,

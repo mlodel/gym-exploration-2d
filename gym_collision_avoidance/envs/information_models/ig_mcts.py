@@ -4,12 +4,13 @@ from copy import deepcopy
 # from gym_collision_avoidance.envs.information_models.ig_agent import ig_agent
 # from gym_collision_avoidance.envs.agent import Agent
 
-from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+from gym_collision_avoidance.envs.information_models.edfMap import EdfMap
 from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
 from gym_collision_avoidance.envs.policies.pydecmcts.DecMCTS import Tree
 
 import os
+
 
 class MCTS_state:
     def __init__(self, act_seq, pose_seq, visib_cells, obsvd_cells, cum_reward):
@@ -20,7 +21,7 @@ class MCTS_state:
         self.obsvd_cells = obsvd_cells
 
 
-class ig_mcts():
+class ig_mcts:
     def __init__(self, ig_model):
 
         self.ig_model = ig_model
@@ -37,16 +38,27 @@ class ig_mcts():
         self.Ntree = 50
         self.Ncycles = 10
         self.Nsims = 10
-        self.mcts_cp = 1.
+        self.mcts_cp = 1.0
         self.mcts_horizon = 4
         self.mcts_gamma = 0.99
         self.cooperation_coef = 0
         self.DT = 0.1
         self.xDT = 12
 
-    def set_param(self, ego_agent, dt=0.1, xdt=1,
-                  Ntree=100, Nsims=10, parallelize_sims=False, mcts_cp=1., mcts_horizon=10, mcts_gamma=0.99, Ncycles=5,
-                  parallelize_agents=False):
+    def set_param(
+        self,
+        ego_agent,
+        dt=0.1,
+        xdt=1,
+        Ntree=100,
+        Nsims=10,
+        parallelize_sims=False,
+        mcts_cp=1.0,
+        mcts_horizon=10,
+        mcts_gamma=0.99,
+        Ncycles=5,
+        parallelize_agents=False,
+    ):
 
         self.DT = dt
         self.xDT = xdt
@@ -63,8 +75,10 @@ class ig_mcts():
 
     def get_expert_goal(self, new_step=True):
 
-        self.global_pose = np.append(self.ig_model.host_agent.pos_global_frame,
-                                     self.ig_model.host_agent.heading_global_frame)
+        self.global_pose = np.append(
+            self.ig_model.host_agent.pos_global_frame,
+            self.ig_model.host_agent.heading_global_frame,
+        )
 
         # dmcts_agents = [i for i in range(len(agents)) if "ig_mcts" in str(type(agents[i].ig_model.expert_policy))
         #                 and i != agent_id]
@@ -73,9 +87,19 @@ class ig_mcts():
         comm_n = 5
         data = {"current_pose": self.global_pose}
         if new_step:
-            self.tree = Tree(data, self.mcts_reward, self.mcts_avail_actions, self.mcts_state_storer,
-                             self.mcts_sim_selection_func, self.mcts_avail_actions, self.mcts_sim_state_storer, comm_n,
-                             robot_id=self.ig_model.host_agent.id, horizon=self.mcts_horizon, c_p=self.mcts_cp)
+            self.tree = Tree(
+                data,
+                self.mcts_reward,
+                self.mcts_avail_actions,
+                self.mcts_state_storer,
+                self.mcts_sim_selection_func,
+                self.mcts_avail_actions,
+                self.mcts_sim_state_storer,
+                comm_n,
+                robot_id=self.ig_model.host_agent.id,
+                horizon=self.mcts_horizon,
+                c_p=self.mcts_cp,
+            )
 
         # collect communications
         # for j in range(len(dmcts_agents)):
@@ -83,7 +107,11 @@ class ig_mcts():
         #         self.tree.receive_comms(agents[j].policy.best_paths, j)
 
         for i in range(self.Ntree):
-            self.tree.grow(nsims=self.Nsims, gamma=self.mcts_gamma, parallelize=self.parallelize_sims)
+            self.tree.grow(
+                nsims=self.Nsims,
+                gamma=self.mcts_gamma,
+                parallelize=self.parallelize_sims,
+            )
             # #collect communications
             # for j in range(len(dmcts_agents)):
             #     self.tree.receive_comms(agents[j].policy.tree.send_comms(), j)
@@ -97,7 +125,9 @@ class ig_mcts():
 
         return goal
 
-    def parallel_next_action(self, obs, agents, agent_id, obstacle, send_end, new_step=True):
+    def parallel_next_action(
+        self, obs, agents, agent_id, obstacle, send_end, new_step=True
+    ):
         action = self.get_expert_goal(new_step)
         # print("This is the id of the agent", agent_id, "child process", os.getpid())
         send_end.send({"policy_obj": self, "action": action})
@@ -121,11 +151,18 @@ class ig_mcts():
                 continue
             else:
                 # Check if Next Pose is within map
-                in_map = (self.ig_model.targetMap.mapSize / 2 > next_pose[0:2]).all() \
-                         and (next_pose[0:2] > -self.ig_model.targetMap.mapSize / 2).all()
+                in_map = (
+                    self.ig_model.targetMap.mapSize / 2 > next_pose[0:2]
+                ).all() and (
+                    next_pose[0:2] > -self.ig_model.targetMap.mapSize / 2
+                ).all()
                 if in_map:
                     # Check if Next Pose is Obstacle
-                    edf_next_pose = self.ig_model.targetMap.edfMapObj.get_edf_value_from_pose(next_pose)
+                    edf_next_pose = (
+                        self.ig_model.targetMap.edfMapObj.get_edf_value_from_pose(
+                            next_pose
+                        )
+                    )
                     if edf_next_pose > self.ego_agent.radius + 0.1:
                         continue
                     else:
@@ -138,8 +175,9 @@ class ig_mcts():
     def mcts_state_storer(self, data, parent_state, action, robot_id, root_pose=None):
         # If first call create State object
         if parent_state is None:
-            return MCTS_state([], [data["current_pose"]], set(), set(),
-                              0)  # This state is also used Null action when calculating local reward
+            return MCTS_state(
+                [], [data["current_pose"]], set(), set(), 0
+            )  # This state is also used Null action when calculating local reward
 
         # Compute state transition
         parent_pose = parent_state.pose_seq[-1]
@@ -158,11 +196,14 @@ class ig_mcts():
             state = None
         return state
 
-    def mcts_sim_state_storer(self, data, parent_state, action, robot_id, root_pose=None):
+    def mcts_sim_state_storer(
+        self, data, parent_state, action, robot_id, root_pose=None
+    ):
         # If first call create State object
         if parent_state is None:
-            return MCTS_state([], [data["current_pose"]], set(), set(),
-                              0)  # This state is also used Null action when calculating local reward
+            return MCTS_state(
+                [], [data["current_pose"]], set(), set(), 0
+            )  # This state is also used Null action when calculating local reward
 
         # Compute state transition
         parent_pose = parent_state.pose_seq[-1]
@@ -199,8 +240,8 @@ class ig_mcts():
 
     @staticmethod
     def mcts_avail_actions(data, state, robot_id):
-        vel_list = [0., 1.0, 3.0]
-        dphi_list = [-0.25*np.pi, -0.1*np.pi, 0, 0.1*np.pi, 0.25*np.pi]
+        vel_list = [0.0, 1.0, 3.0]
+        dphi_list = [-0.25 * np.pi, -0.1 * np.pi, 0, 0.1 * np.pi, 0.25 * np.pi]
 
         action_list = [np.array([vel, dphi]) for vel in vel_list for dphi in dphi_list]
         return action_list

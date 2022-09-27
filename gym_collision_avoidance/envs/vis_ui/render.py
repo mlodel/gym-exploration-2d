@@ -41,7 +41,7 @@ class GymRenderer:
         self.colors = np.around(self.colors * 255).astype(np.uint8)
         self.colors = self.colors[:, ::-1]
 
-        self.obs_keys = ["ego_global_map", "explored_map"]
+        self.obs_keys = ["ego_explored_map", "ego_entropy_map"]
 
         # Init Map
         cellsize = min(map_size) / (res_factor * map_min_shape)
@@ -325,7 +325,7 @@ class GymRenderer:
             dsize=(self.small_map_size, self.small_map_size),
             fx=0,
             fy=0,
-            interpolation=cv2.INTER_NEAREST,
+            interpolation=cv2.INTER_LINEAR,
         )
         small_map = cv2.circle(
             small_map,

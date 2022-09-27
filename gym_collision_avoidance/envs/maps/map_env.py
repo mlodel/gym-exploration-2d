@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from scipy import ndimage
 import json
+import skimage
 
 
 class EnvMap(BaseMap):
@@ -33,6 +34,7 @@ class EnvMap(BaseMap):
             ndimage.distance_transform_edt((~(self.map.astype(bool))).astype(int))
             * self.cell_size
         )
+        self.points, self.free_points = self._generate_global_pointcloud()
 
     def update(self, pose: np.ndarray, **kwargs):
         super().update(pose)
@@ -131,7 +133,54 @@ class EnvMap(BaseMap):
         else:
             return False
 
-    def get_local_pointcloud(self, pos: np.ndarray, lookahead: float, pt_type="pos"):
+    def _generate_global_pointcloud(self):
+
+        # Generate point cloud indices
+        points_idc = np.argwhere(self.map == 1)
+        free_points_idc = np.argwhere(self.map == 0)
+
+        # Convert into positions
+        points = self.get_pos_from_idc(points_idc)
+        free_points = self.get_pos_from_idc(free_points_idc)
+
+        return np.array(points), np.array(free_points)
+
+    def get_local_pointcloud(
+        self,
+        pos: np.ndarray,
+        lookahead: float,
+        scope: str = "square",
+        free: bool = False,
+    ):
+
+        # Switch buffer of points
+        if free:
+            points = self.free_points
+        else:
+            points = self.points
+
+        if scope == "square":
+            # get local scope of self.points
+            points_return = points[
+                (points[:, 0] > pos[0] - lookahead)
+                & (points[:, 0] < pos[0] + lookahead)
+                & (points[:, 1] > pos[1] - lookahead)
+                & (points[:, 1] < pos[1] + lookahead)
+            ]
+
+        elif scope == "circle":
+            # get circular scope of self.points
+            points_return = points[
+                (points[:, 0] - pos[0]) ** 2 + (points[:, 1] - pos[1]) ** 2
+                <= lookahead**2
+            ]
+
+        else:
+            raise ValueError("Scope must be either rectangle or circle!")
+
+        return points_return
+
+    def get_local_pointcloud2(self, pos: np.ndarray, lookahead: float, pt_type="pos"):
         lookahead_px = int(lookahead / self.cell_size)
 
         # Create border around map to select submap close to map boundaries
@@ -152,14 +201,14 @@ class EnvMap(BaseMap):
             pos_px[1] : pos_px[1] + 2 * lookahead_px,
         ]
 
-        # if pt_type == "pos":
-        #     submap[:, [0, -1]] = 1
-        #     submap[[0, -1], :] = 1
-        # elif pt_type == "idc":
-        #     points_free = np.argwhere(submap == 0)
-        #     points_free = points_free + (
-        #             np.array(pos_px) - np.array([submap.shape[0] / 2, submap.shape[1] / 2])
-        #     )
+        if pt_type == "pos":
+            submap[:, [0, -1]] = 1
+            submap[[0, -1], :] = 1
+        elif pt_type == "idc":
+            points_free = np.argwhere(submap == 0)
+            points_free = points_free + (
+                np.array(pos_px) - np.array([submap.shape[0] / 2, submap.shape[1] / 2])
+            )
 
         points_idc = np.argwhere(submap)
         points_idc = points_idc + (
@@ -180,6 +229,6 @@ class EnvMap(BaseMap):
         if pt_type == "pos":
             return points, submap
         elif pt_type == "idc":
-            return points_idc
+            return points_idc, points_free
         else:
             raise ValueError("pt_type must be 'pos' or 'idc'")

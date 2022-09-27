@@ -70,19 +70,9 @@ def ego_rot_global_map(
         point[1] - sub_img_width : point[1] + sub_img_width,
         point[0] - sub_img_width : point[0] + sub_img_width,
     ]
-    # final = cv2.flip(final, 1)
-
-    cv2.imshow("map", final * 255)
-    cv2.waitKey(1)
 
     # Dilate final map to preserve features
     final = cv2.dilate(final, np.ones((3, 3), np.uint8), iterations=3)
-
-    cv2.imshow("map2", final * 255)
-    cv2.waitKey(1)
-
-    if final.size == 0:
-        test = 1
 
     # Resize to output size
     final_resize = cv2.resize(final, output_size, interpolation=cv2.INTER_LINEAR)
@@ -204,8 +194,8 @@ def ego_submap_from_map(
     submap_idc_y_h = int(pos[0] + submap_size / 2)
     submap_img = rot_img[submap_idc_y_l:submap_idc_y_h, submap_idc_x_l:submap_idc_x_h]
 
-    cv2.imshow("map", submap_img * 255)
-    cv2.waitKey(1)
+    # cv2.imshow("map", submap_img * 255)
+    # cv2.waitKey(1)
 
     # Dilate final map to preserve features
     # iterations = np.ceil(submap_img.shape[0] / 200).astype(int)

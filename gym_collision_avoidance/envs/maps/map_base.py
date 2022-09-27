@@ -39,34 +39,60 @@ class BaseMap(ABC):
         # Optional setting for border_value for image rotations when generating obs, if None map_scale is used
         self.obs_border_value = None
 
-    def get_idc_from_pos(self, pos: Union[np.ndarray, list, tuple]) -> tuple:
+    def get_idc_from_pos(
+        self, pos: Union[np.ndarray, list, tuple]
+    ) -> Union[tuple, np.ndarray]:
+
+        pos = np.array(pos)
+        if pos.ndim == 1:
+            onedim = True
+            pos = pos.reshape((1, -1))
+        else:
+            onedim = False
 
         # Round to correct for numerical errors before doing np.floor
         pos = pos.round(self.cell_size_decimals)
 
         # OpenCV coordinate frame is in the top-left corner, x to the left, y downwards
-        x_idx = np.floor((pos[0] + self.map_size[0] / 2) / self.cell_size)
-        y_idx = np.floor((-pos[1] + self.map_size[1] / 2) / self.cell_size)
+        x_idx = np.floor((pos[:, [0]] + self.map_size[0] / 2) / self.cell_size)
+        y_idx = np.floor((-pos[:, [1]] + self.map_size[1] / 2) / self.cell_size)
 
-        # x_idx = np.clip(x_idx, 0, self.map.shape[1] - 1)
-        x_idx = (
-            self.map.shape[1] - 1
-            if x_idx > self.map.shape[1] - 1
-            else (0 if x_idx < 0 else x_idx)
-        )
-        # y_idx = np.clip(y_idx, 0, self.map.shape[0] - 1)
-        y_idx = (
-            self.map.shape[0] - 1
-            if y_idx > self.map.shape[1] - 1
-            else (0 if y_idx < 0 else y_idx)
-        )
+        if onedim:
+            x_idx = (
+                self.map.shape[1] - 1
+                if x_idx > self.map.shape[1] - 1
+                else (0 if x_idx < 0 else x_idx)
+            )
+            y_idx = (
+                self.map.shape[0] - 1
+                if y_idx > self.map.shape[1] - 1
+                else (0 if y_idx < 0 else y_idx)
+            )
+            return int(y_idx), int(x_idx)
+        else:
+            x_idx = np.clip(x_idx, 0, self.map.shape[1] - 1)
+            y_idx = np.clip(y_idx, 0, self.map.shape[0] - 1)
+            return np.hstack((y_idx, x_idx)).astype(int)
 
-        return int(y_idx), int(x_idx)
+    def get_pos_from_idc(self, idc: Union[np.ndarray, list, tuple]) -> np.ndarray:
 
-    def get_pos_from_idc(self, idc: tuple) -> np.ndarray:
-        x = (idc[1]) * self.cell_size - self.map_size[0] / 2  # + self.cell_size / 2
-        y = (-idc[0]) * self.cell_size + self.map_size[1] / 2  # - self.cell_size / 2
-        return np.array([x, y])
+        idc = np.array(idc)
+        if idc.ndim == 1:
+            onedim = True
+            idc = idc.reshape((1, -1))
+        else:
+            onedim = False
+
+        x = (idc[:, [1]]) * self.cell_size - self.map_size[
+            0
+        ] / 2  # + self.cell_size / 2
+        y = (-idc[:, [0]]) * self.cell_size + self.map_size[
+            1
+        ] / 2  # - self.cell_size / 2
+        if onedim:
+            return np.hstack((x, y)).squeeze()
+        else:
+            return np.hstack((x, y))
 
     def get_map_value(
         self, pos: Union[np.ndarray, list, tuple], map_name: str = None

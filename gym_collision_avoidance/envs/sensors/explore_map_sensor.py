@@ -8,7 +8,7 @@ class ExploreMapSensor(Sensor):
     def __init__(self):
         Sensor.__init__(self)
         self.map = ExploreMap(
-            map_size=(Config.MAP_WIDTH, Config.MAP_HEIGHT),
+            map_size=Config.MAP_SIZE,
             cell_size=Config.SUBMAP_RESOLUTION,
             sensing_fov=Config.IG_SENSE_FOV,
             sensing_range=Config.IG_SENSE_RADIUS,

@@ -2,7 +2,7 @@ import gc
 
 import numpy as np
 
-from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+from gym_collision_avoidance.envs.information_models.edfMap import EdfMap
 from gym_collision_avoidance.envs.information_models.targetMap import targetMap
 
 from gym_collision_avoidance.envs.information_models.ig_greedy import ig_greedy
@@ -19,6 +19,7 @@ def current_milli_time():
 class ig_agent:
     def __init__(self, expert_policy=None):
 
+        self.edf_map = None
         self.targetMap = None
         self.detect_fov = None
         self.detect_range = None
@@ -58,8 +59,7 @@ class ig_agent:
         rng,
         rOcc,
         rEmp,
-        occ_map=None,
-        edfmap_res_factor=10,
+        env_map,
         init_kwargs=None,
     ):
 
@@ -69,14 +69,15 @@ class ig_agent:
         self.detect_fov = detect_fov * np.pi / 180
         self.map_size = map_size
         # Init EDF and Target Map
+        self.edf_map = EdfMap(env_map)
         self.targetMap = targetMap(
+            self.edf_map,
             map_size,
             map_res,
             sensFOV=self.detect_fov,
             sensRange=self.detect_range,
             rOcc=rOcc,
             rEmp=rEmp,
-            edfmap_res_factor=edfmap_res_factor,
         )  # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)
@@ -85,9 +86,6 @@ class ig_agent:
 
         # self.expert_seed = expert_seed
         self.rng = rng
-
-        if occ_map is not None:
-            self.update_map(occ_map=occ_map)
 
         init_kwargs = dict if init_kwargs is None else init_kwargs
         self._init_model(**init_kwargs)

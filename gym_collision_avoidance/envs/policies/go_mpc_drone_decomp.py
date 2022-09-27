@@ -74,8 +74,12 @@ class GoMPCDroneDecomp(Policy):
         self.map = None
         # self.static_obstacles = StaticObstacleAvoidance()
 
+        self.constraints_lookahead = 3.0
         self.static_obstacles_manager = ConstraintGen(
-            resolution=Config.SUBMAP_RESOLUTION, robot_radius=0.3, n_constraints=self.M
+            resolution=Config.SUBMAP_RESOLUTION,
+            robot_radius=0.3,
+            n_constraints=self.M,
+            lookahead=self.constraints_lookahead,
         )
         self.ellipse_decomp = True
 
@@ -135,7 +139,9 @@ class GoMPCDroneDecomp(Policy):
         # Compute Static Collision Constraints
         map = agent.sensors["GlobalMapSensor"].map
         constraints_goal = self.goal_ if self.ellipse_decomp else None
-        points, _ = map.get_local_pointcloud(agent.pos_global_frame, lookahead=3)
+        points = map.get_local_pointcloud(
+            agent.pos_global_frame, lookahead=self.constraints_lookahead
+        )
         (
             self.linear_constraints["a"],
             self.linear_constraints["b"],
@@ -209,7 +215,9 @@ class GoMPCDroneDecomp(Policy):
 
         # Compute Static Collision Constraints
         map = agent.sensors["GlobalMapSensor"].map
-        points, _ = map.get_local_pointcloud(agent.pos_global_frame, lookahead=3)
+        points = map.get_local_pointcloud(
+            agent.pos_global_frame, lookahead=self.constraints_lookahead
+        )
         (
             self.linear_constraints["a"],
             self.linear_constraints["b"],

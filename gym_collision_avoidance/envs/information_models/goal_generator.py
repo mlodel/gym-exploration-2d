@@ -3,7 +3,7 @@ from typing import Union
 import random
 import copy
 from gym_collision_avoidance.envs.config import Config
-from gym_collision_avoidance.envs.information_models.edfMap import edfMap
+from gym_collision_avoidance.envs.information_models.edfMap import EdfMap
 
 random.seed(0)
 
@@ -20,7 +20,7 @@ class GoalGenerator:
         max_num_goals: int,
         min_steps_between_goals: int,
         goal_radius: int,
-        edf_obj: edfMap,
+        edf_obj: EdfMap,
         rng: np.random.Generator = np.random.default_rng(0),
     ):
         # Init parameters
