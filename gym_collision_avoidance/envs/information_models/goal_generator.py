@@ -49,17 +49,20 @@ class GoalGenerator:
             # Sample goal timing
             min_steps = 0 if i == 0 else self.min_steps_between_goals
             next_step = rng.integers(min_steps, self.max_steps_between_goals)
-            self.goal_steps.append(next_step + last_step)
-            last_step = next_step + last_step
 
             # Sample goal
             goal_ok = False
+            failed_trials = 0
             while not goal_ok:
-                next_goal = rng.random(2) * self.map_size - self.map_size / 2
 
+                if failed_trials > 100:
+                    break
+
+                next_goal = rng.random(2) * self.map_size - self.map_size / 2
                 # Check if in obstacle
                 edf_val = self.edf_obj.get_edf_value_from_pose(next_goal)
                 if edf_val < self.goal_radius:
+                    failed_trials += 1
                     continue
 
                 # Check if too close to previous goal
@@ -69,17 +72,23 @@ class GoalGenerator:
                         for goal in self.goals
                     ]
                 ):
+                    failed_trials += 1
                     continue
 
                 # if both checks passed, goal is okay
                 goal_ok = True
 
-            self.goals.append(next_goal)
+            if goal_ok:
+                self.goals.append(next_goal)
+                self.goal_steps.append(next_step + last_step)
+                last_step = next_step + last_step
+            else:
+                self.num_goals -= 1
 
         self.rng.__setstate__(rng_state)
 
         self.current_goal = None
-        self.finished = not Config.IG_GOALS_TERMINATION
+        self.finished = not (Config.IG_GOALS_TERMINATION and self.num_goals > 0)
 
     def next_goal(self, num_steps) -> bool:
         if num_steps in self.goal_steps:
