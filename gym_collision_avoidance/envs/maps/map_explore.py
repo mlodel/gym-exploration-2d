@@ -80,8 +80,8 @@ class ExploreMap(BaseMap):
             mask=mask_inv,
         )
 
-        cv2.imshow("update", update_contours)
-        cv2.waitKey(1)
+        # cv2.imshow("update", update_contours)
+        # cv2.waitKey(1)
 
         # Color unknown areas in visible area (mask) grey
         update_unknown = np.zeros_like(mask)

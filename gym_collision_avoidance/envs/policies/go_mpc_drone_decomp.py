@@ -77,7 +77,7 @@ class GoMPCDroneDecomp(Policy):
         self.constraints_lookahead = 3.0
         self.static_obstacles_manager = ConstraintGen(
             resolution=Config.SUBMAP_RESOLUTION,
-            robot_radius=0.3,
+            robot_radius=0.2,
             n_constraints=self.M,
             lookahead=self.constraints_lookahead,
         )
@@ -150,8 +150,9 @@ class GoMPCDroneDecomp(Policy):
         ) = self.static_obstacles_manager.constraints_from_pointcloud(
             points, agent.pos_global_frame, constraints_goal
         )
-        # if new_goal is not None:
-        #     self.goal_ = new_goal
+        if new_goal is not None:
+            #     self.goal_ = new_goal
+            self.policy_goal = new_goal
 
         # self.x_error_weight_ = 5.0
         # self.y_error_weight_ = 5.0

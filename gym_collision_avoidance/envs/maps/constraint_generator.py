@@ -63,7 +63,7 @@ class ConstraintGen:
                 (b_sorted, np.ones((self.n_constraints - b_sorted.shape[0])) * 100)
             )
 
-        return a_sorted, b_sorted, new_goal, vis
+        return a_sorted, b_sorted, new_goal_feas, vis
 
     def get_constraints_from_ellipse(self, pos, goal):
 

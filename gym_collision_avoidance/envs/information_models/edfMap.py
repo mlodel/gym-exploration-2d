@@ -32,7 +32,6 @@ class EdfMap:
         ):
             return 0.0
         else:
-
             return self.map[int(yIdc), int(xIdc)]
 
     def checkVisibility(self, pose, goal, thres=0.001):
@@ -64,7 +63,7 @@ class EdfMap:
             # yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
             yIdc = (
                 self.map.shape[0] - 1
-                if yIdc > self.map.shape[1] - 1
+                if yIdc > self.map.shape[0] - 1
                 else (0 if yIdc < 0 else yIdc)
             )
 

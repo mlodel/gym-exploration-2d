@@ -65,7 +65,7 @@ class BaseMap(ABC):
             )
             y_idx = (
                 self.map.shape[0] - 1
-                if y_idx > self.map.shape[1] - 1
+                if y_idx > self.map.shape[0] - 1
                 else (0 if y_idx < 0 else y_idx)
             )
             return int(y_idx), int(x_idx)

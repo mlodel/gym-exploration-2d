@@ -46,7 +46,7 @@ def main():
 
     # Repeatedly send actions to the environment based on agents' observations
     n_eps = 1
-    num_steps = 128
+    num_steps = 512
     max_rewards = []
     max_ig_rewards = []
     ig_rewards = [[] for i in range(n_envs)]

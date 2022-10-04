@@ -23,6 +23,7 @@ class targetMap:
         p_false_neg=0.1,
         p_false_pos=0.05,
         logmap_bound=30.0,
+        real_map_size=None,
     ):
 
         self.edfMapObj = edf_map
@@ -31,6 +32,8 @@ class targetMap:
         self.mapSize = np.asarray(mapSize)
         self.sensFOV = sensFOV
         self.sensRange = sensRange
+
+        self.real_map_size = real_map_size if real_map_size is not None else mapSize
 
         self.lOcc = np.log(rOcc)
         self.lEmp = np.log(rEmp)
@@ -106,14 +109,25 @@ class targetMap:
     def _init_free_cells(self):
 
         self.free_cells.clear()
-        for i in range(self.map.shape[0]):
-            for j in range(self.map.shape[1]):
-                if self.received_map:
+        y_start = self.getCellsFromPose([0, self.real_map_size[1] / 2])[0]
+        y_end = self.getCellsFromPose([0, -self.real_map_size[1] / 2])[0]
+        x_start = self.getCellsFromPose([-self.real_map_size[0] / 2, 0])[1]
+        x_end = self.getCellsFromPose([self.real_map_size[0] / 2, 0])[1]
+
+        self.binaryMap = np.ones_like(self.binaryMap).astype(bool)
+
+        for i in range(y_start, y_end):
+            for j in range(x_start, x_end):
+
+                if self.edfMapObj is not None:
                     pose = self.getPoseFromCell((i, j))
-                    if self.edfMapObj.get_edf_value_from_pose(pose) >= 0.001:
+                    edf_value = self.edfMapObj.get_edf_value_from_pose(pose)
+                    if edf_value >= 0.001:
                         self.free_cells.add((i, j))
+                        self.binaryMap[i, j] = False
                 else:
                     self.free_cells.add((i, j))
+                    self.binaryMap[i, j] = False
 
     def update_map(self, occ_map=None, edf_map=None):
         map_updated = False
@@ -145,7 +159,7 @@ class targetMap:
         # yIdc = np.clip(yIdc, 0, self.map.shape[0] - 1)
         yIdc = (
             self.map.shape[0] - 1
-            if yIdc > self.map.shape[1] - 1
+            if yIdc > self.map.shape[0] - 1
             else (0 if yIdc < 0 else yIdc)
         )
 
@@ -506,7 +520,7 @@ class targetMap:
             final, Config.EGO_MAP_SIZE, interpolation=cv2.INTER_LINEAR
         )
 
-        return final_resize
+        return (final_resize * 255).astype(np.uint8)
 
     def create_ego_map_old(self, pose, map, newImageWidth, border_value=0.0):
 

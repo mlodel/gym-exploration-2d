@@ -1,5 +1,7 @@
 import numpy as np
 from gym_collision_avoidance.envs.maps.map_env import EnvMap
+from tinydb import TinyDB, Query
+import os
 
 
 def json_map_file(Config, **kwargs):
@@ -8,8 +10,39 @@ def json_map_file(Config, **kwargs):
     )
 
     # file_name = "0a1b29dba355df2ab02630133187bfab.json"
-    file_name = "0a1a5807d65749c1194ce1840354be39.json"
+    # file_name = "0a1a5807d65749c1194ce1840354be39.json"
     # file_name = "0a5c77794ab1c44936682ccf4562f3c3.json"
+    file_name = "8098c4391a1213f5e0233b7f97ae9428.json"
+
+    json_path = json_prefix + file_name
+
+    return None, json_path
+
+
+def json_map_random(
+    Config,
+    level: int = 1,
+    rng: np.random.Generator = np.random.default_rng(0),
+    **kwargs
+):
+    json_prefix = (
+        "/home/max/Documents/projects/exploration_2d/HouseExpo/HouseExpo/json/"
+    )
+    # cwd = os.getcwd()
+    db = TinyDB(
+        "/home/max/Documents/projects/exploration_2d/gym-exploration-2d/gym_collision_avoidance/envs/maps/db/map_selection_db.json"
+    )
+    Map = Query()
+    table = db.table("level" + str(int(level)))
+    result = table.all()
+
+    # Random choice of maps
+    if not Config.TEST_MODE:
+        map = rng.choice(result[:100])
+    else:
+        map = rng.choice(result[100:200])
+
+    file_name = map["id"] + ".json"
 
     json_path = json_prefix + file_name
 

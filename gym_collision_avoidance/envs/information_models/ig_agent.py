@@ -78,6 +78,7 @@ class ig_agent:
             sensRange=self.detect_range,
             rOcc=rOcc,
             rEmp=rEmp,
+            real_map_size=env_map.map_size,
         )  # rOcc 3.0 1.1 rEmp 0.33 0.9
         gc.collect()
         self.agent_pos_map = np.zeros(self.targetMap.map.shape)

@@ -177,7 +177,7 @@ class CollisionAvoidanceEnv(gym.Env):
         # self.testcases_seeds_test = np.arange(self.testcase_n_train, self.testcase_n_train+self.testcase_n_test)
 
         self.renderer = None
-        self.enable_auto_render = True
+        self.enable_auto_render = False
         self.auto_rendering_mode = "human"
 
         # Rendering
@@ -570,7 +570,7 @@ class CollisionAvoidanceEnv(gym.Env):
 
         self.obstacles, self.map_file = getattr(
             environment_scenarios, self.scenario[0]["env"]
-        )(Config, n_obstacles=self.n_obstacles, rng=self.testcase_rng)
+        )(Config, n_obstacles=self.n_obstacles, level=1, rng=self.testcase_rng)
 
         self.map = EnvMap(
             map_size=Config.MAP_SIZE,

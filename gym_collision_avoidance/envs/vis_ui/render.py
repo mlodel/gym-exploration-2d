@@ -41,7 +41,7 @@ class GymRenderer:
         self.colors = np.around(self.colors * 255).astype(np.uint8)
         self.colors = self.colors[:, ::-1]
 
-        self.obs_keys = ["ego_explored_map", "ego_entropy_map"]
+        self.obs_keys = ["ego_explored_map", "binary_map"]
 
         # Init Map
         cellsize = min(map_size) / (res_factor * map_min_shape)
@@ -173,8 +173,10 @@ class GymRenderer:
 
         if hasattr(agent.policy, "policy_goal"):
             subgoal = agent.policy.goal_
+            subgoal2 = agent.policy.policy_goal
         else:
             subgoal = None
+            subgoal2 = None
 
         if hasattr(agent.policy, "predicted_traj"):
             trajectory = agent.policy.predicted_traj
@@ -232,6 +234,19 @@ class GymRenderer:
                 radius=np.around(agent.radius * self.res).astype(int),
                 thickness=-1,
                 color=(self.colors[1, :] + (255 - self.colors[1, :]) // 1.5).tolist(),
+                lineType=cv2.LINE_AA,
+            )
+
+        # Draw Feasible Subgoal
+        if subgoal2 is not None:
+            subgoal_cell = self.render_map.get_idc_from_pos(subgoal2)[::-1]
+            ## Draw Filled Circle
+            img = cv2.circle(
+                img,
+                center=subgoal_cell,
+                radius=np.around(agent.radius * self.res * 0.3).astype(int),
+                thickness=-1,
+                color=(self.colors[1, :] + (255 - self.colors[1, :]) // 3).tolist(),
                 lineType=cv2.LINE_AA,
             )
 
@@ -350,23 +365,6 @@ class GymRenderer:
             A, b = constraints["a"], constraints["b"]
             A = np.array(A)
             b = np.array(b)
-            # for i in range(A.shape[0]):
-            #     if A[i, 0] != 0:
-            #         x = np.array([0, b[i] / A[i, 0]])
-            #         y = np.array([1, (b[i] - A[i, 1]) / A[i, 0]])
-            #     else:
-            #         x = np.array([b[i] / A[i, 1], 0])
-            #         y = np.array([(b[i] - A[i, 0]) / A[i, 1], 1])
-            #     x = self.render_map.get_idc_from_pos(x)[::-1]
-            #     y = self.render_map.get_idc_from_pos(y)[::-1]
-            #     img = cv2.line(
-            #         img,
-            #         pt1=x,
-            #         pt2=y,
-            #         color=self.colors[3, :].tolist(),
-            #         thickness=self.res_factor,
-            #         lineType=cv2.LINE_AA,
-            #     )
 
             vert = pypoman.compute_polytope_vertices(A, b)
             pts = np.array([(self.render_map.get_idc_from_pos(pt)) for pt in vert])

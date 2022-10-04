@@ -23,7 +23,7 @@ from gym_collision_avoidance.envs.dynamics.PtMassSecondOrderDynamics import (
 from gym_collision_avoidance.envs.dynamics.StaticDynamics import StaticDynamics
 
 
-def exploration_random(Config, env_map, radius=0.2, rng=None, seed=None):
+def exploration_random(Config, env_map, radius=0.15, rng=None, seed=None):
     n_targets = 3
 
     if seed is not None and rng is None:

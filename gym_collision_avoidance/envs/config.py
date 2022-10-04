@@ -84,7 +84,7 @@ class Config:
     IG_ACCUMULATE_REWARDS = False
     IG_REWARD_MODE = "binary"  # entropy, binary
     IG_REWARD_BINARY_CELL = 0.1
-    IG_THRES_VISITED_CELLS = 0.99
+    IG_THRES_VISITED_CELLS = 0.9
     IG_THRES_AVG_CELL_ENTROPY = 0.1  # 0.1
     IG_THRES_ACTIVE = True  # When False fixed episode length by timeout
     IG_REWARD_COVERAGE_FINISHED = 1.0
@@ -129,7 +129,7 @@ class Config:
     USE_MPC_EXPERT_IN_TEST = False
 
     SCENARIOS_FOR_TRAINING = [
-        {"env": "json_map_file", "agents": "exploration_fixed_init"}
+        {"env": "json_map_random", "agents": "exploration_random"}
     ]
 
     # Angular Map
@@ -154,7 +154,7 @@ class Config:
         "pos_global_frame",
         "vel_global_frame",
         "ego_binary_map",
-        # "ego_global_map",
+        "ego_explored_map",
         "ego_goal_map"
         # "local_grid",
     ]
